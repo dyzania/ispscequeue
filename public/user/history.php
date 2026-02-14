@@ -1,0 +1,116 @@
+<?php
+session_start();
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../models/Ticket.php';
+
+requireLogin();
+requireRole('user');
+
+$ticketModel = new Ticket();
+$history = $ticketModel->getUserTicketHistory(getUserId());
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History - <?php echo APP_NAME; ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <?php injectTailwindConfig(); ?>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="min-h-screen pb-20">
+    <?php include __DIR__ . '/../../includes/user-navbar.php'; ?>
+
+    <main class="container-ultra px-4 md:px-10 py-8">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center justify-between mb-10">
+                <div>
+                    <h3 class="text-3xl md:text-4xl font-black text-gray-900 font-heading tracking-tight">Transaction History</h3>
+                    <p class="text-gray-500 font-medium">A complete record of your past visits and tickets.</p>
+                </div>
+                <div class="px-6 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-200">
+                    <?php echo count($history); ?> Sessions
+                </div>
+            </div>
+
+            <?php if (empty($history)): ?>
+                <div class="bg-white rounded-[40px] p-20 text-center border border-slate-100 shadow-premium">
+                    <div class="w-24 h-24 bg-slate-50 rounded-[32px] flex items-center justify-center mx-auto mb-8">
+                        <i class="fas fa-history text-slate-200 text-4xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-black text-gray-900 mb-2 font-heading">No history yet</h2>
+                    <p class="text-gray-400 font-medium mb-8">Your past tickets will appear here once completed.</p>
+                    <a href="get-ticket.php" class="inline-flex items-center space-x-2 text-primary-600 font-black uppercase tracking-widest text-sm hover:text-primary-700 transition-colors">
+                        <span>Get your first ticket</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            <?php else: ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                    <?php foreach ($history as $pastTicket): ?>
+                        <div class="bg-white rounded-[40px] p-10 shadow-division border border-slate-50 hover:shadow-premium hover:-translate-y-1 transition-all duration-500 group relative overflow-hidden">
+                            <!-- Background Accent -->
+                            <div class="absolute -right-10 -bottom-10 text-[120px] font-black text-slate-50/50 group-hover:text-primary-50/50 transition-colors pointer-events-none">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+
+                            <div class="relative z-10">
+                                <div class="flex items-start justify-between mb-8">
+                                    <div class="flex items-center space-x-5">
+                                        <div class="w-16 h-16 <?php echo $pastTicket['status'] === 'completed' ? 'bg-primary-50 text-primary-600' : 'bg-secondary-50 text-secondary-600'; ?> rounded-[24px] flex items-center justify-center text-xl font-black shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                                            <?php echo $pastTicket['service_code']; ?>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-2xl font-black text-gray-900 tracking-tight leading-none mb-2"><?php echo $pastTicket['ticket_number']; ?></h4>
+                                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center">
+                                                <i class="far fa-calendar-alt mr-2"></i>
+                                                <?php echo date('M d, Y • H:i', strtotime($pastTicket['created_at'])); ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span class="px-4 py-1.5 <?php echo $pastTicket['status'] === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-secondary-50 text-secondary-600'; ?> rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                        <?php echo $pastTicket['status']; ?>
+                                    </span>
+                                </div>
+                                
+                                <div class="bg-slate-50 rounded-[32px] p-6 border border-slate-100 mb-8 group-hover:bg-slate-900 transition-all duration-500">
+                                    <div class="flex flex-col gap-1">
+                                        <span class="text-[10px] font-black text-primary-600 uppercase tracking-widest group-hover:text-primary-400"><?php echo $pastTicket['service_name']; ?></span>
+                                        <?php if ($pastTicket['processing_time']): ?>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <span class="text-sm font-bold text-gray-400 group-hover:text-slate-500">Duration</span>
+                                                <span class="text-lg font-black text-gray-900 group-hover:text-white"><?php echo $pastTicket['processing_time']; ?></span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-6 border-t border-slate-100/50">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-800 transition-colors">
+                                            <i class="fas fa-desktop text-xs text-slate-400 group-hover:text-slate-500"></i>
+                                        </div>
+                                        <span class="text-sm font-black text-gray-600 group-hover:text-gray-400">Window <?php echo $pastTicket['window_number'] ?: '--'; ?></span>
+                                    </div>
+                                    <?php if ($pastTicket['status'] === 'completed'): ?>
+                                        <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shadow-lg shadow-emerald-100">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="w-10 h-10 bg-secondary-100 text-secondary-600 rounded-full flex items-center justify-center shadow-lg shadow-secondary-100">
+                                            <i class="fas fa-times"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </main>
+
+    <?php include __DIR__ . '/../../includes/chatbot-widget.php'; ?>
+</body>
+</html>
