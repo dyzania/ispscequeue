@@ -9,13 +9,13 @@ $error = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $content = trim($_POST['content']);
+    // Allow HTML content from Quill
+    $content = $_POST['content'];
     
-    if (empty($content)) {
+    if (empty(trim(strip_tags($content)))) {
         $error = 'Context content cannot be empty.';
     } else {
-        $stmt = $db->prepare("UPDATE chatbot_data SET content = ?, updated_at = NOW() WHERE id = 1");
-        if ($stmt->execute([$content])) {
+        if ($chatbot->updateContext($content)) {
             $message = 'Chatbot knowledge base updated successfully!';
         } else {
             $error = 'Failed to update database.';
@@ -26,15 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $chatbot = new Chatbot();
 
 // Get current chatbot data
-$stmt = $db->query("SELECT * FROM chatbot_data WHERE id = 1");
-$chatbot_data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// If no data exists, insert default
-if (!$chatbot_data) {
-    $default_content = 'Enter your organization details here...';
-    $db->exec("INSERT INTO chatbot_data (content) VALUES ('$default_content')");
-    $chatbot_data = ['content' => $default_content];
-}
+// Initial data check handled by migration script
+// $chatbot_data is no longer needed as we call getContext() directly in the view
 ?>
 <?php
 if ($message): ?>
@@ -70,17 +63,26 @@ if ($message): ?>
                     <p class="font-medium">The data below forms the AI's "Brain". Be precise with business hours, physical location, service requirements, and organizational policies to ensure accurate responses.</p>
                 </div>
 
-                <form method="POST">
+                <form method="POST" id="chatbotForm">
                     <div class="mb-8">
-                        <label for="content" class="block text-gray-700 text-xs font-black uppercase tracking-[0.2em] mb-4 ml-2">Knowledge Base Content</label>
-                        <textarea
-                            id="content"
-                            name="content"
-                            rows="15"
-                            class="w-full px-8 py-6 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary-100 focus:bg-white focus:border-primary-500 transition-all font-medium text-gray-700 context-editor shadow-inner"
-                            placeholder="Enter company info, FAQs, and policies here..."
-                            required
-                        ><?php echo htmlspecialchars($chatbot_data['content']); ?></textarea>
+                        <div class="flex justify-between items-center mb-4 ml-2">
+                            <label for="content" class="text-gray-700 text-xs font-black uppercase tracking-[0.2em]">Knowledge Base Content</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="file" id="docUpload" accept=".pdf,.docx" class="hidden">
+                                <button type="button" onclick="document.getElementById('docUpload').click()" 
+                                    class="text-xs font-bold text-primary-600 hover:text-primary-800 bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition-colors flex items-center">
+                                    <i class="fas fa-file-upload mr-2"></i>Import Doc/PDF
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden input to store Quill content -->
+                        <input type="hidden" name="content" id="hiddenContent">
+                        
+                        <!-- Quill Editor Container -->
+                        <div id="editor-container" class="bg-white rounded-xl border border-slate-200 shadow-inner" style="height: 400px;">
+                            <?php echo $chatbot->getContext(); ?>
+                        </div>
                     </div>
 
                     <div class="flex justify-end">
@@ -89,6 +91,73 @@ if ($message): ?>
                         </button>
                     </div>
                 </form>
+
+                <!-- Quill JS & File Upload Script -->
+                <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+                <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+                <script>
+                    // Initialize Quill
+                    var quill = new Quill('#editor-container', {
+                        theme: 'snow',
+                        modules: {
+                            toolbar: [
+                                [{ 'header': [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                [{ 'color': [] }, { 'background': [] }],
+                                ['clean']
+                            ]
+                        },
+                        placeholder: 'Enter company info, FAQs, and policies here...'
+                    });
+
+                    // Handle Form Submission
+                    document.getElementById('chatbotForm').onsubmit = function() {
+                        var content = document.querySelector('#hiddenContent');
+                        content.value = quill.root.innerHTML;
+                        return true;
+                    };
+
+                    // Handle File Upload
+                    document.getElementById('docUpload').addEventListener('change', async function(e) {
+                        const file = e.target.files[0];
+                        if (!file) return;
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        // Show loading state
+                        const btn = this.nextElementSibling;
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Extracting...';
+                        btn.disabled = true;
+
+                        try {
+                            const response = await fetch('import-doc.php', {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            const data = await response.json();
+                            
+                            if (data.error) {
+                                alert('Error extracting text: ' + data.error);
+                            } else if (data.text) {
+                                // Insert text at cursor position or at the end
+                                const range = quill.getSelection(true);
+                                quill.insertText(range.index, '\n' + data.text + '\n');
+                                alert('Document imported successfully!');
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Failed to process document.');
+                        } finally {
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                            this.value = ''; // Reset file input
+                        }
+                    });
+                </script>
             </div>
         </div>
     </div>

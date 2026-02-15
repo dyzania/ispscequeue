@@ -70,16 +70,16 @@ if ($window) {
                     <div class="flex flex-col items-end">
                         <p class="text-[10px] 5xl:text-xl font-black text-gray-400 uppercase tracking-widest mb-2">Service Status</p>
                         <div class="flex items-center gap-4">
-                            <span class="text-xs font-black uppercase tracking-wider <?php echo $window['is_active'] ? 'text-emerald-600' : 'text-slate-400'; ?>">
+                            <span class="text-xs font-black uppercase tracking-wider <?php echo $window['is_active'] ? 'text-emerald-600' : 'text-rose-600'; ?>">
                                 <?php echo $window['is_active'] ? 'Online' : 'On Break'; ?>
                             </span>
                             <button onclick="toggleBreakMode(<?php echo $window['id']; ?>, <?php echo $window['is_active']; ?>, this)" 
-                                    class="relative inline-flex h-10 w-20 5xl:h-20 5xl:w-40 items-center rounded-full transition-all duration-300 focus:outline-none shadow-inner <?php echo $window['is_active'] ? 'bg-emerald-500' : 'bg-slate-300'; ?>">
+                                    class="relative inline-flex h-10 w-20 5xl:h-20 5xl:w-40 items-center rounded-full transition-all duration-300 focus:outline-none shadow-inner <?php echo $window['is_active'] ? 'bg-emerald-500' : 'bg-rose-500'; ?>">
                                 <span class="sr-only">Toggle Online Status</span>
                                 <span class="inline-block h-8 w-8 5xl:h-16 5xl:w-16 transform rounded-full bg-white shadow-xl transition-all duration-300 transform <?php echo $window['is_active'] ? 'translate-x-11 5xl:translate-x-22' : 'translate-x-1'; ?>"></span>
                                 <div class="absolute inset-0 flex items-center justify-between px-3 5xl:px-6 pointer-events-none">
                                     <i class="fas fa-check text-[10px] 5xl:text-2xl text-white <?php echo $window['is_active'] ? 'opacity-100' : 'opacity-0'; ?> transition-opacity"></i>
-                                    <i class="fas fa-coffee text-[10px] 5xl:text-2xl text-slate-500 <?php echo !$window['is_active'] ? 'opacity-100' : 'opacity-0'; ?> transition-opacity"></i>
+                                    <i class="fas fa-coffee text-[10px] 5xl:text-2xl text-white <?php echo !$window['is_active'] ? 'opacity-100' : 'opacity-0'; ?> transition-opacity"></i>
                                 </div>
                             </button>
                         </div>
@@ -273,21 +273,21 @@ if ($window) {
 
                                 <div class="space-y-3 5xl:space-y-8">
                                     <?php if ($ticket['status'] === 'called'): ?>
-                                        <button onclick="startServing(<?php echo $ticket['id']; ?>, this)" class="w-full py-4 5xl:py-10 bg-indigo-600 text-white font-black rounded-2xl 5xl:rounded-[40px] shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all text-sm 5xl:text-4xl flex items-center justify-center gap-2 5xl:gap-6">
+                                        <button type="button" onclick="startServing(<?php echo $ticket['id']; ?>, this)" class="relative z-10 w-full py-4 5xl:py-10 bg-indigo-600 text-white font-black rounded-2xl 5xl:rounded-[40px] shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all text-sm 5xl:text-4xl flex items-center justify-center gap-2 5xl:gap-6">
                                             <i class="fas fa-play"></i> Start Serving
                                         </button>
                                         <div class="flex gap-3 5xl:gap-8">
-                                            <button onclick="cancelTicket(<?php echo $ticket['id']; ?>, this)" class="flex-1 py-4 5xl:py-10 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl 5xl:rounded-[40px] hover:bg-slate-50 transition-all text-sm 5xl:text-3xl">
+                                            <button type="button" onclick="cancelTicket(<?php echo $ticket['id']; ?>, this)" class="relative z-10 flex-1 py-4 5xl:py-10 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl 5xl:rounded-[40px] hover:bg-slate-50 transition-all text-sm 5xl:text-3xl">
                                                 No Show
                                             </button>
                                         </div>
                                     <?php else: ?>
-                                        <button onclick="completeTicket(<?php echo $ticket['id']; ?>, this)" class="w-full py-4 5xl:py-10 bg-emerald-500 text-white font-black rounded-2xl 5xl:rounded-[40px] shadow-lg shadow-emerald-200 hover:bg-emerald-600 hover:-translate-y-0.5 transition-all text-sm 5xl:text-4xl flex items-center justify-center gap-2 5xl:gap-6">
+                                        <button type="button" onclick="completeTicket(<?php echo $ticket['id']; ?>, this)" class="relative z-10 w-full py-4 5xl:py-10 bg-emerald-500 text-white font-black rounded-2xl 5xl:rounded-[40px] shadow-lg shadow-emerald-200 hover:bg-emerald-600 hover:-translate-y-0.5 transition-all text-sm 5xl:text-4xl flex items-center justify-center gap-2 5xl:gap-6">
                                             <i class="fas fa-check"></i> Complete
                                         </button>
                                     <?php endif; ?>
                                     
-                                    <button onclick="archiveTicket(<?php echo $ticket['id']; ?>, this)" class="w-full py-3 5xl:py-8 bg-amber-50 text-amber-600 font-bold rounded-xl hover:bg-amber-100 transition-all text-xs 5xl:text-2xl flex items-center justify-center gap-2 5xl:gap-6">
+                                    <button type="button" onclick="archiveTicket(<?php echo $ticket['id']; ?>, this)" class="relative z-10 w-full py-3 5xl:py-8 bg-amber-50 text-amber-600 font-bold rounded-xl hover:bg-amber-100 transition-all text-xs 5xl:text-2xl flex items-center justify-center gap-2 5xl:gap-6">
                                         <i class="fas fa-box-archive"></i> Move to Archive
                                     </button>
                                 </div>
@@ -296,9 +296,15 @@ if ($window) {
                         <?php endforeach; ?>
 
                         <!-- Call Next Mini-Button -->
-                        <button onclick="callNext(<?php echo $window['id']; ?>, this)" class="w-full py-4 5xl:py-10 border-2 border-dashed border-indigo-200 text-indigo-500 font-bold rounded-2xl hover:bg-indigo-50 hover:border-indigo-300 transition-all flex items-center justify-center gap-2 5xl:gap-6 text-sm 5xl:text-3xl">
-                            <i class="fas fa-plus"></i> Call Another
-                        </button>
+                        <?php if ($window['is_active']): ?>
+                            <button type="button" onclick="callNext(<?php echo $window['id']; ?>, this)" class="relative z-10 w-full py-4 5xl:py-10 border-2 border-dashed border-indigo-200 text-indigo-500 font-bold rounded-2xl hover:bg-indigo-50 hover:border-indigo-300 transition-all flex items-center justify-center gap-2 5xl:gap-6 text-sm 5xl:text-3xl">
+                                <i class="fas fa-plus"></i> Call Another
+                            </button>
+                        <?php else: ?>
+                            <button disabled class="w-full py-4 5xl:py-10 border-2 border-dashed border-slate-200 text-slate-400 font-bold rounded-2xl cursor-not-allowed flex items-center justify-center gap-2 5xl:gap-6 text-sm 5xl:text-3xl">
+                                <i class="fas fa-ban"></i> Go Online to Call Only
+                            </button>
+                        <?php endif; ?>
 
                     <?php else: ?>
                         <div class="bg-white rounded-2xl p-8 5xl:p-32 text-center shadow-xl shadow-slate-200/50 border border-slate-100 py-20 5xl:py-40">
@@ -306,9 +312,15 @@ if ($window) {
                                 <i class="fas fa-bell text-indigo-500 text-2xl 5xl:text-7xl"></i>
                             </div>
                             <h3 class="text-xl 5xl:text-5xl font-black text-gray-900 mb-2 5xl:mb-10">Ready to Serve</h3>
-                            <button onclick="callNext(<?php echo $window['id']; ?>, this)" class="mt-6 5xl:mt-10 px-8 5xl:px-20 py-4 5xl:py-10 bg-indigo-600 text-white font-black rounded-2xl 5xl:rounded-[40px] shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 transition-all text-sm 5xl:text-4xl uppercase tracking-widest">
-                                Call Next Ticket
-                            </button>
+                            <?php if ($window['is_active']): ?>
+                                <button onclick="callNext(<?php echo $window['id']; ?>, this)" class="mt-6 5xl:mt-10 px-8 5xl:px-20 py-4 5xl:py-10 bg-indigo-600 text-white font-black rounded-2xl 5xl:rounded-[40px] shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 transition-all text-sm 5xl:text-4xl uppercase tracking-widest">
+                                    Call Next Ticket
+                                </button>
+                            <?php else: ?>
+                                <button disabled class="mt-6 5xl:mt-10 px-8 5xl:px-20 py-4 5xl:py-10 bg-slate-200 text-slate-400 font-black rounded-2xl 5xl:rounded-[40px] cursor-not-allowed text-sm 5xl:text-4xl uppercase tracking-widest">
+                                    You are Offline
+                                </button>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -318,232 +330,303 @@ if ($window) {
     </main>
 
     <script>
+        // Define Base URL for Notifications
+        const ANTIGRAVITY_BASE_URL = "<?php echo defined('BASE_URL') ? BASE_URL : ''; ?>";
+    </script>
+    <script src="../js/notifications.js"></script>
+    
+    <script>
         function setLoading(btn, isLoading, showText = true) {
-            if (isLoading) {
-                btn.disabled = true;
-                btn.style.opacity = '0.7';
-                btn.style.cursor = 'not-allowed';
-                const originalText = btn.innerHTML;
-                btn.setAttribute('data-original-text', originalText);
-                if (showText) {
-                    btn.innerHTML = `<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...`;
+            // console.log('setLoading called', { btn, isLoading, showText });
+            try {
+                if (isLoading) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.7';
+                    btn.style.cursor = 'not-allowed';
+                    const originalText = btn.innerHTML;
+                    btn.setAttribute('data-original-text', originalText);
+                    if (showText) {
+                        btn.innerHTML = `<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...`;
+                    } else {
+                        // Just add the spinner to the existing content if it's a toggle
+                        btn.innerHTML = `<i class="fas fa-circle-notch animate-spin"></i>`;
+                    }
                 } else {
-                    // Just add the spinner to the existing content if it's a toggle
-                    btn.innerHTML = `<i class="fas fa-circle-notch animate-spin"></i>`;
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                    btn.innerHTML = btn.getAttribute('data-original-text');
                 }
-            } else {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-                btn.innerHTML = btn.getAttribute('data-original-text');
+            } catch (e) {
+                console.error('Error in setLoading:', e);
+                // alert('Error in UI update: ' + e.message);
             }
         }
 
         function toggleBreakMode(windowId, currentStatus, btn) {
-            const newStatus = currentStatus ? 0 : 1;
-            setLoading(btn, true, false);
-            
-            fetch('../api/set-window-status.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ window_id: windowId, is_active: newStatus })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Notify and delay reload
-                    document.dispatchEvent(new CustomEvent('equeue:toast', { 
-                        detail: { type: 'success', message: 'Status updated successfully' } 
-                    }));
-                    setTimeout(() => window.location.reload(), 3500);
-                } else {
+            console.log('toggleBreakMode called', { windowId, currentStatus });
+            try {
+                const newStatus = currentStatus ? 0 : 1;
+                setLoading(btn, true, false);
+                
+                fetch('../api/set-window-status.php', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ window_id: windowId, is_active: newStatus })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Notify and delay reload
+                        document.dispatchEvent(new CustomEvent('equeue:toast', { 
+                            detail: { 
+                                type: 'success', 
+                                title: newStatus ? 'Back Online' : 'On Break',
+                                message: newStatus ? 'You are now visible to customers.' : 'Window set to break mode.'
+                            } 
+                        }));
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        setLoading(btn, false);
+                        alert(data.message || 'Error updating status');
+                    }
+                })
+                .catch(err => {
+                    console.error('toggleBreakMode error:', err);
                     setLoading(btn, false);
-                    alert(data.message || 'Error updating status');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(btn, false);
-            });
+                    alert('Error: ' + err.message);
+                });
+            } catch (e) {
+                console.error('Error in toggleBreakMode:', e);
+                alert('Script error: ' + e.message);
+            }
         }
 
         function callNext(windowId, btn) {
-            setLoading(btn, true);
-            fetch('../api/call-ticket.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ window_id: windowId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
+            console.log('callNext called', { windowId, btn });
+            try {
+                setLoading(btn, true);
+                fetch('../api/call-ticket.php', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ window_id: windowId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log('callNext data:', data);
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        setLoading(btn, false);
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error('callNext error:', err);
                     setLoading(btn, false);
-                    alert(data.message);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(btn, false);
-            });
+                    alert('Error: ' + err.message);
+                });
+            } catch (e) {
+                console.error('Error in callNext:', e);
+                alert('Script error: ' + e.message);
+            }
         }
 
         function startServing(ticketId, btn) {
-            setLoading(btn, true);
-            fetch('../api/start-serving.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ ticket_id: ticketId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Notify and delay reload
-                    document.dispatchEvent(new CustomEvent('equeue:toast', { 
-                        detail: { type: 'serving', message: 'Service started' } 
-                    }));
-                    setTimeout(() => window.location.reload(), 3500);
-                } else {
+            console.log('startServing called', { ticketId });
+            try {
+                setLoading(btn, true);
+                fetch('../api/start-serving.php', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ ticket_id: ticketId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Notify and delay reload
+                        document.dispatchEvent(new CustomEvent('equeue:toast', { 
+                            detail: { type: 'serving', message: 'Service started' } 
+                        }));
+                        setTimeout(() => window.location.reload(), 3500);
+                    } else {
+                        setLoading(btn, false);
+                        alert(data.message || 'Error starting service');
+                    }
+                })
+                .catch(err => {
+                    console.error('startServing error:', err);
                     setLoading(btn, false);
-                    alert(data.message || 'Error starting service');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(btn, false);
-            });
+                    alert('Error: ' + err.message);
+                });
+            } catch (e) {
+                console.error('Error in startServing:', e);
+                alert('Script error: ' + e.message);
+            }
         }
 
         function cancelTicket(ticketId, btn) {
-            if (!confirm('Are you sure you want to cancel this ticket (No Show)?')) return;
-            
-            setLoading(btn, true);
-            fetch('../api/cancel-ticket.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ ticket_id: ticketId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Notify and delay reload
-                    document.dispatchEvent(new CustomEvent('equeue:toast', { 
-                        detail: { type: 'cancelled', message: 'Ticket cancelled successfully' } 
-                    }));
-                    setTimeout(() => window.location.reload(), 3500);
-                } else {
+            console.log('cancelTicket called', { ticketId });
+            try {
+                if (!confirm('Are you sure you want to cancel this ticket (No Show)?')) return;
+                
+                setLoading(btn, true);
+                fetch('../api/cancel-ticket.php', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ ticket_id: ticketId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Notify and delay reload
+                        document.dispatchEvent(new CustomEvent('equeue:toast', { 
+                            detail: { type: 'cancelled', message: 'Ticket cancelled successfully' } 
+                        }));
+                        setTimeout(() => window.location.reload(), 3500);
+                    } else {
+                        setLoading(btn, false);
+                        alert(data.message || 'Error cancelling ticket');
+                    }
+                })
+                .catch(err => {
+                    console.error('cancelTicket error:', err);
                     setLoading(btn, false);
-                    alert(data.message || 'Error cancelling ticket');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(btn, false);
-            });
+                    alert('Error: ' + err.message);
+                });
+            } catch (e) {
+                console.error('Error in cancelTicket:', e);
+                alert('Script error: ' + e.message);
+            }
         }
 
         function completeTicket(ticketId, btn) {
-            const notesEl = document.getElementById(`staff-notes-${ticketId}`);
-            const notes = notesEl ? notesEl.value : '';
-            
-            setLoading(btn, true);
-            fetch('../api/complete-ticket.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ ticket_id: ticketId, notes: notes })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
+            console.log('completeTicket called', { ticketId, btn });
+            try {
+                const notesEl = document.getElementById(`staff-notes-${ticketId}`);
+                const notes = notesEl ? notesEl.value : '';
+                
+                setLoading(btn, true);
+                fetch('../api/complete-ticket.php', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ ticket_id: ticketId, notes: notes })
+                })
+                .then(res => {
+                    console.log('completeTicket response status:', res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    console.log('completeTicket data:', data);
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        setLoading(btn, false);
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error('completeTicket fetch error:', err);
                     setLoading(btn, false);
-                    alert(data.message);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(btn, false);
-            });
+                    alert('Network error: ' + err.message);
+                });
+            } catch (e) {
+                console.error('Error in completeTicket:', e);
+                alert('Script error: ' + e.message);
+            }
         }
 
         function archiveTicket(ticketId, btn) {
-            if (!confirm('Move this ticket to archive? Use this for long-running transactions.')) return;
-            
-            const notesEl = document.getElementById(`staff-notes-${ticketId}`);
-            const notes = notesEl ? notesEl.value : '';
+            console.log('archiveTicket called', { ticketId, btn });
+            try {
+                if (!confirm('Move this ticket to archive? Use this for long-running transactions.')) return;
+                
+                const notesEl = document.getElementById(`staff-notes-${ticketId}`);
+                const notes = notesEl ? notesEl.value : '';
 
-            setLoading(btn, true);
-            fetch('../api/archive-ticket.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ ticket_id: ticketId, notes: notes })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Notify and delay reload
-                    document.dispatchEvent(new CustomEvent('equeue:toast', { 
-                        detail: { type: 'success', message: 'Ticket moved to archive' } 
-                    }));
-                    setTimeout(() => window.location.reload(), 3500);
-                } else {
+                setLoading(btn, true);
+                fetch('../api/archive-ticket.php', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ ticket_id: ticketId, notes: notes })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log('archiveTicket data:', data);
+                    if (data.success) {
+                        // Notify and delay reload
+                        document.dispatchEvent(new CustomEvent('equeue:toast', { 
+                            detail: { type: 'success', message: 'Ticket moved to archive' } 
+                        }));
+                        setTimeout(() => window.location.reload(), 3500);
+                    } else {
+                        setLoading(btn, false);
+                        alert(data.message || 'Error archiving ticket');
+                    }
+                })
+                .catch(err => {
+                    console.error('archiveTicket error:', err);
                     setLoading(btn, false);
-                    alert(data.message || 'Error archiving ticket');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(btn, false);
-            });
+                    alert('Error: ' + err.message);
+                });
+            } catch (e) {
+                console.error('Error in archiveTicket:', e);
+                alert('Script error: ' + e.message);
+            }
         }
 
         function resumeTicket(ticketId, btn) {
-            setLoading(btn, true);
-            fetch('../api/resume-ticket.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ ticket_id: ticketId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Notify and delay reload
-                    document.dispatchEvent(new CustomEvent('equeue:toast', { 
-                        detail: { type: 'success', message: 'Ticket resumed successfully' } 
-                    }));
-                    setTimeout(() => window.location.reload(), 3500);
-                } else {
+            console.log('resumeTicket called', { ticketId });
+            try {
+                setLoading(btn, true);
+                fetch('../api/resume-ticket.php', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ ticket_id: ticketId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Notify and delay reload
+                        document.dispatchEvent(new CustomEvent('equeue:toast', { 
+                            detail: { type: 'success', message: 'Ticket resumed successfully' } 
+                        }));
+                        setTimeout(() => window.location.reload(), 3500);
+                    } else {
+                        setLoading(btn, false);
+                        alert(data.message || 'Error resuming ticket');
+                    }
+                })
+                .catch(err => {
+                    console.error('resumeTicket error:', err);
                     setLoading(btn, false);
-                    alert(data.message || 'Error resuming ticket');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(btn, false);
-            });
+                    alert('Error: ' + err.message);
+                });
+            } catch (e) {
+                console.error('Error in resumeTicket:', e);
+                alert('Script error: ' + e.message);
+            }
         }
 
         // Live Timer for Archived Tickets
@@ -618,15 +701,16 @@ if ($window) {
                 if (currentCount > 0) {
                     if (lastEmptyStartTime !== null) {
                         const secondsIdle = (now - lastEmptyStartTime) / 1000;
+                        // Trigger Notification via centralized system (Sound + Toast + Native)
                         if (secondsIdle >= STAGNANT_THRESHOLD) {
-                            alertSound.play().catch(err => console.error("Audio play failed:", err));
-                            
-                            // Visual toast notification
-                            const toast = document.createElement('div');
-                            toast.className = 'fixed top-10 right-10 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl z-[9999] animate-bounce font-black flex items-center border-2 border-primary-500';
-                            toast.innerHTML = '<i class="fas fa-bell mr-3 text-primary-400"></i> NEW TICKET AFTER IDLE PERIOD!';
-                            document.body.appendChild(toast);
-                            setTimeout(() => toast.remove(), 3000);
+                            document.dispatchEvent(new CustomEvent('equeue:toast', { 
+                                detail: { 
+                                    type: 'turn_next', 
+                                    title: 'WAKE UP! NEW TICKET!', 
+                                    message: 'A new ticket has arrived after idle period!',
+                                    native: true 
+                                } 
+                            }));
                         }
                         lastEmptyStartTime = null; // No longer empty
                     }

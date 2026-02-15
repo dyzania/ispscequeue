@@ -32,7 +32,12 @@ requireRole('admin');
 </head>
 <body class="min-h-screen flex">
     <!-- Sidebar -->
-    <aside class="fixed inset-y-0 left-0 w-72 glass-sidebar text-white z-50 flex flex-col transition-all duration-300">
+    <?php 
+    $isDashboard = str_contains($_SERVER['PHP_SELF'], 'dashboard.php');
+    $sidebarClass = $isDashboard ? '-translate-x-full' : '';
+    $mainContentClass = $isDashboard ? 'ml-0' : 'ml-72';
+    ?>
+    <aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-72 glass-sidebar text-white z-50 flex flex-col transition-all duration-300 <?php echo $sidebarClass; ?>">
         <div class="p-8 border-b border-white/10">
             <a href="dashboard.php" class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center shadow-lg shadow-primary-900/20">
@@ -85,10 +90,13 @@ requireRole('admin');
     </aside>
 
     <!-- Main Content Wrapper -->
-    <div class="flex-1 ml-72 min-h-screen flex flex-col">
+    <div id="admin-main-content" class="flex-1 <?php echo $mainContentClass; ?> min-h-screen flex flex-col transition-all duration-300">
         <!-- Top Header -->
         <header class="h-24 glass-morphism sticky top-0 z-40 border-b border-slate-200/50 px-10 flex items-center justify-between shadow-sm">
             <div class="flex items-center flex-1 max-w-xl">
+                <button onclick="toggleSidebar()" class="mr-6 text-slate-400 hover:text-primary-600 transition-colors">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
                 <!-- Search Bar -->
                 <div class="relative group flex-1 max-w-xl">
                     <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
@@ -98,6 +106,21 @@ requireRole('admin');
                 </div>
 
                 <script>
+                    function toggleSidebar() {
+                        const sidebar = document.getElementById('admin-sidebar');
+                        const mainContent = document.getElementById('admin-main-content');
+                        
+                        if (sidebar.classList.contains('-translate-x-full')) {
+                            sidebar.classList.remove('-translate-x-full');
+                            mainContent.classList.remove('ml-0');
+                            mainContent.classList.add('ml-72');
+                        } else {
+                            sidebar.classList.add('-translate-x-full');
+                            mainContent.classList.remove('ml-72');
+                            mainContent.classList.add('ml-0');
+                        }
+                    }
+
                     document.addEventListener('keydown', function(e) {
                         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                             e.preventDefault();
@@ -128,4 +151,4 @@ requireRole('admin');
         </header>
 
         <!-- Main View Area -->
-        <main class="flex-1 p-10">
+        <main class="flex-1 p-4">

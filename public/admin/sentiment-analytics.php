@@ -34,7 +34,7 @@ $windowBreakdown = $db->query("
 
 <div class="space-y-10">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="flex flex-col items-center justify-center text-center gap-6">
         <div>
             <p class="text-[10px] font-black uppercase tracking-[0.3em] text-primary-600 mb-2">Intelligence & Insights</p>
             <h1 class="text-4xl 5xl:text-8xl font-black text-gray-900 font-heading tracking-tight leading-none">Sentiment Analytics</h1>
@@ -48,11 +48,11 @@ $windowBreakdown = $db->query("
 
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <div class="bg-white rounded-xl p-8 shadow-xl shadow-slate-200/50 border border-white">
+        <div class="bg-white rounded-xl p-8 shadow-xl shadow-slate-200/50 border border-white flex flex-col items-center text-center">
             <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Feedback</p>
             <p class="text-4xl font-black text-gray-900 font-heading"><?php echo $stats['total_feedback']; ?></p>
         </div>
-        <div class="bg-emerald-50 rounded-xl p-8 shadow-xl shadow-emerald-100/50 border border-emerald-100">
+        <div class="bg-emerald-50 rounded-xl p-8 shadow-xl shadow-emerald-100/50 border border-emerald-100 flex flex-col items-center text-center">
             <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Positive Ratio</p>
             <p class="text-4xl font-black text-emerald-700 font-heading">
                 <?php 
@@ -61,13 +61,13 @@ $windowBreakdown = $db->query("
                 ?>%
             </p>
         </div>
-        <div class="bg-slate-900 rounded-xl p-8 shadow-xl shadow-slate-900/20 text-white">
+        <div class="bg-slate-900 rounded-xl p-8 shadow-xl shadow-slate-900/20 text-white flex flex-col items-center text-center">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Average Score</p>
             <p class="text-4xl font-black font-heading text-indigo-400">
                 <?php echo number_format($stats['avg_sentiment_score'] ?? 0, 2); ?>
             </p>
         </div>
-        <div class="bg-white rounded-xl p-8 shadow-xl shadow-slate-200/50 border border-white">
+        <div class="bg-white rounded-xl p-8 shadow-xl shadow-slate-200/50 border border-white flex flex-col items-center text-center">
             <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Health Status</p>
             <div class="flex items-center mt-2">
                 <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></span>
@@ -79,13 +79,13 @@ $windowBreakdown = $db->query("
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- Sentiment Distribution Chart -->
         <div class="lg:col-span-4 bg-white rounded-2xl p-10 shadow-2xl shadow-slate-200/40 border border-white">
-            <h3 class="text-xl font-black text-gray-900 font-heading mb-8">Sentiment Distribution</h3>
+            <h3 class="text-xl font-black text-gray-900 font-heading mb-8 text-center">Sentiment Distribution</h3>
             <canvas id="distributionChart" height="300"></canvas>
         </div>
 
         <!-- Sentiment Trend Chart -->
         <div class="lg:col-span-8 bg-white rounded-2xl p-10 shadow-2xl shadow-slate-200/40 border border-white">
-            <h3 class="text-xl font-black text-gray-900 font-heading mb-8">Sentiment Trends</h3>
+            <h3 class="text-xl font-black text-gray-900 font-heading mb-8 text-center">Sentiment Trends</h3>
             <canvas id="trendChart" height="140"></canvas>
         </div>
     </div>
@@ -94,7 +94,7 @@ $windowBreakdown = $db->query("
         <!-- Service Performance -->
         <div class="bg-white rounded-2xl shadow-2xl shadow-slate-200/40 border border-white overflow-hidden">
             <div class="px-10 py-8 border-b border-slate-50 bg-slate-50/50">
-                <h3 class="text-xl font-black text-gray-900 font-heading">Service Performance</h3>
+                <h3 class="text-xl font-black text-gray-900 font-heading text-center">Service Performance</h3>
             </div>
             <div class="p-10">
                 <div class="space-y-6">
@@ -116,7 +116,7 @@ $windowBreakdown = $db->query("
         <!-- Window Performance -->
         <div class="bg-white rounded-2xl shadow-2xl shadow-slate-200/40 border border-white overflow-hidden">
             <div class="px-10 py-8 border-b border-slate-50 bg-slate-50/50">
-                <h3 class="text-xl font-black text-gray-900 font-heading">Counter Performance</h3>
+                <h3 class="text-xl font-black text-gray-900 font-heading text-center">Counter Performance</h3>
             </div>
             <div class="p-10">
                 <div class="space-y-6">
@@ -142,10 +142,17 @@ $windowBreakdown = $db->query("
     <!-- Recent Feedback Feed -->
     <div class="bg-white rounded-2xl shadow-2xl shadow-slate-200/40 border border-white overflow-hidden">
         <div class="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-primary-900 text-white">
-            <div>
+            <div class="w-full text-center"> <!-- Centered Feedback Header -->
                 <h3 class="text-2xl font-black font-heading">Feedback Feed</h3>
                 <p class="text-xs font-bold text-primary-300 uppercase tracking-widest mt-1">Real-time analysis of user comments</p>
             </div>
+            <!-- Removed/Adjusted Live Updates badge to not interfere with centering?
+                 Actually the original had justify-between.
+                 If I center the text wrapper, and keep the badge on the right, it might look off.
+                 I will make the main text centered and absolute position the badge or just let flexbox handle it but text-center the content.
+            -->
+            <!-- Let's just center the content Div and keep the badge -->
+        </div>
             <div class="flex items-center space-x-2">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
                 <span class="text-[10px] font-black text-primary-400 uppercase tracking-widest">Live Updates</span>

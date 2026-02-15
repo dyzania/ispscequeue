@@ -66,7 +66,7 @@ class Ticket {
         
         $count = $result['count'] + 1;
         
-        return $service['service_code'] . '-' . date('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+        return $service['service_code'] . date('md') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
     }
     
     public function hasPendingFeedback($userId) {
@@ -658,5 +658,36 @@ class Ticket {
         $stats['avg_rating'] = $stats['avg_rating'] ? round($stats['avg_rating'], 1) : '0';
         
         return $stats;
+    }
+    public function getGlobalAverageProcessTime() {
+        $stmt = $this->db->prepare("
+            SELECT AVG(TIMESTAMPDIFF(MINUTE, served_at, completed_at)) as avg_minutes
+            FROM tickets
+            WHERE status = 'completed'
+            AND served_at IS NOT NULL
+            AND completed_at IS NOT NULL
+            AND DATE(completed_at) = CURDATE()
+        ");
+        
+        $stmt->execute();
+        $result = $stmt->fetch();
+        
+        return $result['avg_minutes'] ? round($result['avg_minutes']) : 0;
+    }
+
+    public function getPeakHour() {
+        $stmt = $this->db->prepare("
+            SELECT HOUR(created_at) as hour, COUNT(*) as count
+            FROM tickets
+            WHERE DATE(created_at) = CURDATE()
+            GROUP BY hour
+            ORDER BY count DESC
+            LIMIT 1
+        ");
+        
+        $stmt->execute();
+        $result = $stmt->fetch();
+        
+        return $result ? str_pad($result['hour'], 2, '0', STR_PAD_LEFT) . ':00' : 'N/A';
     }
 }

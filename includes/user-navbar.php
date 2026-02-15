@@ -1,12 +1,10 @@
 <nav class="sticky top-0 z-[100] w-full">
     <div class="w-full">
-        <div class="glass-morphism shadow-premium px-4 md:px-12 py-4 md:py-6 border-b border-white/50">
+        <div class="glass-morphism shadow-premium px-4 md:px-12 py-2 md:py-6 border-b border-white/50">
             <div class="flex items-center justify-between gap-4">
                 <!-- Logo -->
                 <a href="dashboard.php" class="flex items-center space-x-3 group shrink-0">
-                    <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg group-hover:bg-primary-700 transition-all duration-300 transform group-hover:rotate-6">
-                        <i class="fas fa-layer-group text-white text-xl"></i>
-                    </div>
+                    <img src="<?php echo BASE_URL; ?>/img/logo.png" alt="<?php echo APP_NAME; ?>" class="w-8 h-8 md:w-10 md:h-10 object-contain group-hover:rotate-6 transition-transform duration-300">
                     <div class="hidden sm:block">
                         <span class="text-xl font-black tracking-tighter font-heading text-gray-900 leading-none"><?php echo APP_NAME; ?></span>
                         <div class="text-[10px] font-black uppercase tracking-[0.2em] text-primary-600">User Portal</div>
@@ -41,7 +39,7 @@
                     <button id="userDropdownButtonMobile" data-dropdown-toggle="userDropdownMobile" class="flex lg:hidden items-center bg-gray-50/50 rounded-xl p-1 border border-gray-100">
                         <img class="w-8 h-8 rounded-lg" src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['full_name'] ?? 'User'); ?>&background=15803d&color=fff&font-size=0.33" alt="user photo">
                     </button>
-                    <button data-collapse-toggle="navbar-user" type="button" class="inline-flex lg:hidden items-center p-2.5 w-12 h-12 justify-center text-gray-600 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all bg-gray-50 border border-gray-100">
+                    <button data-collapse-toggle="navbar-user" type="button" class="inline-flex lg:hidden items-center p-2 w-10 h-10 justify-center text-gray-600 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all bg-gray-50 border border-gray-100">
                         <span class="sr-only">Open main menu</span>
                         <i class="fas fa-bars text-2xl"></i>
                     </button>

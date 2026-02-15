@@ -50,23 +50,22 @@ $waitingTickets = $ticketModel->getWaitingQueue();
         <?php if ($currentTicket && ($currentTicket['status'] === 'called' || $currentTicket['status'] === 'serving')): ?>
             <!-- Notification Banner for Called/Serving -->
             <div class="mb-6 4xl:mb-20 bg-slate-900 rounded-[2rem] 5xl:rounded-[60px] shadow-premium overflow-hidden">
-                <div class="bg-indigo-600/10 backdrop-blur-xl p-4 md:p-6 3xl:p-10 5xl:p-20 flex flex-col md:flex-row items-center justify-between gap-6 relative">
-                    <div class="flex items-center space-x-4 md:space-x-6 3xl:space-x-10 5xl:space-x-20 relative z-10">
-                        <div class="w-12 md:w-16 3xl:w-24 5xl:w-40 h-12 md:h-16 3xl:h-24 5xl:h-40 bg-indigo-600 rounded-xl md:rounded-2xl 3xl:rounded-[32px] 5xl:rounded-[48px] flex items-center justify-center animate-bounce shadow-lg shadow-indigo-500/20">
+                <div class="bg-indigo-600/10 backdrop-blur-xl p-4 md:p-6 3xl:p-10 5xl:p-20 flex flex-col md:flex-row items-center md:justify-between gap-4 md:gap-6 relative text-left">
+                    <div class="flex flex-row items-center space-x-4 md:space-x-6 3xl:space-x-10 5xl:space-x-20 relative z-10 w-full md:w-auto">
+                        <div class="w-12 h-12 md:w-16 3xl:w-24 5xl:w-40 bg-indigo-600 rounded-xl md:rounded-2xl 3xl:rounded-[32px] 5xl:rounded-[48px] flex items-center justify-center animate-bounce shadow-lg shadow-indigo-500/20 shrink-0">
                             <i class="fas fa-bullhorn text-white text-xl md:text-2xl 3xl:text-4xl 5xl:text-7xl"></i>
                         </div>
                         <div>
-                            <h2 class="text-xl md:text-2xl 3xl:text-3xl 5xl:text-5xl font-black text-white font-heading leading-tight"><?php echo ($currentTicket['status'] === 'called') ? 'Attention Required!' : 'Being Served'; ?></h2>
+                            <h2 class="text-xl md:text-2xl 3xl:text-3xl 5xl:text-5xl font-black text-white font-heading leading-tight mb-1 md:mb-0">Being Served</h2>
                             <p class="text-indigo-200 font-bold text-sm md:text-base 3xl:text-xl 5xl:text-3xl">
-                                Your Ticket <span class="bg-white text-indigo-600 px-2 5xl:px-4 py-0.5 5xl:py-2 rounded-lg 5xl:rounded-2xl ml-2"><?php echo $currentTicket['ticket_number']; ?></span> 
                                 <?php if ($currentTicket['window_number']): ?>
-                                is active at <span class="text-white underline underline-offset-4"><?php echo $currentTicket['window_number']; ?></span>
+                                <span class="bg-white text-indigo-600 px-3 md:px-3 5xl:px-6 py-0.5 md:py-1 5xl:py-2 rounded-lg md:rounded-lg 5xl:rounded-2xl font-black text-sm md:text-base"><?php echo $currentTicket['window_number']; ?></span>
                                 <?php endif; ?>
                             </p>
                         </div>
                     </div>
-                    <a href="my-ticket.php" class="bg-white text-slate-900 px-6 md:px-8 3xl:px-12 5xl:px-20 py-3 md:py-4 3xl:py-6 5xl:py-10 rounded-xl md:rounded-2xl 3xl:rounded-[32px] 5xl:rounded-[48px] font-black hover:bg-slate-50 transition-all relative z-10 flex items-center shadow-lg text-sm md:text-lg 3xl:text-2xl 5xl:text-4xl whitespace-nowrap">
-                        <span>Go to Window</span>
+                    <a href="my-ticket.php" class="w-full md:w-auto bg-white text-slate-900 px-6 md:px-8 3xl:px-12 5xl:px-20 py-3 md:py-4 3xl:py-6 5xl:py-10 rounded-xl md:rounded-2xl 3xl:rounded-[32px] 5xl:rounded-[48px] font-black hover:bg-slate-50 transition-all relative z-10 flex items-center justify-center shadow-lg text-sm md:text-lg 3xl:text-2xl 5xl:text-4xl whitespace-nowrap">
+                        <span>View Ticket</span>
                         <i class="fas fa-arrow-right ml-2 md:ml-3 5xl:ml-6"></i>
                     </a>
                 </div>
@@ -117,10 +116,10 @@ $waitingTickets = $ticketModel->getWaitingQueue();
             </div>
         <?php endif; ?>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 3xl:grid-cols-4 5xl:grid-cols-5 gap-10 5xl:gap-20">
+        <div class="flex flex-col lg:flex-row gap-10 5xl:gap-20">
             <!-- Windows Section -->
-            <div class="lg:col-span-2 3xl:col-span-3 5xl:col-span-4 space-y-8 5xl:space-y-16">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-4 5xl:pb-10">
+            <div class="w-full lg:w-[65%] space-y-8 5xl:space-y-16">
+                <div class="flex items-center justify-between border-b border-gray-100 5xl:pb-10">
                     <h3 class="text-2xl 3xl:text-4xl 5xl:text-6xl font-black text-gray-900 font-heading">Service Windows</h3>
                     <span class="px-4 py-1.5 5xl:px-8 5xl:py-3 bg-green-100 text-green-700 rounded-full text-xs 3xl:text-sm 5xl:text-2xl font-black tracking-widest uppercase flex items-center">
                         <span class="w-1.5 h-1.5 5xl:w-4 5xl:h-4 bg-green-500 rounded-full mr-2 5xl:mr-4 animate-pulse"></span>
@@ -137,9 +136,9 @@ $waitingTickets = $ticketModel->getWaitingQueue();
                         <p class="text-gray-400 max-w-xs 3xl:max-w-xl 5xl:max-w-4xl mx-auto text-sm 3xl:text-lg 5xl:text-3xl">Service windows are currently closed. Please check back during business hours.</p>
                     </div>
                 <?php else: ?>
-                    <div id="active-windows-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 5xl:grid-cols-4 gap-6 5xl:gap-12">
+                    <div id="active-windows-container" class="flex overflow-x-auto pb-4 snap-x snap-mandatory gap-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 xl:grid-cols-3 5xl:grid-cols-4 md:gap-6 5xl:gap-12 scrollbar-hide">
                         <?php foreach ($activeWindows as $window): ?>
-                            <div class="bg-white rounded-[32px] 5xl:rounded-[60px] p-6 3xl:p-10 5xl:p-16 shadow-division border border-gray-50 hover:shadow-premium hover:-translate-y-1 transition-all duration-300 group">
+                            <div class="min-w-[85%] md:min-w-0 snap-center bg-white rounded-[32px] 5xl:rounded-[60px] p-6 3xl:p-10 5xl:p-16 shadow-division border border-gray-50 hover:shadow-premium hover:-translate-y-1 transition-all duration-300 group">
                                 <div class="flex items-start justify-between mb-8 5xl:mb-16">
                                     <div class="flex items-center space-x-4 3xl:space-x-6 5xl:space-x-10">
                                         <div class="w-14 3xl:w-20 5xl:w-32 h-14 3xl:h-24 5xl:h-40 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl 3xl:rounded-[32px] 5xl:rounded-[48px] flex items-center justify-center text-white shadow-lg shadow-indigo-100 group-hover:rotate-6 transition-transform relative overflow-hidden">
@@ -193,7 +192,7 @@ $waitingTickets = $ticketModel->getWaitingQueue();
             </div>
 
             <!-- Queue List Section -->
-            <div class="space-y-8 5xl:space-y-16">
+            <div class="w-full lg:w-[35%] space-y-8 5xl:space-y-16">
                 <div class="flex items-center justify-between border-b border-gray-100 pb-4 5xl:pb-10">
                     <h3 class="text-2xl 5xl:text-5xl font-black text-gray-900 font-heading">Queue Waitlist</h3>
                     <i class="fas fa-sync-alt text-gray-300 5xl:text-4xl animate-spin-slow cursor-pointer hover:text-primary-600 transition-colors"></i>
@@ -251,6 +250,14 @@ $waitingTickets = $ticketModel->getWaitingQueue();
         .animate-gradient {
             background-size: 200% auto;
             animation: gradient 3s linear infinite;
+        }
+        /* Mobile Carousel Scrollbar Hide */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none !important;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
         }
     </style>
 

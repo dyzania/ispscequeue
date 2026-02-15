@@ -5,28 +5,35 @@ from transformers import pipeline
 app = FastAPI(title="Sentiment Analysis API")
 
 # -------------------------------------------------------------------------
-# PRODUCTION HOSTING:s
+# PRODUCTION HOSTING:
 # 1. Install dependencies: pip install fastapi uvicorn transformers torch
 # 2. Run with a production server: uvicorn app:app --host 0.0.0.0 --port 8000
 # 3. If using a firewall, ensure port 8000 is open for your PHP server's IP.
-# ------------------------------------P-------------------------------------
+# -------------------------------------------------------------------------
 
 model_id = "tabularisai/multilingual-sentiment-analysis"
 
-sentiment_pipeline = pipeline(
-    "text-classification",
-    model=model_id,
-    tokenizer=model_id,
-    truncation=True,
-    top_k=1,          # return only top label
-    return_all_scores=False
-)
+try:
+    sentiment_pipeline = pipeline(
+        "text-classification",
+        model=model_id,
+        tokenizer=model_id,
+        truncation=True,
+        top_k=1,          # return only top label
+        return_all_scores=False
+    )
+except Exception as e:
+    print(f"Warning: Model loading failed. API will run but sentiment analysis will fail. Error: {e}")
+    sentiment_pipeline = None
 
 class TextInput(BaseModel):
     text: str
 
 @app.post("/analyze")
 def analyze_sentiment(data: TextInput):
+    if not sentiment_pipeline:
+        return {"error": "Model not loaded service unavailable"}
+        
     try:
         result = sentiment_pipeline(data.text)
         if isinstance(result, list) and len(result) > 0:

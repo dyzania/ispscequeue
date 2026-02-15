@@ -23,6 +23,7 @@ $services = $windowModel->getWindowServices($window['id']);
     <script src="https://cdn.tailwindcss.com"></script>
     <?php injectTailwindConfig(); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="csrf-token" content="<?php echo generateCsrfToken(); ?>">
 </head>
 <body class="min-h-screen">
     <?php include __DIR__ . '/../../includes/staff-navbar.php'; ?>
@@ -37,19 +38,19 @@ $services = $windowModel->getWindowServices($window['id']);
                     <p class="text-gray-600 mt-1">Toggle the services you can handle at this window.</p>
                 </div>
                 
-                <div class="divide-y divide-gray-100">
+                <div class="px-6 pb-6 space-y-4">
                     <?php if(empty($services)): ?>
                         <div class="p-8 text-center text-gray-500">
                             No services available to manage.
                         </div>
                     <?php else: ?>
                         <?php foreach($services as $service): ?>
-                            <div class="p-6 flex items-center justify-between hover:bg-gray-50 transition">
+                            <div id="service-card-<?php echo $service['id']; ?>" class="p-6 flex items-center justify-between transition border-2 rounded-lg mb-2 <?php echo $service['is_enabled'] ? 'bg-emerald-50 border-emerald-500' : 'bg-rose-50 border-rose-500'; ?>">
                                 <div class="flex-1">
                                     <h3 class="font-bold text-lg text-gray-800">
                                         <?php echo $service['service_name']; ?>
                                     </h3>
-                                    <span class="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    <span class="text-sm font-mono text-gray-500 bg-white/50 px-2 py-1 rounded">
                                         <?php echo $service['service_code']; ?>
                                     </span>
                                 </div>
@@ -59,8 +60,8 @@ $services = $windowModel->getWindowServices($window['id']);
                                         <input type="checkbox" class="sr-only peer" 
                                             onchange="toggleService(<?php echo $service['id']; ?>)"
                                             <?php echo $service['is_enabled'] ? 'checked' : ''; ?>>
-                                        <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
-                                        <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-green-600">
+                                        <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-600"></div>
+                                        <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-emerald-600">
                                             <span id="status-<?php echo $service['id']; ?>">
                                                 <?php echo $service['is_enabled'] ? 'Active' : 'Inactive'; ?>
                                             </span>
@@ -80,7 +81,8 @@ $services = $windowModel->getWindowServices($window['id']);
             fetch('../api/toggle-service.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({
                     window_id: <?php echo $window['id']; ?>,
@@ -91,14 +93,21 @@ $services = $windowModel->getWindowServices($window['id']);
             .then(data => {
                 if(data.success) {
                     const statusSpan = document.getElementById('status-' + serviceId);
+                    const card = document.getElementById('service-card-' + serviceId);
+                    
                     if(data.is_enabled) {
                         statusSpan.textContent = 'Active';
+                        // Update Card Styles to Green
+                        card.classList.remove('bg-rose-50', 'border-rose-500');
+                        card.classList.add('bg-emerald-50', 'border-emerald-500');
                     } else {
                         statusSpan.textContent = 'Inactive';
+                        // Update Card Styles to Red
+                        card.classList.remove('bg-emerald-50', 'border-emerald-500');
+                        card.classList.add('bg-rose-50', 'border-rose-500');
                     }
                 } else {
                     alert('Failed to update service status');
-                    // Revert checkbox state (optional/complex to implement simply here)
                     location.reload(); 
                 }
             })

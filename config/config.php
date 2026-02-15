@@ -48,7 +48,7 @@ $host = $_SERVER['HTTP_HOST'];
 $currentDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 $publicPath = (strpos($currentDir, '/public') !== false) ? '/public' : '';
 // This is a common pattern for local PHP apps to handle subdirectories
-$baseUrl = $protocol . '://' . $host . '/equeue-system/public';
+$baseUrl = $protocol . '://' . $host . '/antigravity/public';
 define('BASE_URL', $baseUrl);
 
 define('APP_NAME', 'E-Queue System');

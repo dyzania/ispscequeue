@@ -70,4 +70,14 @@ class Chatbot {
         
         return $result;
     }
+
+    public function getContext() {
+        $stmt = $this->db->query("SELECT content FROM ai_context WHERE id = 1");
+        return $stmt->fetchColumn();
+    }
+
+    public function updateContext($content) {
+        $stmt = $this->db->prepare("UPDATE ai_context SET content = ?, updated_at = NOW() WHERE id = 1");
+        return $stmt->execute([$content]);
+    }
 }

@@ -55,8 +55,8 @@ $services = $serviceModel->getAllServicesAdmin();
 ?>
 
 <div class="space-y-10">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div>
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="text-center w-full md:w-auto">
             <p class="text-[10px] font-black uppercase tracking-[0.4em] text-primary-600 mb-2">System Configuration</p>
             <h1 class="text-4xl 5xl:text-8xl font-black text-gray-900 font-heading tracking-tight leading-none">Service Management</h1>
             <p class="text-gray-500 font-medium mt-2 text-sm">Manage available categories and queue preferences.</p>
@@ -67,14 +67,14 @@ $services = $serviceModel->getAllServicesAdmin();
     </div>
     
     <?php if($message): ?>
-        <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-800 flex items-center shadow-lg shadow-emerald-100/50 animate-float">
+        <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-800 flex items-center justify-center shadow-lg shadow-emerald-100/50 animate-float">
             <i class="fas fa-check-circle mr-4 text-2xl"></i>
             <span class="font-bold"><?php echo $message; ?></span>
         </div>
     <?php endif; ?>
     
     <?php if($error): ?>
-        <div class="p-6 bg-rose-50 rounded-xl border border-rose-100 text-rose-800 flex items-center shadow-lg shadow-rose-100/50">
+        <div class="p-6 bg-rose-50 rounded-xl border border-rose-100 text-rose-800 flex items-center justify-center shadow-lg shadow-rose-100/50">
             <i class="fas fa-exclamation-circle mr-4 text-2xl"></i>
             <span class="font-bold"><?php echo $error; ?></span>
         </div>
@@ -82,13 +82,13 @@ $services = $serviceModel->getAllServicesAdmin();
 
     <div class="bg-white rounded-2xl shadow-2xl shadow-slate-200/40 border border-white overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-center">
                 <thead class="bg-slate-50 border-b border-slate-100">
                     <tr>
-                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em]">Service Details</th>
-                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em]">Code</th>
-                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em]">Processing Time</th>
-                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-right">Actions</th>
+                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-center">Service Details</th>
+                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-center">Code</th>
+                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-center">Processing Time</th>
+                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -108,8 +108,10 @@ $services = $serviceModel->getAllServicesAdmin();
                         <?php foreach ($services as $service): ?>
                             <tr class="hover:bg-slate-50/80 transition-colors group">
                                 <td class="px-10 py-6">
-                                    <div class="font-black text-gray-900 text-sm mb-1"><?php echo htmlspecialchars($service['service_name']); ?></div>
-                                    <div class="text-[11px] text-gray-500 font-medium truncate max-w-xs"><?php echo htmlspecialchars($service['description']); ?></div>
+                                    <div class="flex flex-col items-center justify-center"> <!-- Centered wrapper for details -->
+                                        <div class="font-black text-gray-900 text-sm mb-1"><?php echo htmlspecialchars($service['service_name']); ?></div>
+                                        <div class="text-[11px] text-gray-500 font-medium truncate max-w-xs"><?php echo htmlspecialchars($service['description']); ?></div>
+                                    </div>
                                 </td>
                                 <td class="px-10 py-6">
                                     <span class="bg-primary-50 text-primary-700 text-[10px] font-black px-4 py-1.5 rounded-md border border-primary-100">
@@ -117,12 +119,12 @@ $services = $serviceModel->getAllServicesAdmin();
                                     </span>
                                 </td>
                                 <td class="px-10 py-6">
-                                    <div class="flex items-center text-gray-600 font-bold text-sm">
+                                    <div class="flex items-center justify-center text-gray-600 font-bold text-sm"> <!-- Added justify-center -->
                                         <i class="far fa-clock mr-2 text-primary-400"></i>
                                         <?php echo htmlspecialchars($service['estimated_time']); ?>
                                     </div>
                                 </td>
-                                <td class="px-10 py-6 text-right space-x-2">
+                                <td class="px-10 py-6 text-center space-x-2"> <!-- Changed text-right to text-center -->
                                     <button 
                                         onclick="openEditModal(<?php echo htmlspecialchars(json_encode($service)); ?>)"
                                         class="text-slate-300 hover:text-primary-600 transition-all p-3 rounded-lg hover:bg-primary-50 active:scale-95" 

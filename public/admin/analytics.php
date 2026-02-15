@@ -38,14 +38,15 @@ $serviceStats = $stmt->fetchAll();
 
 <div class="space-y-10">
     <!-- Page Header -->
-    <div>
+    <div class="text-center"> <!-- Centered Header -->
         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-primary-600 mb-2">Performance & Insights</p>
         <h1 class="text-4xl 5xl:text-8xl font-black text-gray-900 font-heading tracking-tight leading-none">System Analytics</h1>
     </div>
 
     <!-- Metrics Strip -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm flex items-center space-x-6">
+        <!-- Card 1 -->
+        <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm flex flex-col items-center text-center space-y-4">
             <div class="w-14 h-14 bg-primary-50 rounded-lg flex items-center justify-center text-primary-600">
                 <i class="fas fa-users text-2xl"></i>
             </div>
@@ -54,7 +55,8 @@ $serviceStats = $stmt->fetchAll();
                 <p class="text-2xl font-black text-gray-900"><?php echo $todayTickets; ?></p>
             </div>
         </div>
-        <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm flex items-center space-x-6">
+        <!-- Card 2 -->
+        <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm flex flex-col items-center text-center space-y-4">
             <div class="w-14 h-14 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600">
                 <i class="fas fa-hourglass-half text-2xl"></i>
             </div>
@@ -63,7 +65,8 @@ $serviceStats = $stmt->fetchAll();
                 <p class="text-2xl font-black text-gray-900"><?php echo $avgWaitTime; ?>m</p>
             </div>
         </div>
-        <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm flex items-center space-x-6">
+        <!-- Card 3 -->
+        <div class="bg-white rounded-xl p-6 border border-slate-100 shadow-sm flex flex-col items-center text-center space-y-4">
             <div class="w-14 h-14 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600">
                 <i class="fas fa-tachometer-alt text-2xl"></i>
             </div>
@@ -78,10 +81,10 @@ $serviceStats = $stmt->fetchAll();
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Service Efficiency List (Modern Approach) -->
         <div class="bg-white rounded-2xl shadow-2xl shadow-slate-200/40 border border-white p-10">
-            <h2 class="text-2xl font-black text-gray-900 font-heading mb-10">Service Efficiency</h2>
+            <h2 class="text-2xl font-black text-gray-900 font-heading mb-10 text-center">Service Efficiency</h2>
             <div class="space-y-8">
                 <?php if(empty($serviceStats)): ?>
-                    <p class="text-gray-400 font-bold italic">No ticket data recorded today.</p>
+                    <p class="text-gray-400 font-bold italic text-center">No ticket data recorded today.</p>
                 <?php else: ?>
                     <?php foreach($serviceStats as $stat): 
                         $percent = ($stat['count'] / max(1, $todayTickets)) * 100;
@@ -115,7 +118,7 @@ $serviceStats = $stmt->fetchAll();
 
         <!-- Productivity Scoreboard -->
         <div class="bg-white rounded-2xl shadow-2xl shadow-slate-200/40 border border-white p-10">
-            <h2 class="text-2xl font-black text-gray-900 font-heading mb-10">Productivity Scoreboard</h2>
+            <h2 class="text-2xl font-black text-gray-900 font-heading mb-10 text-center">Productivity Scoreboard</h2>
             <?php
             // Mocking staff productivity for visual demonstration as seen in reference
             $staffMock = [

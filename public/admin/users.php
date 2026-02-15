@@ -40,8 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <div class="space-y-10">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div>
+<div class="space-y-10">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="text-center w-full md:w-auto">
             <p class="text-[10px] font-black uppercase tracking-[0.4em] text-primary-600 mb-2">Access & Security</p>
             <h1 class="text-4xl 5xl:text-8xl font-black text-gray-900 font-heading tracking-tight leading-none">User Directory</h1>
             <p class="text-gray-500 font-medium mt-2 text-sm">Manage administrative access and staff authorizations.</p>
@@ -52,14 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     
     <?php if($success_msg): ?>
-        <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-800 flex items-center shadow-lg shadow-emerald-100/50 animate-float">
+        <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-800 flex items-center justify-center shadow-lg shadow-emerald-100/50 animate-float">
             <i class="fas fa-check-circle mr-4 text-2xl"></i>
             <span class="font-bold"><?php echo $success_msg; ?></span>
         </div>
     <?php endif; ?>
     
     <?php if($error_msg): ?>
-        <div class="p-6 bg-rose-50 rounded-xl border border-rose-100 text-rose-800 flex items-center shadow-lg shadow-rose-100/50">
+        <div class="p-6 bg-rose-50 rounded-xl border border-rose-100 text-rose-800 flex items-center justify-center shadow-lg shadow-rose-100/50">
             <i class="fas fa-exclamation-circle mr-4 text-2xl"></i>
             <span class="font-bold"><?php echo $error_msg; ?></span>
         </div>
@@ -67,13 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="bg-white rounded-2xl shadow-2xl shadow-slate-200/40 border border-white overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-center">
                 <thead class="bg-slate-50 border-b border-slate-100">
                     <tr>
-                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em]">Identity</th>
-                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em]">Permissions</th>
-                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em]">Lifecycle</th>
-                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-right">Actions</th>
+                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-center">Identity</th>
+                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-center">Permissions</th>
+                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-center">Lifecycle</th>
+                        <th class="px-10 py-6 font-black text-gray-400 uppercase text-[10px] tracking-[0.3em] text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -85,9 +86,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php foreach ($users as $user): ?>
                             <tr class="hover:bg-slate-50/80 transition-colors group">
                                 <td class="px-10 py-6">
-                                    <div class="flex items-center space-x-4">
+                                    <div class="flex items-center justify-center space-x-4">
                                         <img class="w-10 h-10 rounded-md border-2 border-white shadow-sm" src="https://ui-avatars.com/api/?name=<?php echo urlencode($user['full_name']); ?>&background=random" alt="">
-                                        <div>
+                                        <div class="text-left"> <!-- Keep text-left for name/email readability but centered in cell -->
                                             <div class="font-black text-gray-900 text-sm mb-1"><?php echo htmlspecialchars($user['full_name']); ?></div>
                                             <div class="text-[11px] text-gray-500 font-bold tracking-tight lowercase"><?php echo htmlspecialchars($user['email']); ?></div>
                                         </div>
@@ -109,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Onboarded</div>
                                     <div class="text-xs font-bold text-gray-700"><?php echo date('M d, Y', strtotime($user['created_at'])); ?></div>
                                 </td>
-                                <td class="px-10 py-6 text-right">
+                                <td class="px-10 py-6 text-center">
                                     <button class="text-slate-300 hover:text-primary-600 transition-all p-3 rounded-lg hover:bg-primary-50 active:scale-95">
                                         <i class="fas fa-shield-alt"></i>
                                     </button>
