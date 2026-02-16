@@ -22,10 +22,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($userModel->emailExists($email)) {
             $error = "Identity already registered in the grid.";
         } else {
-            $token = bin2hex(random_bytes(32));
-            if ($userModel->register($email, $password, $fullName, $schoolId, 'user', $token)) {
-                $mailService->sendVerification($email, $fullName, $token);
-                $success = "Registration initiated! Please verify your identity via email ($email).";
+            // Register and get OTP
+            $otpCode = $userModel->register($email, $password, $fullName, $schoolId, 'user');
+            
+            if ($otpCode) {
+                // Send OTP Email
+                if ($mailService->sendOTPEmail($email, $fullName, $otpCode, 'verification')) {
+                    // Redirect to OTP verification page
+                    header("Location: verify-otp.php?email=" . urlencode($email) . "&context=verification");
+                    exit;
+                } else {
+                    $error = "Registration successful, but failed to send OTP. Please contact support.";
+                }
             } else {
                 $error = "Protocol failure. Identity or School ID already synchronized.";
             }
@@ -154,19 +162,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Brand Side -->
         <div class="hidden lg:flex flex-col justify-between p-16 bg-gradient-to-bl from-primary-600/20 to-transparent relative overflow-hidden order-1 lg:order-2">
             <div class="z-10">
-                <a href="index.php" class="flex items-center space-x-3 mb-16 group">
-                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform">
-                        <i class="fas fa-plus text-primary-600 text-2xl"></i>
+                <a href="index.php" class="flex items-center space-x-4 mb-16 group justify-end">
+                    <div class="flex flex-col text-right">
+                        <span class="text-2xl font-black tracking-tighter font-heading text-white leading-none">ISPSC MAIN</span>
+                        <span class="text-sm font-bold tracking-[0.3em] text-primary-400 mt-1 uppercase">Registrar E-Queue</span>
                     </div>
-                    <span class="text-3xl font-black tracking-tight font-heading text-white"><?php echo APP_NAME; ?></span>
+                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl group-hover:rotate-6 transition-all duration-500 p-2">
+                        <img src="img/logo.png" alt="ISPSC Logo" class="w-full h-full object-contain">
+                    </div>
                 </a>
                 
                 <h1 class="text-6xl font-black leading-tight mb-8 font-heading text-white text-right">
                     JOIN THE <br>
-                    <span class="text-primary-400">EVOLUTION.</span>
+                    <span class="text-primary-400 font-black">REGISTRAR QUEUE.</span>
                 </h1>
                 <p class="text-gray-400 text-xl max-w-sm ml-auto text-right font-medium leading-relaxed">
-                    Efficiency is not an option, it's a requirement. Register your identity to experience the next-gen grid.
+                    Efficiency starts with an identity. Register now to experience the next-gen Registrar e-queueing grid.
                 </p>
             </div>
 

@@ -23,13 +23,11 @@ requireRole('admin');
         .sidebar-active { background: rgba(255, 255, 255, 0.1); border-left: 4px solid #ffcd00; }
         .glass-sidebar { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); }
         
-        /* Desktop-only font scaling */
-        @media (min-width: 1024px) {
+        /* TV/4K scaling only */
+        @media (min-width: 1921px) {
             html { font-size: 18px; } /* Scales rem-based values */
             body { font-size: 1.125rem; }
-            .text-sm { font-size: 1.125rem !important; }
-            .text-xs { font-size: 1rem !important; }
-            .text-\[10px\] { font-size: 0.875rem !important; }
+            /* Remove aggressive overrides for standard desktops to keep cards proportional */
         }
     </style>
 </head>
@@ -93,7 +91,7 @@ requireRole('admin');
     </aside>
 
     <!-- Main Content Wrapper -->
-    <div id="admin-main-content" class="flex-1 <?php echo $mainContentClass; ?> min-h-screen flex flex-col transition-all duration-300">
+    <div id="admin-main-content" class="flex-1 <?php echo $mainContentClass; ?> min-h-screen flex flex-col transition-all duration-300 overflow-x-hidden">
         <!-- Top Header -->
         <header class="h-24 bg-gradient-to-r from-primary-900 via-primary-700 to-secondary-800 sticky top-0 z-40 border-b border-white/10 px-10 flex items-center justify-between shadow-2xl">
             <div class="flex items-center flex-1 max-w-2xl">

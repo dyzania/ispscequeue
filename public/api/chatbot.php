@@ -29,13 +29,12 @@ if (!$chatbot_content) {
 
 // Construct prompt
 $prompt = "Be precise, simple, provide a direct and complete answer, avoiding vague, generic, or overly broad explanations.
-Remove any unnecessary characters. If the question cannot be answered using the following context, respond only with: 'I do not have the information needed to answer this question. Please email this inquiry to admin@registrar.com or ask at the Registrar.' 
+Remove any unnecessary characters. If the question cannot be answered using the following context, 
+respond only with: 'I do not have the information needed to answer this question. Please email this inquiry to admin@registrar.com or ask at the Registrar Office.' 
 
 Context: {$chatbot_content}
 
-User Question: {$user_message}
-
-Answer:";
+Client Question: {$user_message}";
 
 // Prepare request to OpenRouter
 $messages = [

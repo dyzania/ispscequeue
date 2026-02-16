@@ -39,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($_GET['verified'])) {
     $success = "Email verified successfully! You can now sign in.";
 }
+if (isset($_GET['reset']) && $_GET['reset'] === 'success') {
+    $success = "Password updated successfully. Please login with your new password.";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -71,19 +74,22 @@ if (isset($_GET['verified'])) {
         <!-- Brand Side -->
         <div class="hidden lg:flex flex-col justify-between p-16 bg-gradient-to-br from-primary-600/20 to-transparent relative overflow-hidden">
             <div class="z-10">
-                <a href="index.php" class="flex items-center space-x-3 mb-16 group">
-                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform">
-                        <i class="fas fa-layer-group text-primary-600 text-2xl"></i>
+                <a href="index.php" class="flex items-center space-x-4 mb-16 group">
+                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl group-hover:rotate-6 transition-all duration-500 p-2">
+                        <img src="img/logo.png" alt="ISPSC Logo" class="w-full h-full object-contain">
                     </div>
-                    <span class="text-3xl font-black tracking-tight font-heading text-white"><?php echo APP_NAME; ?></span>
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-black tracking-tighter font-heading text-white leading-none">ISPSC MAIN</span>
+                        <span class="text-sm font-bold tracking-[0.3em] text-primary-400 mt-1 uppercase">Registrar E-Queue</span>
+                    </div>
                 </a>
                 
                 <h1 class="text-6xl font-black leading-tight mb-8 font-heading text-white">
-                    RETURN TO <br>
-                    <span class="text-primary-400">CONTROL.</span>
+                    ISPSC MAIN <br>
+                    <span class="text-primary-400 font-black">REGISTRAR E-QUEUE.</span>
                 </h1>
                 <p class="text-gray-400 text-xl max-w-md font-medium leading-relaxed">
-                    Authentication requires precision. Access your quantum queue dashboard and manage the flow of efficiency.
+                    Official e-queueing portal for ISPSC Main Registrar. Synchronize your appointment and manage your service flow with precision.
                 </p>
             </div>
 
@@ -144,7 +150,7 @@ if (isset($_GET['verified'])) {
                 <div class="space-y-2">
                     <div class="flex justify-between items-center ml-1">
                         <label class="block text-gray-400 text-[10px] font-black uppercase tracking-[0.3em]" for="password">Access Key</label>
-                        <a href="#" class="text-[10px] font-black uppercase tracking-widest text-primary-500 hover:text-primary-400">Recovery?</a>
+                        <a href="forgot-password.php" class="text-[10px] font-black uppercase tracking-widest text-primary-500 hover:text-primary-400">Recovery?</a>
                     </div>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">

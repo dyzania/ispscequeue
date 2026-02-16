@@ -10,7 +10,13 @@ class Window {
     
     public function getAllWindows() {
         $stmt = $this->db->prepare("
-            SELECT w.*, u.full_name as staff_name, u.email as staff_email
+            SELECT w.*, u.full_name as staff_name, u.email as staff_email,
+                   (SELECT ticket_number 
+                    FROM tickets 
+                    WHERE window_id = w.id 
+                    AND status IN ('called', 'serving') 
+                    AND is_archived = 0
+                    ORDER BY called_at DESC LIMIT 1) as serving_ticket
             FROM windows w
             LEFT JOIN users u ON w.staff_id = u.id
             ORDER BY w.window_number

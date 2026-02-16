@@ -12,15 +12,32 @@ $feedbackModel = new Feedback();
 
 $ticket = $ticketModel->getCurrentTicket(getUserId());
 
+// Helper function to format duration in seconds to "Xh Ym Zs"
+function formatDuration($seconds) {
+    if ($seconds <= 0) return "0s";
+    
+    $h = floor($seconds / 3600);
+    $m = floor(($seconds % 3600) / 60);
+    $s = $seconds % 60;
+    
+    $parts = [];
+    if ($h > 0) $parts[] = $h . "h";
+    if ($m > 0) $parts[] = $m . "m";
+    if ($s > 0 || empty($parts)) $parts[] = $s . "s";
+    
+    return implode(" ", $parts);
+}
+
 // If no active ticket, check for tickets needing feedback
 if (!$ticket) {
     $ticket = $ticketModel->getPendingFeedbackTicket(getUserId());
 }
 
-$position = $ticket ? $ticketModel->getQueuePosition($ticket['id']) : 0;
-// Use Global Daily Average across all services as requested
-$avgProcessTime = $ticketModel->getGlobalDailyAverageProcessTime();
-$estimatedWait = $position * $avgProcessTime;
+$position = $ticket ? $ticketModel->getGlobalQueuePosition($ticket['id']) : 0;
+// Use new weighted wait time calculation
+$estimatedWaitSeconds = $ticket ? $ticketModel->getWeightedEstimatedWaitTime($ticket['id']) : 0;
+$estimatedWait = formatDuration(round($estimatedWaitSeconds));
+
 $feedbackGiven = $ticket ? $feedbackModel->getFeedbackByTicket($ticket['id']) : null;
 $history = $ticketModel->getUserTicketHistory(getUserId());
 
@@ -28,10 +45,16 @@ $history = $ticketModel->getUserTicketHistory(getUserId());
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
     verifyCsrfToken($_POST['csrf_token'] ?? '');
     
-    $comment = sanitize($_POST['comment']);
-    
-    if ($feedbackModel->createFeedback($ticket['id'], getUserId(), $ticket['window_id'], $comment)) {
-        header('Location: my-ticket.php?success=1');
+    if ($ticket) {
+        $comment = sanitize($_POST['comment']);
+        
+        if ($feedbackModel->createFeedback($ticket['id'], getUserId(), $ticket['window_id'], $comment)) {
+            header('Location: my-ticket.php?success=1');
+            exit;
+        }
+    } else {
+        // Redirect or handle error if no ticket is found
+        header('Location: dashboard.php');
         exit;
     }
 }
@@ -74,13 +97,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                         <div class="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 md:gap-20">
                             <!-- Left: Number -->
                             <div class="text-center md:text-left">
-                                <p class="text-[10px] md:text-base font-black uppercase tracking-[0.4em] text-primary-400 mb-2 md:mb-4">Queue Ticket</p>
+                                <?php $isCompleted = ($ticket['status'] === 'completed'); ?>
+                                <p class="text-[10px] md:text-base font-black uppercase tracking-[0.4em] <?php echo $isCompleted ? 'text-secondary-400' : 'text-primary-400'; ?> mb-2 md:mb-4">Queue Ticket</p>
                                 <h2 class="text-4xl md:text-[8.5rem] font-black font-heading tracking-tighter leading-none">
                                     <?php echo $ticket['ticket_number']; ?>
                                 </h2>
                                 <div class="mt-4 md:mt-10 flex items-center justify-center md:justify-start space-x-3 md:space-x-6">
-                                    <span class="w-2.5 h-2.5 md:w-5 md:h-5 rounded-full bg-primary-500 animate-ping"></span>
-                                    <span class="text-xl md:text-4xl font-black uppercase tracking-[0.2em] text-primary-300">
+                                    <span class="w-2.5 h-2.5 md:w-5 md:h-5 rounded-full <?php echo $isCompleted ? 'bg-secondary-500' : 'bg-primary-500'; ?> animate-ping"></span>
+                                    <span class="text-xl md:text-4xl font-black uppercase tracking-[0.2em] <?php echo $isCompleted ? 'text-secondary-300' : 'text-primary-300'; ?>">
                                         <?php 
                                             if ($ticket['is_archived'] == 1 && $ticket['status'] !== 'completed') {
                                                 echo "NOW SERVING";
@@ -104,11 +128,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                 <h3 class="text-base md:text-3xl font-black font-heading mb-4 md:mb-8 leading-tight opacity-50 text-center md:text-left"><?php echo $ticket['service_name']; ?></h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-col gap-4 md:gap-8">
                                     <div class="px-6 md:px-12 py-4 md:py-10 bg-white/5 rounded-[22px] md:rounded-[32px] border border-white/10 flex items-center space-x-5 md:space-x-8 backdrop-blur-xl group/box">
-                                        <i class="fas fa-user-friends text-primary-400 text-xl md:text-5xl shrink-0 group-hover/box:scale-110 transition-transform"></i>
+                                        <i class="fas fa-user-friends text-white text-xl md:text-5xl shrink-0 group-hover/box:scale-110 transition-transform"></i>
                                         <div class="flex flex-col">
-                                            <span class="text-[8px] md:text-sm font-black uppercase tracking-widest text-primary-400 opacity-60 mb-1 md:mb-2">Queue Position</span>
+                                            <span class="text-[8px] md:text-sm font-black uppercase tracking-widest text-white opacity-60 mb-1 md:mb-2">Queue Position</span>
                                             <div class="flex items-baseline space-x-3">
-                                                <span id="ticket-queue-position" class="text-2xl md:text-5xl font-black text-white">
+                                                <span id="ticket-queue-position" class="text-2xl md:text-5xl font-black <?php echo ($ticket['status'] === 'waiting') ? 'text-amber-300' : 'text-white'; ?>">
                                                     <?php 
                                                         if ($ticket['is_archived'] == 1 && $ticket['status'] !== 'completed') {
                                                             echo "SERVING";
@@ -122,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                                     ?>
                                                 </span>
                                                 <?php if ($ticket['status'] === 'waiting'): ?>
-                                                    <span class="text-[10px] md:text-lg font-bold text-primary-300">
+                                                    <span class="text-[10px] md:text-lg font-bold text-amber-300">
                                                         (<?php echo $position; ?> ahead)
                                                     </span>
                                                 <?php endif; ?>
@@ -130,16 +154,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                         </div>
                                     </div>
                                     <div class="px-6 md:px-12 py-4 md:py-10 bg-white/5 rounded-[22px] md:rounded-[32px] border border-white/10 flex items-center space-x-5 md:space-x-8 backdrop-blur-xl group/box">
-                                        <i class="fas fa-clock text-amber-400 text-xl md:text-5xl shrink-0 group-hover/box:scale-110 transition-transform"></i>
+                                        <i class="fas fa-clock text-white text-xl md:text-5xl shrink-0 group-hover/box:scale-110 transition-transform"></i>
                                         <div class="flex flex-col w-full">
                                             <div class="flex flex-col gap-3 md:gap-5">
                                                 <div>
-                                                    <span class="text-[8px] md:text-sm font-black uppercase tracking-widest text-amber-500/60 mb-1 md:mb-2 block">Est. Process Time</span>
-                                                    <span class="text-[12px] md:text-2xl font-bold text-amber-200/80 tracking-tight leading-none block">~<?php echo $avgProcessTime; ?>m / person</span>
+                                                    <span class="text-[8px] md:text-sm font-black uppercase tracking-widest text-white/60 mb-1 md:mb-2 block">Est. Process Time</span>
+                                                    <span class="text-[12px] md:text-2xl font-bold text-amber-200/80 tracking-tight leading-none block">~<?php echo $ticket['estimated_time'] ?? '10'; ?>m / person</span>
                                                 </div>
                                                 <div class="pt-3 md:pt-5 border-t border-white/10">
-                                                    <span class="text-[8px] md:text-sm font-black uppercase tracking-widest text-amber-400 mb-1 md:mb-2 block">Your Waiting Time</span>
-                                                    <span id="ticket-estimated-wait" class="text-2xl md:text-5xl font-black text-amber-300 leading-none block">~<?php echo $estimatedWait; ?>m wait</span>
+                                                    <span class="text-[8px] md:text-sm font-black uppercase tracking-widest text-white mb-1 md:mb-2 block">Your Waiting Time</span>
+                                                    <span id="ticket-estimated-wait" class="text-2xl md:text-5xl font-black text-amber-300 leading-none block"><?php echo $estimatedWait; ?></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -172,11 +196,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                             <span class="text-[8px] md:text-sm font-bold uppercase tracking-widest">Adjust sequence or cancel</span>
                         </div>
                         <div class="flex items-center space-x-3 w-full sm:w-auto">
-                            <button onclick="snoozeTicket(<?php echo $ticket['id']; ?>)" class="flex-1 sm:flex-initial px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-[10px] md:text-base hover:bg-slate-100 transition-all flex items-center justify-center">
+                            <button onclick="snoozeTicket(<?php echo $ticket['id']; ?>)" class="flex-1 sm:flex-initial px-6 py-4 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-xs md:text-lg hover:bg-slate-100 transition-all flex items-center justify-center shadow-sm">
                                 <i class="fas fa-hourglass-half mr-2 text-amber-500"></i>
                                 Step Back
                             </button>
-                            <button onclick="confirmCancel(<?php echo $ticket['id']; ?>)" class="flex-1 sm:flex-initial px-4 py-2.5 bg-red-50 text-red-600 rounded-xl font-black text-[10px] md:text-base hover:bg-red-100 transition-all flex items-center justify-center">
+                            <button onclick="confirmCancel(<?php echo $ticket['id']; ?>)" class="flex-1 sm:flex-initial px-6 py-4 bg-red-50 border border-red-200 text-red-600 rounded-xl font-black text-xs md:text-lg hover:bg-red-100 transition-all flex items-center justify-center shadow-sm">
                                 <i class="fas fa-times-circle mr-2"></i>
                                 Cancel
                             </button>
@@ -256,27 +280,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                     <div class="bg-white rounded-[32px] p-6 md:p-10 shadow-premium border border-slate-50 overflow-hidden relative">
                         <div class="flex flex-col lg:flex-row items-start justify-between gap-6 md:gap-10 relative z-10">
                             <div class="flex-1 w-full">
-                                <h3 class="text-xl md:text-2xl font-black text-gray-800 font-heading tracking-tight mb-3 flex items-center">
-                                    <div class="w-8 h-8 md:w-12 md:h-12 bg-primary-600 rounded-lg md:rounded-xl flex items-center justify-center text-white mr-3 shadow-lg shrink-0">
-                                        <i class="fas fa-clipboard-check text-sm md:text-xl"></i>
+                                <h3 class="text-2xl md:text-4xl font-black text-gray-800 font-heading tracking-tight mb-4 flex items-center">
+                                    <div class="w-10 h-10 md:w-16 md:h-16 bg-primary-600 rounded-lg md:rounded-2xl flex items-center justify-center text-white mr-4 shadow-lg shrink-0">
+                                        <i class="fas fa-clipboard-check text-lg md:text-3xl"></i>
                                     </div>
                                     Preparation Checklist
                                 </h3>
-                                <p class="text-gray-500 font-medium mb-5 text-[10px] md:text-sm leading-relaxed max-w-xl">
+                                <p class="text-gray-500 font-medium mb-8 text-xs md:text-lg leading-relaxed max-w-xl">
                                     Ready these requirements to help our staff serve you faster!
                                 </p>
 
                                  <?php if (!empty($ticket['requirements'])): ?>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                         <?php 
                                         $reqs = preg_split('/[,\n\r]+/', $ticket['requirements']);
                                         foreach ($reqs as $req): 
                                             $req = trim($req);
                                             if (empty($req)) continue;
                                         ?>
-                                            <label class="flex items-center space-x-3 p-3 md:p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-primary-200 transition-all cursor-pointer">
-                                                <input type="checkbox" class="w-4 h-4 md:w-5 md:h-5 rounded border-2 border-slate-200 bg-white checked:bg-primary-600 checked:border-primary-600 cursor-pointer transition-all shrink-0" onchange="this.nextElementSibling.classList.toggle('line-through', this.checked); this.nextElementSibling.classList.toggle('opacity-50', this.checked)">
-                                                <span class="text-[10px] md:text-sm font-bold text-gray-600 transition-all truncate"><?php echo htmlspecialchars($req); ?></span>
+                                            <label class="flex items-center space-x-4 px-4 md:px-8 py-8 md:py-16 bg-slate-50 rounded-2xl md:rounded-[32px] border border-slate-100 group hover:border-primary-200 transition-all cursor-pointer shadow-sm">
+                                                <input type="checkbox" class="w-5 h-5 md:w-8 md:h-8 rounded border-2 border-slate-200 bg-white checked:bg-primary-600 checked:border-primary-600 cursor-pointer transition-all shrink-0" onchange="this.nextElementSibling.classList.toggle('line-through', this.checked); this.nextElementSibling.classList.toggle('opacity-50', this.checked)">
+                                                <span class="text-xs md:text-xl font-bold text-gray-600 transition-all truncate"><?php echo htmlspecialchars($req); ?></span>
                                             </label>
                                         <?php endforeach; ?>
                                     </div>
@@ -289,12 +313,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
 
                             <div class="w-full lg:w-64 shrink-0">
                                 <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-white shadow-2xl relative overflow-hidden">
-                                    <h4 class="text-sm md:text-lg font-black mb-2 relative z-10 flex items-center">
-                                        <i class="fas fa-lightbulb text-amber-400 mr-2"></i>
-                                        Pro Tip
+                                    <h4 class="text-sm md:text-xl font-black mb-3 relative z-10 flex items-center">
+                                        <i class="fas fa-robot text-primary-400 mr-3"></i>
+                                        Quick Tip
                                     </h4>
-                                    <p class="text-[9px] md:text-xs text-slate-300 font-medium leading-relaxed relative z-10">
-                                        Today's average is <?php echo $avgProcessTime; ?>m / customer. Check your docs while waiting!
+                                    <p class="text-[10px] md:text-sm text-slate-300 font-bold leading-relaxed relative z-10">
+                                        Have questions? Ask our AI Assistant below for instant help and guidance while you wait!
                                     </p>
                                     <i class="fas fa-bolt absolute -right-2 -bottom-2 text-4xl opacity-5 -rotate-12"></i>
                                 </div>
@@ -418,7 +442,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
         if (<?php echo ($ticket && $ticket['status'] !== 'completed') ? 'true' : 'false'; ?>) {
             document.addEventListener('DOMContentLoaded', () => {
                 if (typeof DashboardRefresh !== 'undefined') {
-                    const refresh = new DashboardRefresh(['ticket-main-content'], 10000);
+                    const refresh = new DashboardRefresh(['ticket-main-content'], 3000);
                 } else {
                     console.error('E-Queue: DashboardRefresh library failed to load.');
                 }

@@ -251,8 +251,8 @@ define('OPENROUTER_API_URL', $_ENV['OPENROUTER_API_URL'] ?? 'https://openrouter.
 define('AI_MODEL', $_ENV['AI_MODEL'] ?? 'stepfun/step-3.5-flash:free');
 
 // Theme Colors
-define('COLOR_PRIMARY', '#0c4b05'); // Dark Green
-define('COLOR_SECONDARY', '#8b0101'); // Dark Red
+define('COLOR_PRIMARY', '#8b0101'); // Dark Red
+define('COLOR_SECONDARY', '#0c4b05'); // Dark Green
 
 function injectTailwindConfig() {
     echo "
@@ -272,29 +272,29 @@ function injectTailwindConfig() {
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf2',
-                            100: '#dbfde1',
-                            200: '#bbf7c6',
-                            300: '#86ef9b',
-                            400: '#4ade68',
-                            500: '" . COLOR_PRIMARY . "',
-                            600: '#0a4004',
-                            700: '#083503',
-                            800: '#062a03',
-                            900: '#052202',
-                            950: '#021001',
-                        },
-                        secondary: {
                             50: '#fef2f2',
                             100: '#fee2e2',
                             200: '#fecaca',
                             300: '#fca5a5',
                             400: '#f87171',
-                            500: '" . COLOR_SECONDARY . "',
+                            500: '" . COLOR_PRIMARY . "',
                             600: '#750101',
                             700: '#610101',
                             800: '#4c0101',
                             900: '#380101',
+                        },
+                        secondary: {
+                            50: '#f0fdf2',
+                            100: '#dbfde1',
+                            200: '#bbf7c6',
+                            300: '#86ef9b',
+                            400: '#4ade68',
+                            500: '" . COLOR_SECONDARY . "',
+                            600: '#0a4004',
+                            700: '#083503',
+                            800: '#062a03',
+                            900: '#052202',
+                            950: '#021001',
                         },
 
                     },
@@ -374,8 +374,8 @@ function injectTailwindConfig() {
             animation: mesh-float 20s infinite alternate ease-in-out;
         }
 
-        .mesh-1 { background-color: #0c4b05; top: -10%; left: -10%; animation-delay: 0s; }
-        .mesh-2 { background-color: #8b0101; bottom: -10%; right: -10%; animation-delay: -5s; }
+        .mesh-1 { background-color: #8b0101; top: -10%; left: -10%; animation-delay: 0s; }
+        .mesh-2 { background-color: #0c4b05; bottom: -10%; right: -10%; animation-delay: -5s; }
 
         @keyframes mesh-float {
             0% { transform: translate(0, 0) scale(1); }

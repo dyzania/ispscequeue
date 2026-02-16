@@ -28,35 +28,37 @@ class MailService {
         }
     }
 
-    public function sendVerification($toEmail, $fullName, $token) {
+    public function sendOTPEmail($toEmail, $fullName, $otpCode, $type = 'verification') {
         $mail = $this->getMailer();
         if (!$mail) return false;
 
         try {
             $mail->addAddress($toEmail, $fullName);
             $mail->isHTML(true);
-            $mail->Subject = 'Verify Your Email - ' . APP_NAME;
             
-            $verifyUrl = BASE_URL . "/verify.php?token=" . $token;
+            $subject = ($type === 'reset') ? 'Password Reset Request' : 'Verify Your Account';
+            $actionText = ($type === 'reset') ? 'reset your password' : 'verify your account';
+            
+            $mail->Subject = "$subject - " . APP_NAME;
             
             $mail->Body    = "
-                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; rounded: 10px;'>
-                    <h2 style='color: #15803d;'>Welcome to " . APP_NAME . "!</h2>
+                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                    <h2 style='color: #8b0101;'>$subject</h2>
                     <p>Hello $fullName,</p>
-                    <p>Please click the button below to verify your email address and activate your account:</p>
+                    <p>Use the following One-Time Password (OTP) to $actionText:</p>
                     <div style='text-align: center; margin: 30px 0;'>
-                        <a href='$verifyUrl' style='background-color: #15803d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Verify Email Address</a>
+                        <span style='background-color: #f3f4f6; color: #8b0101; padding: 15px 30px; font-size: 32px; font-weight: bold; letter-spacing: 5px; border-radius: 10px; border: 2px solid #8b0101;'>$otpCode</span>
                     </div>
-                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
-                    <p><a href='$verifyUrl'>$verifyUrl</a></p>
+                    <p>This code is valid for 15 minutes.</p>
+                    <p>If you did not request this, please ignore this email.</p>
                     <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                    <p style='font-size: 12px; color: #666;'>If you did not create an account, no further action is required.</p>
+                    <p style='font-size: 12px; color: #666;'>Automatic notification from " . APP_NAME . ".</p>
                 </div>
             ";
 
             return $mail->send();
         } catch (Exception $e) {
-            error_log("Verification Email Error: " . $e->getMessage());
+            error_log("OTP Email Error: " . $e->getMessage());
             return false;
         }
     }
@@ -89,7 +91,7 @@ class MailService {
         }
     }
 
-    public function sendTicketCompleted($toEmail, $fullName, $ticketNumber, $staffNotes = null) {
+    public function sendTicketCompleted($toEmail, $fullName, $ticketNumber, $staffNotes = null, $waitTime = null) {
         $mail = $this->getMailer();
         if (!$mail) return false;
 
@@ -104,12 +106,20 @@ class MailService {
                     <p style='margin: 5px 0 0; color: #1e293b;'>$staffNotes</p>
                 </div>
             " : "";
+            
+            $timeHtml = $waitTime ? "
+                <div style='margin-top: 15px; padding: 10px; background-color: #f0fdf4; border-radius: 8px; text-align: center;'>
+                    <p style='margin: 0; font-size: 13px; color: #15803d;'>Total Wait Time</p>
+                    <p style='margin: 0; font-size: 18px; font-weight: bold; color: #166534;'>$waitTime</p>
+                </div>
+            " : "";
 
             $mail->Body    = "
                 <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
                     <h2 style='color: #15803d;'>Transaction Completed</h2>
                     <p>Hello $fullName,</p>
                     <p>Your transaction for ticket <strong>#$ticketNumber</strong> has been successfully completed.</p>
+                    $timeHtml
                     $notesHtml
                     <p style='margin-top: 20px;'>We value your feedback! Please tell us how we did by rating your experience on our portal.</p>
                     <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>

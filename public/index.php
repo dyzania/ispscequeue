@@ -17,7 +17,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antigravity - Next-Gen Queue Management</title>
+    <title>ISPSC - Main Registrar E-Queue System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <?php injectTailwindConfig(); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -40,10 +40,10 @@ if (isset($_SESSION['user_id'])) {
             50% { transform: translateY(-20px); }
         }
         .text-glow {
-            text-shadow: 0 0 20px rgba(16, 185, 129, 0.2); /* Soft Primary Glow */
+            text-shadow: 0 0 20px rgba(139, 1, 1, 0.2); /* Crimson Glow (Primary) */
         }
         .text-glow-secondary {
-            text-shadow: 0 0 20px rgba(139, 1, 1, 0.3); /* Crimson Glow */
+            text-shadow: 0 0 20px rgba(12, 75, 5, 0.3); /* Emerald Glow (Secondary) */
         }
     </style>
 </head>
@@ -51,23 +51,42 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- Premium Navbar -->
     <nav class="fixed top-0 left-0 right-0 z-50 glass-nav">
-        <div class="container-ultra px-6 md:px-12 py-4 md:py-6 flex items-center justify-between">
+        <div class="container-ultra px-4 md:px-12 py-4 md:py-6 flex items-center justify-between relative">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-900/40">
-                    <i class="fas fa-layer-group text-white text-xl"></i>
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-lg overflow-hidden">
+                    <img src="img/logo.png" alt="ISPSC Logo" class="w-8 h-8 object-contain">
                 </div>
-                <span class="text-2xl font-black tracking-tight font-heading text-white">ANTIGRAVITY</span>
+                <div class="flex flex-col">
+                    <span class="text-lg md:text-2xl font-black tracking-tight font-heading text-white leading-none uppercase">ISPSC</span>
+                    <span class="text-[8px] md:text-[10px] font-bold text-primary-400 tracking-widest uppercase">Main Registrar E-Queue System</span>
+                </div>
             </div>
             
-            <div class="hidden md:flex items-center space-x-10 text-sm font-black uppercase tracking-[0.2em] text-gray-400">
+            <!-- Desktop Menu -->
+            <div class="hidden lg:flex items-center space-x-8 text-xs font-black uppercase tracking-[0.2em] text-gray-400">
                 <a href="#features" class="hover:text-white transition-colors">Features</a>
                 <a href="#stats" class="hover:text-white transition-colors">Metrics</a>
                 <a href="#about" class="hover:text-white transition-colors">Vision</a>
+                <div class="h-6 w-px bg-white/10 mx-2"></div>
+                <a href="login.php" class="hover:text-primary-400 transition-colors">Sign In</a>
+                <a href="register.php" class="bg-white text-slate-900 px-6 py-2.5 rounded-xl font-black transition-all hover:bg-primary-500 hover:text-white">Get Started</a>
             </div>
 
-            <div class="flex items-center space-x-4">
-                <a href="login.php" class="text-sm font-black uppercase tracking-widest px-6 py-2 hover:text-primary-400 transition-colors">Sign In</a>
-                <a href="register.php" class="bg-white text-slate-900 px-6 py-3 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-primary-500 hover:text-white transition-all shadow-xl shadow-white/5 active:scale-95">Get Started</a>
+            <!-- Mobile Menu Toggle -->
+            <button id="mobile-menu-toggle" class="lg:hidden text-white p-2">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobile-menu" class="hidden absolute top-full left-0 right-0 bg-primary-950/95 backdrop-blur-2xl border-b border-white/10 p-6 flex flex-col space-y-6 lg:hidden animate-in slide-in-from-top-4 duration-300">
+                <a href="#features" class="text-sm font-black uppercase tracking-widest text-gray-400 hover:text-white">Features</a>
+                <a href="#stats" class="text-sm font-black uppercase tracking-widest text-gray-400 hover:text-white">Metrics</a>
+                <a href="#about" class="text-sm font-black uppercase tracking-widest text-gray-400 hover:text-white">Vision</a>
+                <div class="h-px w-full bg-white/5"></div>
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                    <a href="login.php" class="flex items-center justify-center px-6 py-4 rounded-2xl border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/5">Sign In</a>
+                    <a href="register.php" class="flex items-center justify-center px-6 py-4 rounded-2xl bg-primary-600 text-white text-xs font-black uppercase tracking-widest">Get Started</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -104,7 +123,7 @@ if (isset($_SESSION['user_id'])) {
         </div>
 
         <!-- Decorative Elements -->
-        <div class="absolute bottom-0 right-0 w-1/3 h-1/2 bg-primary-600/10 blur-[120px] rounded-full translate-x-1/2 translate-y-1/2"></div>
+        <div class="absolute bottom-0 right-0 w-1/3 h-1/2 bg-secondary-600/10 blur-[120px] rounded-full translate-x-1/2 translate-y-1/2"></div>
     </section>
 
     <!-- Features Section -->
@@ -127,7 +146,7 @@ if (isset($_SESSION['user_id'])) {
                     </p>
                 </div>
 
-                <!-- Feature 2: Secondary (Crimson) -->
+                <!-- Feature 2: Secondary (Emerald) -->
                 <div class="bg-white/5 border border-white/10 p-10 rounded-[40px] hover:bg-white/[0.08] transition-all group">
                     <div class="w-16 h-16 bg-secondary-600/20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
                         <i class="fas fa-chart-line text-3xl text-secondary-500"></i>
@@ -177,15 +196,18 @@ if (isset($_SESSION['user_id'])) {
     <!-- Enhanced Footer -->
     <footer class="py-20 bg-primary-950 border-t border-white/5">
         <div class="container-ultra px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-10">
-            <div class="flex items-center space-x-3 opacity-50">
-                <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                    <i class="fas fa-layer-group text-slate-950 text-sm"></i>
+            <div class="flex items-center space-x-4 opacity-70">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1.5">
+                    <img src="img/logo.png" alt="ISPSC Logo" class="w-full h-full object-contain">
                 </div>
-                <span class="text-lg font-black tracking-tight font-heading">ANTIGRAVITY</span>
+                <div class="flex flex-col">
+                    <span class="text-lg font-black tracking-tight font-heading text-white leading-none uppercase">ISPSC</span>
+                    <span class="text-[10px] font-bold text-primary-400 tracking-widest uppercase">Main E-Queue System</span>
+                </div>
             </div>
             
             <p class="text-gray-500 font-medium text-sm">
-                &copy; 2026 Antigravity Systems. All rights reserved. Built for Excellence.
+                &copy; 2026 ISPSC Main Registrar. All rights reserved. Built for Excellence.
             </p>
 
             <div class="flex space-x-6 text-gray-500">
@@ -196,5 +218,27 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </footer>
 
+    <script>
+        const menuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            const icon = menuToggle.querySelector('i');
+            if (mobileMenu.classList.contains('hidden')) {
+                icon.classList.replace('fa-times', 'fa-bars');
+            } else {
+                icon.classList.contains('fa-bars') ? icon.classList.replace('fa-bars', 'fa-times') : icon.classList.add('fa-times');
+            }
+        });
+
+        // Close menu on link click
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                menuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
+            });
+        });
+    </script>
 </body>
 </html>

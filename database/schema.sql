@@ -14,10 +14,13 @@ CREATE TABLE users (
     role ENUM('user', 'staff', 'admin') DEFAULT 'user',
     verification_token VARCHAR(255) DEFAULT NULL,
     is_verified BOOLEAN DEFAULT FALSE,
+    otp_code VARCHAR(6) DEFAULT NULL,
+    otp_expiry DATETIME DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email),
-    INDEX idx_role (role)
+    INDEX idx_role (role),
+    INDEX idx_otp (otp_code)
 ) ENGINE=InnoDB;
 
 -- Windows/Counters table

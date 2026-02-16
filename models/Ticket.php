@@ -118,7 +118,7 @@ class Ticket {
     
     public function getCurrentTicket($userId) {
         $stmt = $this->db->prepare("
-            SELECT t.*, s.service_name, s.service_code, s.requirements, w.window_number, w.window_name, w.location_info,
+            SELECT t.*, s.service_name, s.service_code, s.requirements, s.estimated_time, w.window_number, w.window_name, w.location_info,
                    u.full_name as user_name, u.email as user_email
             FROM tickets t
             JOIN services s ON t.service_id = s.id
@@ -158,6 +158,88 @@ class Ticket {
         $result = $stmt->fetch();
         
         return $result['position'];
+    }
+
+    public function getGlobalQueuePosition($ticketId) {
+        $stmt = $this->db->prepare("
+            SELECT created_at 
+            FROM tickets 
+            WHERE id = ?
+        ");
+        
+        $stmt->execute([$ticketId]);
+        $ticket = $stmt->fetch();
+        
+        if (!$ticket) return 0;
+        
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) as position 
+            FROM tickets 
+            WHERE status = 'waiting'
+            AND (created_at < ? OR (created_at = ? AND id < ?))
+        ");
+        
+        $stmt->execute([$ticket['created_at'], $ticket['created_at'], $ticketId]);
+        $result = $stmt->fetch();
+        
+        return $result['position'];
+    }
+
+    public function getWeightedEstimatedWaitTime($ticketId) {
+        $stmt = $this->db->prepare("
+            SELECT created_at, service_id 
+            FROM tickets 
+            WHERE id = ?
+        ");
+        $stmt->execute([$ticketId]);
+        $targetTicket = $stmt->fetch();
+        if (!$targetTicket) return 0;
+
+        $serviceId = $targetTicket['service_id'];
+
+        // 1. Total estimated service time of all waiting tickets ahead (Global queue sequence)
+        $stmt = $this->db->prepare("
+            SELECT SUM(s.estimated_time * 60) as waiting_workload
+            FROM tickets t
+            JOIN services s ON t.service_id = s.id
+            WHERE t.status = 'waiting'
+            AND (t.created_at < ? OR (t.created_at = ? AND t.id < ?))
+        ");
+        $stmt->execute([$targetTicket['created_at'], $targetTicket['created_at'], $ticketId]);
+        $waitingWorkload = $stmt->fetch()['waiting_workload'] ?? 0;
+
+        // 2. Remaining processing time of active transactions at windows that support THIS service
+        // We count any ticket being served at a window that is capable of serving our service
+        $stmt = $this->db->prepare("
+            SELECT SUM(GREATEST((s.estimated_time * 60) - TIMESTAMPDIFF(SECOND, t.served_at, NOW()), 0)) as active_workload
+            FROM tickets t
+            JOIN services s ON t.service_id = s.id
+            WHERE t.status = 'serving'
+            AND t.served_at IS NOT NULL
+            AND t.window_id IN (
+                SELECT window_id FROM window_services WHERE service_id = ? AND is_enabled = 1
+            )
+        ");
+        $stmt->execute([$serviceId]);
+        $activeWorkload = $stmt->fetch()['active_workload'] ?? 0;
+
+        // 3. Count currently open windows that support THIS service
+        $stmt = $this->db->prepare("
+            SELECT COUNT(DISTINCT w.id) as active_windows 
+            FROM windows w
+            JOIN window_services ws ON w.id = ws.window_id
+            WHERE w.is_active = 1 
+            AND ws.service_id = ? 
+            AND ws.is_enabled = 1
+        ");
+        $stmt->execute([$serviceId]);
+        $activeWindowsCount = $stmt->fetch()['active_windows'] ?? 0;
+
+        // 4. Calculate deterministic wait time: (Waiting Workload + Active Workload) / Active Windows
+        $totalWorkload = $waitingWorkload + $activeWorkload;
+        $activeWindows = max((int)$activeWindowsCount, 1); // Avoid division by zero branch
+
+        return $totalWorkload / $activeWindows;
     }
     
     public function getWaitingQueue($serviceId = null, $windowId = null) {
@@ -461,7 +543,7 @@ class Ticket {
 
     public function getPendingFeedbackTicket($userId) {
         $stmt = $this->db->prepare("
-            SELECT t.*, s.service_name, s.service_code, w.window_number, w.window_name
+            SELECT t.*, s.service_name, s.service_code, s.estimated_time, w.window_number, w.window_name
             FROM tickets t
             JOIN services s ON t.service_id = s.id
             LEFT JOIN windows w ON t.window_id = w.id

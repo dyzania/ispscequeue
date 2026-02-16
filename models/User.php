@@ -8,16 +8,22 @@ class User {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    public function register($email, $password, $full_name, $school_id = null, $role = 'user', $token = null) {
+    public function register($email, $password, $full_name, $school_id = null, $role = 'user') {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $otpCode = sprintf("%06d", mt_rand(0, 999999));
+        $otpExpiry = date('Y-m-d H:i:s', strtotime('+15 minutes'));
         
         $stmt = $this->db->prepare("
-            INSERT INTO users (email, password, full_name, school_id, role, verification_token, is_verified) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (email, password, full_name, school_id, role, otp_code, otp_expiry, is_verified) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
-        $isVerified = ($role !== 'user') ? 1 : 0; // Staff/Admin verified by default or differently
-        return $stmt->execute([$email, $hashedPassword, $full_name, $school_id, $role, $token, $isVerified]);
+        $isVerified = ($role !== 'user') ? 1 : 0; // Staff/Admin verified by default
+        
+        if ($stmt->execute([$email, $hashedPassword, $full_name, $school_id, $role, $otpCode, $otpExpiry, $isVerified])) {
+            return $otpCode;
+        }
+        return false;
     }
     
     public function login($credential, $password) {
@@ -47,9 +53,48 @@ class User {
         return $stmt->fetch();
     }
 
-    public function verifyUser($id) {
-        $stmt = $this->db->prepare("UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?");
-        return $stmt->execute([$id]);
+    public function verifyOTP($email, $code) {
+        $stmt = $this->db->prepare("
+            SELECT id, full_name, otp_expiry 
+            FROM users 
+            WHERE email = ? AND otp_code = ?
+        ");
+        $stmt->execute([$email, $code]);
+        $user = $stmt->fetch();
+        
+        if ($user) {
+            if (strtotime($user['otp_expiry']) > time()) {
+                // OTP is valid and not expired
+                // Clear OTP after successful use
+                $update = $this->db->prepare("UPDATE users SET otp_code = NULL, otp_expiry = NULL, is_verified = 1 WHERE id = ?");
+                $update->execute([$user['id']]);
+                return $user;
+            }
+        }
+        return false;
+    }
+    
+    public function requestPasswordReset($email) {
+        $stmt = $this->db->prepare("SELECT id, full_name FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+        
+        if ($user) {
+            $otpCode = sprintf("%06d", mt_rand(0, 999999));
+            $otpExpiry = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+            
+            $update = $this->db->prepare("UPDATE users SET otp_code = ?, otp_expiry = ? WHERE id = ?");
+            if ($update->execute([$otpCode, $otpExpiry, $user['id']])) {
+                return ['code' => $otpCode, 'full_name' => $user['full_name']];
+            }
+        }
+        return false;
+    }
+
+    public function resetPassword($id, $newPassword) {
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
+        return $stmt->execute([$hashedPassword, $id]);
     }
     
     public function getUserById($id) {

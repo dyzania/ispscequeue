@@ -12,9 +12,9 @@ function sendNotification($userId, $ticketId, $type, $message, $staffNotes = nul
     $stmt->execute([$userId, $ticketId, $type, $message]);
     
     // 2. Get User & Ticket Details for Email
-    // We join with tickets to get the ticket number and window info if needed
+    // We join with tickets to get the ticket number, window info, and timestamps
     $stmt = $db->prepare("
-        SELECT u.email, u.full_name, t.ticket_number, w.window_name
+        SELECT u.email, u.full_name, t.ticket_number, t.created_at, t.completed_at, w.window_name
         FROM users u
         LEFT JOIN tickets t ON t.id = ?
         LEFT JOIN windows w ON t.window_id = w.id
@@ -36,11 +36,25 @@ function sendNotification($userId, $ticketId, $type, $message, $staffNotes = nul
                     $data['window_name'] ?? 'Assigned Counter'
                 );
             } elseif ($type === 'completed') {
+                // Calculate Wait Time
+                $created = new DateTime($data['created_at']);
+                $completed = $data['completed_at'] ? new DateTime($data['completed_at']) : new DateTime();
+                $interval = $created->diff($completed);
+                
+                $parts = [];
+                if ($interval->h > 0) $parts[] = $interval->h . ' hr' . ($interval->h > 1 ? 's' : '');
+                if ($interval->i > 0) $parts[] = $interval->i . ' min' . ($interval->i > 1 ? 's' : '');
+                // If less than a minute, show seconds
+                if (empty($parts)) $parts[] = $interval->s . ' sec' . ($interval->s > 1 ? 's' : '');
+                
+                $waitTime = implode(' ', $parts);
+
                 $mailService->sendTicketCompleted(
                     $data['email'], 
                     $data['full_name'], 
                     $data['ticket_number'],
-                    $staffNotes
+                    $staffNotes,
+                    $waitTime
                 );
             } elseif ($type === 'cancelled') {
                 // You might want a specific method in MailService for this, 

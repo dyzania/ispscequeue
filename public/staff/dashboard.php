@@ -46,7 +46,7 @@ if ($window) {
 <body class="min-h-screen">
     <?php include __DIR__ . '/../../includes/staff-navbar.php'; ?>
 
-    <main class="container-ultra max-w-[2000px] mx-auto py-8 px-4 md:px-10">
+    <main class="container-ultra max-w-[2000px] mx-auto pt-2 pb-8 px-4 md:px-8">
         <?php if (!$window): ?>
             <div class="max-w-2xl mx-auto mt-20 text-center bg-white p-12 rounded-2xl shadow-2xl shadow-slate-200 border border-slate-100">
                 <div class="w-24 h-24 bg-rose-50 rounded-xl flex items-center justify-center mx-auto mb-8">
@@ -58,7 +58,7 @@ if ($window) {
         <?php else: ?>
             
             <!-- Compact Header -->
-            <div class="bg-white rounded-2xl p-6 5xl:p-12 shadow-xl shadow-slate-200/50 border border-white mb-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            <div class="bg-white rounded-2xl p-6 5xl:p-12 shadow-xl shadow-slate-200/50 border border-white mb-2 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
                 <div class="flex items-center gap-6 5xl:gap-12 relative z-10">
                     <div class="w-16 5xl:w-32 h-16 5xl:h-32 bg-slate-900 rounded-2xl 5xl:rounded-[48px] flex items-center justify-center text-white font-black text-2xl 5xl:text-5xl shadow-lg">
                         <?php echo $window['window_number']; ?>
@@ -657,7 +657,7 @@ if ($window) {
             'archived-tickets-container',
             'waiting-tickets-container',
             'active-transaction-container'
-        ], 10000); // Refresh every 10 seconds
+        ], 3000); // Refresh every 3 seconds
 
         // --- Staff Idle Wake-up Alert Logic ---
         let lastEmptyStartTime = null;
