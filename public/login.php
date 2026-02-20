@@ -151,7 +151,7 @@ if (isset($_GET['update']) && $_GET['update'] === 'password_success') {
                             name="email" 
                             required
                             class="w-full pl-16 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all font-medium text-white placeholder-gray-600"
-                            placeholder="Email or Local ID"
+                            placeholder="Email"
                         >
                     </div>
                 </div>

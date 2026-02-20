@@ -65,7 +65,7 @@ if (isset($_SESSION['user_id'])) {
             <div class="hidden lg:flex items-center space-x-8 text-xs font-black uppercase tracking-[0.2em] text-gray-400">
                 <a href="#features" class="hover:text-white transition-colors">Features</a>
                 <a href="#stats" class="hover:text-white transition-colors">Metrics</a>
-                <a href="#about" class="hover:text-white transition-colors">Vision</a>
+
                 <div class="h-6 w-px bg-white/10 mx-2"></div>
                 <a href="login.php" class="hover:text-primary-400 transition-colors">Login</a>
                 <a href="register.php" class="bg-white text-slate-900 px-6 py-2.5 rounded-xl font-black transition-all hover:bg-primary-500 hover:text-white">Register</a>
@@ -87,10 +87,7 @@ if (isset($_SESSION['user_id'])) {
                         <span class="w-1.5 h-1.5 rounded-full bg-secondary-500 mr-3"></span>
                         Metrics
                     </a>
-                    <a href="#about" class="text-sm font-black uppercase tracking-[0.2em] text-gray-300 hover:text-white flex items-center">
-                        <span class="w-1.5 h-1.5 rounded-full bg-primary-300 mr-3"></span>
-                        Vision
-                    </a>
+
                 </div>
                 
                 <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>

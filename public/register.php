@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                                 <i class="fas fa-id-card text-gray-600 group-focus-within:text-white transition-colors"></i>
                             </div>
-                            <input type="text" id="full_name" name="full_name" required class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all font-medium text-white placeholder-gray-600" placeholder="John Doe">
+                            <input type="text" id="full_name" name="full_name" required class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all font-medium text-white placeholder-gray-600" placeholder="">
                         </div>
                     </div>
                     <div class="space-y-2 text-left">
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                                 <i class="fas fa-id-badge text-gray-600 group-focus-within:text-white transition-colors"></i>
                             </div>
-                            <input type="text" id="school_id" name="school_id" class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all font-medium text-white placeholder-gray-600" placeholder="e.g. 2024-01">
+                            <input type="text" id="school_id" name="school_id" class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all font-medium text-white placeholder-gray-600" placeholder="e.g. NLP-**-*****">
                         </div>
                     </div>
                 </div>
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                             <i class="fas fa-envelope-open-text text-gray-600 group-focus-within:text-white transition-colors"></i>
                         </div>
-                        <input type="email" id="email" name="email" required class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all font-medium text-white placeholder-gray-600" placeholder="john@example.com">
+                        <input type="email" id="email" name="email" required class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all font-medium text-white placeholder-gray-600" placeholder="your_email@example.com">
                     </div>
                 </div>
 

@@ -206,6 +206,22 @@ if ($window) {
                                     <p class="text-xs 5xl:text-2xl font-bold text-primary-600 uppercase tracking-widest"><?php echo $ticket['service_name']; ?></p>
                                 </div>
 
+                                <?php if (!empty($ticket['user_note'])): ?>
+                                    <div class="mb-6 5xl:mb-12 p-4 5xl:p-10 bg-amber-50 rounded-2xl border border-amber-100 relative overflow-hidden group/note">
+                                        <div class="relative z-10">
+                                            <p class="text-[10px] 5xl:text-xl font-black text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                                <i class="fas fa-comment-dots"></i> Customer Concern
+                                            </p>
+                                            <p class="text-sm 5xl:text-3xl font-bold text-gray-800 italic leading-relaxed">
+                                                "<?php echo htmlspecialchars($ticket['user_note']); ?>"
+                                            </p>
+                                        </div>
+                                        <div class="absolute -right-4 -bottom-4 text-6xl 5xl:text-9xl text-amber-100/30 group-hover/note:scale-110 transition-transform">
+                                            <i class="fas fa-quote-right"></i>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
                                 <?php if ($ticket['status'] === 'serving'): ?>
                                     <div class="mb-6 5xl:mb-12">
                                         <label for="staff-notes-<?php echo $ticket['id']; ?>" class="block text-[10px] 5xl:text-xl font-black text-gray-400 uppercase tracking-widest mb-2">Notes to User</label>
