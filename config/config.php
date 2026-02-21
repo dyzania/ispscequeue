@@ -30,7 +30,7 @@ loadEnv(__DIR__ . '/../.env');
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'equeue_systems');
+define('DB_NAME', 'equeue_system');
 
 //equeue_system - dummy data
 //test_db - clean data  
@@ -62,9 +62,9 @@ define('APP_NAME', 'E-Queue System');
 define('MAILER_PATH', __DIR__ . '/../mailer/autoload.php');
 define('SMTP_HOST', getenv('MAIL_HOST') ?: 'smtp.gmail.com');
 define('SMTP_PORT', getenv('MAIL_PORT') ?: 587);
-define('SMTP_USER', getenv('MAIL_USERNAME') ?: 'your-email@gmail.com');
-define('SMTP_PASS', getenv('MAIL_PASSWORD') ?: 'your-app-password');
-define('FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: 'noreply@equeue.com');
+define('SMTP_USER', getenv('MAIL_USERNAME') ?: '.@gmail.com');
+define('SMTP_PASS', getenv('MAIL_PASSWORD') ?: 'app-password');
+define('FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: '.@equeue.com');
 define('FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'E-Queue System');
 
 // Session Configuration
@@ -327,6 +327,7 @@ function injectTailwindConfig() {
                         heading: ['Outfit', 'sans-serif'],
                     },
                     screens: {
+                        'xs': '450px',
                         '3xl': '1800px',
                         '4xl': '2100px',
                         '5xl': '2500px',

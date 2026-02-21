@@ -2,14 +2,19 @@
 session_start();
 $pageTitle = 'Campus Announcements';
 require_once __DIR__ . '/../../models/Announcement.php';
+require_once __DIR__ . '/../../models/User.php';
 require_once __DIR__ . '/../../config/config.php';
 
 $announcementModel = new Announcement();
+$userModel = new User();
 $announcements = $announcementModel->getAll();
 
+$isSubscribed = false;
 // Mark as read for the current user
 if (isset($_SESSION['user_id'])) {
     $announcementModel->markAsRead($_SESSION['user_id']);
+    $userData = $userModel->getUserById($_SESSION['user_id']);
+    $isSubscribed = $userData['announcement_subscription'] ?? false;
 }
 
 // Premium header inclusion
@@ -40,7 +45,8 @@ if (isset($_SESSION['user_id'])) {
     <main class="max-w-2xl mx-auto px-4 py-8 md:py-20">
         <div class="mb-10 md:mb-16 text-center">
             <h1 class="text-3xl md:text-5xl font-black text-gray-900 font-heading tracking-tight mb-4">Campus News Feed</h1>
-            <p class="text-gray-500 text-sm md:text-base font-medium max-w-md mx-auto">Stay updated with the latest events, announcements, and news from the ISPSC Registrar.</p>
+            <p class="text-gray-500 text-sm md:text-base font-medium max-w-md mx-auto mb-8">Stay updated with the latest events, announcements, and news from the ISPSC Registrar.</p>
+            
         </div>
 
         <div class="space-y-6 md:space-y-12">
@@ -107,5 +113,8 @@ if (isset($_SESSION['user_id'])) {
     </main>
 
     <?php include __DIR__ . '/../../includes/admin-layout-footer.php'; ?>
+
+    <script>
+    </script>
 </body>
 </html>

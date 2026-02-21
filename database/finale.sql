@@ -268,25 +268,26 @@ CREATE TABLE `users` (
   `is_verified` tinyint(1) DEFAULT 0,
   `otp_code` varchar(6) DEFAULT NULL,
   `otp_expiry` datetime DEFAULT NULL,
-  `last_read_announcement_id` int(11) DEFAULT 0
+  `last_read_announcement_id` int(11) DEFAULT 0,
+  `announcement_subscription` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `email`, `school_id`, `password`, `full_name`, `role`, `created_at`, `updated_at`, `verification_token`, `is_verified`, `otp_code`, `otp_expiry`, `last_read_announcement_id`) VALUES
-(1, 'admin@equeue.com', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'System Administrator', 'admin', '2026-02-13 16:38:21', '2026-02-13 16:38:21', NULL, 0, NULL, NULL, 0),
-(18, 'w01@window.local', NULL, '$2y$10$Rm1uBXHsPpHPHOq/lyIyN.oS0ofP6rbdVHXE6aUPvlaJ7T83XrOle', 'Staff W-01', 'staff', '2026-02-14 08:04:35', '2026-02-14 08:04:35', NULL, 1, NULL, NULL, 0),
-(19, 'w02@window.local', NULL, '$2y$10$X86VU44sQQXZ98dGLcAvk.IfiR8QzF3WWrJvDgJ7Na742.cPLB1a.', 'Staff W-02', 'staff', '2026-02-14 14:21:48', '2026-02-14 14:21:48', NULL, 1, NULL, NULL, 0),
-(24, 'w03@window.local', NULL, '$2y$10$eL39jKmSNhnElHktV1l39.P6EZ60vhUsRTDdNGwWW/HpFVQkA18Ra', 'Staff W-03', 'staff', '2026-02-15 07:47:03', '2026-02-15 07:47:03', NULL, 1, NULL, NULL, 0),
-(25, 'w04@window.local', NULL, '$2y$10$0M4mIZjkDcgCnK7jxdNvUOjvaYp9nrZ/nvAxhBCpMVw8YXdREaPky', 'Staff W-04', 'staff', '2026-02-15 07:47:11', '2026-02-15 07:47:11', NULL, 1, NULL, NULL, 0),
-(26, 'w05@window.local', NULL, '$2y$10$qvhTIOh761yDJ/b0avt6C.l38yYzzpQJFWHGVJxIBmHd946Fn4lp6', 'Staff W-05', 'staff', '2026-02-15 07:47:16', '2026-02-15 07:47:16', NULL, 1, NULL, NULL, 0),
-(27, 'w06@window.local', NULL, '$2y$10$aE0.I3b7EHkkW/dFIYS94OUvTYylyKxZ1JzW6yG8jIbpp.PmSedKG', 'Staff W-06', 'staff', '2026-02-15 07:47:20', '2026-02-15 07:47:20', NULL, 1, NULL, NULL, 0),
-(54, 'paulojayboy@gmail.com', 'NLP-22-00430', '$2y$10$lI5kvBSbF0BbJJyRFpmu8.RFSiSQvK8d1N0ru8PepsCBO5zuUIlKG', 'Jay Paulo', 'user', '2026-02-19 08:41:28', '2026-02-19 08:41:59', NULL, 1, NULL, NULL, 0),
-(55, 'seangalace28@gmail.com', 'NLP-22-00021', '$2y$10$T5WzJr.pXz.AOE8NPgSZA.HZWbY2YBk9Rv/hxAXuPf8pSi5A8Kf/G', 'Sean Galace', 'user', '2026-02-19 08:44:20', '2026-02-19 08:44:45', NULL, 1, NULL, NULL, 0),
-(57, 'izzakatherine@gmail.com', 'NLP-22-00493', '$2y$10$wJ4zmLJe7VLd1sR1MhXDXuJFv8.YxRjrOrWCKaylIDowHC6vWKTJC', 'Izza Kaherine Dela Rosa', 'user', '2026-02-19 08:45:02', '2026-02-19 09:39:16', NULL, 1, NULL, NULL, 8),
-(58, 'exodusgalimba@gmail.com', 'NLP-22-00679', '$2y$10$FNsbP.q8S6tFBw/sjejGoO1qqpWnWRrtvSP9WCiB0Fqo1GfVkiehC', 'Genesis Manzano', 'user', '2026-02-19 09:13:38', '2026-02-19 09:36:59', NULL, 1, NULL, NULL, 8);
+INSERT INTO `users` (`id`, `email`, `school_id`, `password`, `full_name`, `role`, `created_at`, `updated_at`, `verification_token`, `is_verified`, `otp_code`, `otp_expiry`, `last_read_announcement_id`, `announcement_subscription`) VALUES
+(1, 'admin@equeue.com', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'System Administrator', 'admin', '2026-02-13 16:38:21', '2026-02-13 16:38:21', NULL, 0, NULL, NULL, 0, 0),
+(18, 'w01@window.local', NULL, '$2y$10$Rm1uBXHsPpHPHOq/lyIyN.oS0ofP6rbdVHXE6aUPvlaJ7T83XrOle', 'Staff W-01', 'staff', '2026-02-14 08:04:35', '2026-02-14 08:04:35', NULL, 1, NULL, NULL, 0, 0),
+(19, 'w02@window.local', NULL, '$2y$10$X86VU44sQQXZ98dGLcAvk.IfiR8QzF3WWrJvDgJ7Na742.cPLB1a.', 'Staff W-02', 'staff', '2026-02-14 14:21:48', '2026-02-14 14:21:48', NULL, 1, NULL, NULL, 0, 0),
+(24, 'w03@window.local', NULL, '$2y$10$eL39jKmSNhnElHktV1l39.P6EZ60vhUsRTDdNGwWW/HpFVQkA18Ra', 'Staff W-03', 'staff', '2026-02-15 07:47:03', '2026-02-15 07:47:03', NULL, 1, NULL, NULL, 0, 0),
+(25, 'w04@window.local', NULL, '$2y$10$0M4mIZjkDcgCnK7jxdNvUOjvaYp9nrZ/nvAxhBCpMVw8YXdREaPky', 'Staff W-04', 'staff', '2026-02-15 07:47:11', '2026-02-15 07:47:11', NULL, 1, NULL, NULL, 0, 0),
+(26, 'w05@window.local', NULL, '$2y$10$qvhTIOh761yDJ/b0avt6C.l38yYzzpQJFWHGVJxIBmHd946Fn4lp6', 'Staff W-05', 'staff', '2026-02-15 07:47:16', '2026-02-15 07:47:16', NULL, 1, NULL, NULL, 0, 0),
+(27, 'w06@window.local', NULL, '$2y$10$aE0.I3b7EHkkW/dFIYS94OUvTYylyKxZ1JzW6yG8jIbpp.PmSedKG', 'Staff W-06', 'staff', '2026-02-15 07:47:20', '2026-02-15 07:47:20', NULL, 1, NULL, NULL, 0, 0),
+(54, 'paulojayboy@gmail.com', 'NLP-22-00430', '$2y$10$lI5kvBSbF0BbJJyRFpmu8.RFSiSQvK8d1N0ru8PepsCBO5zuUIlKG', 'Jay Paulo', 'user', '2026-02-19 08:41:28', '2026-02-19 08:41:59', NULL, 1, NULL, NULL, 0, 0),
+(55, 'seangalace28@gmail.com', 'NLP-22-00021', '$2y$10$T5WzJr.pXz.AOE8NPgSZA.HZWbY2YBk9Rv/hxAXuPf8pSi5A8Kf/G', 'Sean Galace', 'user', '2026-02-19 08:44:20', '2026-02-19 08:44:45', NULL, 1, NULL, NULL, 0, 0),
+(57, 'izzakatherine@gmail.com', 'NLP-22-00493', '$2y$10$wJ4zmLJe7VLd1sR1MhXDXuJFv8.YxRjrOrWCKaylIDowHC6vWKTJC', 'Izza Kaherine Dela Rosa', 'user', '2026-02-19 08:45:02', '2026-02-19 09:39:16', NULL, 1, NULL, NULL, 8, 0),
+(58, 'exodusgalimba@gmail.com', 'NLP-22-00679', '$2y$10$FNsbP.q8S6tFBw/sjejGoO1qqpWnWRrtvSP9WCiB0Fqo1GfVkiehC', 'Genesis Manzano', 'user', '2026-02-19 09:13:38', '2026-02-19 09:36:59', NULL, 1, NULL, NULL, 8, 0);
 
 -- --------------------------------------------------------
 

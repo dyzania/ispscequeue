@@ -174,9 +174,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
                             <!-- Footer -->
                             <form id="form-<?php echo $service['id']; ?>" method="POST" action="" class="pb-8 md:pb-10 pt-6">
                                 <input type="hidden" name="service_id" value="<?php echo $service['id']; ?>">
-                                <button type="submit" <?php echo !$isAvailable ? 'disabled' : ''; ?> class="w-full <?php echo $isAvailable ? 'bg-slate-900 hover:bg-black shadow-slate-200' : 'bg-slate-300 cursor-not-allowed'; ?> text-white py-3 md:py-4 3xl:py-6 rounded-lg md:rounded-xl 3xl:rounded-2xl font-black text-xs md:text-sm 3xl:text-xl shadow-lg transition-all active:scale-95 flex items-center justify-center space-x-2">
+                                <button type="button" <?php echo !$isAvailable ? 'disabled' : ''; ?> 
+                                    onclick="openChecklist(<?php echo $service['id']; ?>, '<?php echo addslashes($service['service_name']); ?>', '<?php echo addslashes(str_replace(["\r", "\n"], ',', $service['requirements'])); ?>')"
+                                    class="w-full <?php echo $isAvailable ? 'bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 shadow-xl shadow-primary-900/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed'; ?> text-white py-3 md:py-4 3xl:py-6 rounded-xl md:rounded-2xl 3xl:rounded-[32px] font-black text-xs md:text-sm 3xl:text-xl transition-all active:scale-95 flex items-center justify-center space-x-2 group">
                                     <span><?php echo $isAvailable ? 'Get Ticket' : 'Currently Unavailable'; ?></span>
-                                    <i class="fas <?php echo $isAvailable ? 'fa-ticket-alt' : 'fa-clock-rotate-left opacity-50'; ?>"></i>
+                                    <i class="fas <?php echo $isAvailable ? 'fa-ticket-alt group-hover:rotate-12 transition-transform' : 'fa-lock opacity-50'; ?>"></i>
                                 </button>
                             </form>
                         </div>
@@ -187,7 +189,172 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
         </div>
     </main>
 
+    <!-- Requirement Checklist Modal -->
+    <div id="checklistModal" class="fixed inset-0 z-50 hidden overflow-y-auto overflow-x-hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="relative w-full max-w-2xl bg-white rounded-[24px] md:rounded-[32px] 3xl:rounded-[48px] shadow-ultra transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+            <!-- Modal Header -->
+            <div class="px-6 md:px-8 pt-6 md:pt-10 pb-4 md:pb-6 border-b border-slate-50 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl md:text-3xl 3xl:text-5xl font-black text-gray-900 font-heading tracking-tight leading-none mb-1 md:mb-2">Checklist Required</h2>
+                    <p class="text-xs md:text-gray-500 font-medium 3xl:text-2xl" id="modalServiceName"></p>
+                </div>
+                <button type="button" onclick="closeChecklist()" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all">
+                    <i class="fas fa-times text-lg md:text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="px-6 md:px-8 py-4 md:py-8 3xl:py-12">
+                <div class="bg-primary-50 rounded-xl md:rounded-2xl p-4 md:p-6 mb-4 md:mb-8 border border-primary-100 flex items-start space-x-3 md:space-x-4">
+                    <div class="w-8 h-8 md:w-10 md:h-10 bg-primary-600 rounded-lg md:rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                        <i class="fas fa-info-circle text-sm md:text-base"></i>
+                    </div>
+                    <p class="text-[10px] md:text-sm 3xl:text-xl font-bold text-primary-900 leading-tight md:leading-normal">Verify that you have fulfilled all the requirements below before you can proceed to queue.</p>
+                </div>
+
+                <div id="requirementsContainer" class="space-y-2 md:space-y-4 max-h-[40vh] overflow-y-auto pr-2 md:pr-4 custom-scrollbar">
+                    <!-- Requirements dynamically populated here -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 md:px-8 pb-6 md:pb-10 pt-4 md:pt-6 border-t border-slate-50 flex flex-col md:flex-row gap-2 md:gap-4">
+                <button type="button" onclick="closeChecklist()" class="order-2 md:order-1 flex-1 px-6 py-3 md:py-4 3xl:py-6 rounded-xl md:rounded-2xl font-black text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all text-xs md:text-base text-center border border-transparent hover:border-slate-200">
+                    Cancel
+                </button>
+                <button type="button" id="confirmTicketBtn" onclick="submitTicket()" disabled class="order-1 md:order-2 flex-[2] bg-slate-100 text-slate-400 px-6 py-3 md:py-4 3xl:py-6 rounded-xl md:rounded-2xl font-black transition-all cursor-not-allowed flex items-center justify-center space-x-2 text-xs md:text-base shadow-sm">
+                    <span>Confirm and Queue</span>
+                    <i class="fas fa-arrow-right ml-2 opacity-30"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+
     <?php include __DIR__ . '/../../includes/chatbot-widget.php'; ?>
     <script src="<?php echo BASE_URL; ?>/js/notifications.js"></script>
+    <script>
+        let currentActiveServiceId = null;
+
+        function openChecklist(serviceId, serviceName, requirementsStr) {
+            currentActiveServiceId = serviceId;
+            const modal = document.getElementById('checklistModal');
+            const content = document.getElementById('modalContent');
+            const nameEl = document.getElementById('modalServiceName');
+            const container = document.getElementById('requirementsContainer');
+            const confirmBtn = document.getElementById('confirmTicketBtn');
+
+            nameEl.textContent = serviceName;
+            container.innerHTML = '';
+            
+            // Parse requirements
+            const requirements = requirementsStr.split(',').map(r => r.trim()).filter(r => r !== '');
+            
+            if (requirements.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <p class="text-slate-500 font-bold uppercase tracking-widest text-[10px]">No requirements listed</p>
+                    </div>
+                `;
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                confirmBtn.classList.add('bg-primary-600', 'text-white', 'hover:bg-primary-700', 'shadow-xl', 'shadow-primary-600/20');
+                confirmBtn.querySelector('i').classList.remove('opacity-30');
+            } else {
+                requirements.forEach((req, index) => {
+                    const div = document.createElement('div');
+                    div.className = "flex items-center p-3 md:p-4 bg-slate-50 hover:bg-slate-100 rounded-xl md:rounded-2xl border border-slate-100 transition-all cursor-pointer group";
+                    div.onclick = () => {
+                        const cb = document.getElementById(`req-${index}`);
+                        cb.checked = !cb.checked;
+                        validateChecklist();
+                    };
+                    
+                    div.innerHTML = `
+                        <div class="relative flex items-center">
+                            <input type="checkbox" id="req-${index}" name="requirements[]" class="w-5 h-5 md:w-6 md:h-6 rounded-md md:rounded-lg border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer transition-all" onclick="event.stopPropagation(); validateChecklist();">
+                        </div>
+                        <label for="req-${index}" class="ml-3 md:ml-4 text-[11px] md:text-sm 3xl:text-xl font-bold text-slate-800 cursor-pointer flex-1 leading-tight md:leading-normal" onclick="event.stopPropagation();">
+                            ${req}
+                        </label>
+                    `;
+                    container.appendChild(div);
+                });
+                
+                confirmBtn.disabled = true;
+                confirmBtn.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                confirmBtn.classList.remove('bg-primary-600', 'text-white', 'hover:bg-primary-700', 'shadow-xl', 'shadow-primary-600/20');
+                confirmBtn.querySelector('i').classList.add('opacity-30');
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function validateChecklist() {
+            const checkboxes = document.querySelectorAll('#requirementsContainer input[type="checkbox"]');
+            const confirmBtn = document.getElementById('confirmTicketBtn');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            if (allChecked) {
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                confirmBtn.classList.add('bg-primary-600', 'text-white', 'hover:bg-primary-700', 'shadow-xl', 'shadow-primary-600/20', 'active:scale-95');
+                confirmBtn.querySelector('i').classList.remove('opacity-30');
+            } else {
+                confirmBtn.disabled = true;
+                confirmBtn.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                confirmBtn.classList.remove('bg-primary-600', 'text-white', 'hover:bg-primary-700', 'shadow-xl', 'shadow-primary-600/20', 'active:scale-95');
+                confirmBtn.querySelector('i').classList.add('opacity-30');
+            }
+        }
+
+        function closeChecklist() {
+            const modal = document.getElementById('checklistModal');
+            const content = document.getElementById('modalContent');
+            
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function submitTicket() {
+            if (currentActiveServiceId) {
+                const form = document.getElementById(`form-${currentActiveServiceId}`);
+                if (form) {
+                    form.submit();
+                }
+            }
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeChecklist();
+        });
+
+        // Close modal on outside click
+        document.getElementById('checklistModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('checklistModal')) closeChecklist();
+        });
+    </script>
 </body>
 </html>

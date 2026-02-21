@@ -192,8 +192,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
 
+                            <div class="pt-8 border-t border-slate-50">
+                                <h3 class="text-xl font-black text-gray-900 font-heading tracking-tight mb-6 flex items-center">
+                                    <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-sliders-h text-sm text-indigo-600"></i>
+                                    </div>
+                                    Preferences
+                                </h3>
+                                <div class="bg-slate-50/50 p-6 md:p-8 rounded-[32px] border border-slate-100 flex items-center justify-between gap-4">
+                                    <div class="min-w-0">
+                                        <h4 class="text-base md:text-lg font-black text-gray-900 leading-tight mb-1 truncate">Notifications</h4>
+                                        <p class="text-[10px] md:text-sm text-gray-500 font-medium leading-normal">Campus news & updates.</p>
+                                    </div>
+                                    
+                                    <?php $isSubscribed = (bool)($user['announcement_subscription'] ?? false); ?>
+                                    <button type="button" id="toggleSubscriptionBtn" 
+                                        class="shrink-0 flex items-center gap-3 px-4 md:px-6 py-3 rounded-2xl md:rounded-full transition-all duration-500 group border <?php echo $isSubscribed ? 'bg-gradient-to-r from-primary-600 to-primary-700 border-primary-500 shadow-xl shadow-primary-900/20 text-white' : 'bg-white border-slate-200 shadow-sm text-slate-600 hover:border-primary-300'; ?>">
+                                        <div class="relative w-10 h-6 hidden xs:block">
+                                            <div class="absolute inset-0 rounded-full transition-colors duration-500 <?php echo $isSubscribed ? 'bg-white/20' : 'bg-slate-200/50'; ?>"></div>
+                                            <div id="toggleKnot" class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-500 <?php echo $isSubscribed ? 'translate-x-4' : 'translate-x-0'; ?>"></div>
+                                        </div>
+                                        <span id="toggleText" class="text-[10px] md:text-xs font-black uppercase tracking-widest select-none">
+                                            <?php echo $isSubscribed ? 'On' : 'Off'; ?>
+                                        </span>
+                                        <i id="toggleIcon" class="fas <?php echo $isSubscribed ? 'fa-bell' : 'fa-bell-slash opacity-40'; ?> text-xs transition-transform group-hover:rotate-12"></i>
+                                        <input type="checkbox" id="announcementSubscription" class="hidden" <?php echo $isSubscribed ? 'checked' : ''; ?>>
+                                    </button>
+                                </div>
+                            </div>
+
                             <div class="pt-10">
-                                <button type="submit" class="w-full bg-slate-900 text-white py-6 rounded-3xl font-black text-xl shadow-premium hover:bg-black hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4 group">
+                                <button type="submit" class="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white py-5 rounded-3xl font-black text-xl shadow-xl shadow-primary-900/20 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4 group uppercase tracking-widest">
                                     <span>Save Changes</span>
                                     <i class="fas fa-check-circle group-hover:scale-125 transition-transform"></i>
                                 </button>
@@ -219,6 +248,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 input.type = 'password';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
+            }
+        }
+
+        // Announcement Subscription Logic
+        const toggleBtn = document.getElementById('toggleSubscriptionBtn');
+        const checkbox = document.getElementById('announcementSubscription');
+        const toggleKnot = document.getElementById('toggleKnot');
+        const toggleText = document.getElementById('toggleText');
+        const toggleIcon = document.getElementById('toggleIcon');
+
+        toggleBtn.addEventListener('click', function() {
+            const isSubscribed = !checkbox.checked;
+            
+            // Optimistic UI Update
+            updateToggleUI(isSubscribed);
+            
+            // Disable temporarily
+            toggleBtn.disabled = true;
+            toggleBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            fetch('<?php echo BASE_URL; ?>/api/update-subscription.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subscribed: isSubscribed ? 1 : 0
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                toggleBtn.disabled = false;
+                toggleBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                if (data.success) {
+                    checkbox.checked = isSubscribed;
+                    if (typeof showNotification === 'function') {
+                        showNotification(data.message, 'success');
+                    }
+                } else {
+                    // Revert on failure
+                    updateToggleUI(!isSubscribed);
+                    if (typeof showNotification === 'function') {
+                        showNotification(data.message, 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                toggleBtn.disabled = false;
+                toggleBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                updateToggleUI(!isSubscribed);
+                console.error('Error:', error);
+            });
+        });
+
+        function updateToggleUI(subscribed) {
+            if (subscribed) {
+                toggleBtn.classList.remove('bg-white', 'border-slate-200', 'shadow-sm', 'text-slate-600', 'hover:border-primary-300');
+                toggleBtn.classList.add('bg-gradient-to-r', 'from-primary-600', 'to-primary-700', 'border-primary-500', 'shadow-xl', 'shadow-primary-900/20', 'text-white');
+                toggleKnot.classList.add('translate-x-4');
+                toggleKnot.classList.remove('translate-x-0');
+                toggleText.textContent = 'On';
+                toggleIcon.classList.remove('fa-bell-slash', 'opacity-40');
+                toggleIcon.classList.add('fa-bell');
+                toggleKnot.parentElement.firstElementChild.classList.add('bg-white/20');
+                toggleKnot.parentElement.firstElementChild.classList.remove('bg-slate-200');
+            } else {
+                toggleBtn.classList.add('bg-white', 'border-slate-200', 'shadow-sm', 'text-slate-600', 'hover:border-primary-300');
+                toggleBtn.classList.remove('bg-gradient-to-r', 'from-primary-600', 'to-primary-700', 'border-primary-500', 'shadow-xl', 'shadow-primary-900/20', 'text-white');
+                toggleKnot.classList.remove('translate-x-4');
+                toggleKnot.classList.add('translate-x-0');
+                toggleText.textContent = 'Off';
+                toggleIcon.classList.add('fa-bell-slash', 'opacity-40');
+                toggleIcon.classList.remove('fa-bell');
+                toggleKnot.parentElement.firstElementChild.classList.remove('bg-white/20');
+                toggleKnot.parentElement.firstElementChild.classList.add('bg-slate-200');
             }
         }
     </script>

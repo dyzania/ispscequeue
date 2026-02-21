@@ -138,7 +138,7 @@ class User {
     
     public function getUserById($id) {
         $stmt = $this->db->prepare("
-            SELECT id, email, password, full_name, role, school_id, created_at 
+            SELECT id, email, password, full_name, role, school_id, created_at, announcement_subscription 
             FROM users 
             WHERE id = ?
         ");

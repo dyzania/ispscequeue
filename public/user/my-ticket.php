@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                 </div>
                 <h2 class="text-3xl 3xl:text-5xl font-black text-gray-900 mb-4 font-heading tracking-tight">No Active Ticket</h2>
                 <p class="text-gray-500 text-lg 3xl:text-2xl mb-10 max-w-sm 3xl:max-w-xl mx-auto">You don't have any tickets in the queue right now. Ready to start?</p>
-                <a href="get-ticket.php" class="inline-block bg-slate-900 text-white px-12 3xl:px-16 py-5 3xl:py-8 rounded-3xl 3xl:rounded-[40px] font-black text-xl 3xl:text-3xl shadow-2xl shadow-slate-200 hover:bg-black hover:-translate-y-1 transition-all active:scale-95">
+                <a href="get-ticket.php" class="inline-block bg-primary-600 text-white px-12 3xl:px-16 py-5 3xl:py-8 rounded-3xl 3xl:rounded-[40px] font-black text-xl 3xl:text-3xl shadow-2xl shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-1 transition-all active:scale-95">
                     Explore Services
                 </a>
             </div>
@@ -320,7 +320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                     </div>
                                 </div>
 
-                                <button type="submit" class="w-full bg-slate-900 text-white py-6 rounded-3xl font-black text-xl shadow-2xl shadow-slate-200 hover:bg-black hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4">
+                                <button type="submit" class="w-full bg-primary-600 text-white py-6 rounded-3xl font-black text-xl shadow-2xl shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4 uppercase tracking-widest">
                                     <span>Submit Feedback</span>
                                     <i class="fas fa-paper-plane"></i>
                                 </button>
