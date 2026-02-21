@@ -5,5 +5,5 @@ echo please run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Curren
 echo in an Administrator PowerShell window.
 start "Sentiment Analysis Server" powershell -NoExit -ExecutionPolicy Bypass -Command "& { Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force; .\.venv\Scripts\Activate.ps1; cd sentiment_analysis; uvicorn app:app --host 127.0.0.1 --port 8000 }"
 timeout /t 3 /nobreak > nul
-start http://localhost/ISPSC-E-QUEUE/public/index.php
+start http://localhost/ispscequeue/public/index.php
 pause

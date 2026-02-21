@@ -18,7 +18,7 @@ define('DB_NAME', 'equeue_system');
 ```
 
 ### Step 3: Test the Flow
-1. Open browser: `http://localhost/ISPSC-E-QUEUE/public`
+1. Open browser: `http://localhost/ispscequeue/public`
 2. Login with: `admin@ispsc.edu.ph` / `password`
 3. Test as Admin:
    - Manage services and windows.
@@ -35,9 +35,9 @@ define('DB_NAME', 'equeue_system');
 
 ## 📚 Documentation Links
 
-- **Full Installation**: [INSTALLATION.md](file:///c:/xampp/htdocs/ISPSC-E-QUEUE/INSTALLATION.md) (Detailed setup, Python microservice, and Troubleshooting)
-- **Project Structure**: [PROJECT_STRUCTURE.md](file:///c:/xampp/htdocs/ISPSC-E-QUEUE/PROJECT_STRUCTURE.md) (Architecture, Security, and File Map)
-- **Thesis Guide**: [THESIS_DEFENSE_GUIDE.txt](file:///c:/xampp/htdocs/ISPSC-E-QUEUE/THESIS_DEFENSE_GUIDE.txt) (Defense-ready technical overview)
+- **Full Installation**: [INSTALLATION.md](file:///c:/xampp/htdocs/ispscequeue/INSTALLATION.md) (Detailed setup, Python microservice, and Troubleshooting)
+- **Project Structure**: [PROJECT_STRUCTURE.md](file:///c:/xampp/htdocs/ispscequeue/PROJECT_STRUCTURE.md) (Architecture, Security, and File Map)
+- **Thesis Guide**: [THESIS_DEFENSE_GUIDE.txt](file:///c:/xampp/htdocs/ispscequeue/THESIS_DEFENSE_GUIDE.txt) (Defense-ready technical overview)
 
 ---
 

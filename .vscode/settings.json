@@ -1,7 +1,7 @@
 {
-  "python.defaultInterpreterPath": "c:/xampp/htdocs/ISPSC-E-QUEUE/venv/Scripts/python.exe",
+  "python.defaultInterpreterPath": "c:/xampp/htdocs/ispscequeue/.venv/Scripts/python.exe",
   "python.analysis.extraPaths": [
-    "c:/xampp/htdocs/ISPSC-E-QUEUE/sentiment_analysis"
+    "c:/xampp/htdocs/ispscequeue/sentiment_analysis"
   ],
   "python.terminal.activateEnvInSelectedTerminal": true,
   "python.languageServer": "Jedi",

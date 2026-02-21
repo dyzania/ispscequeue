@@ -38,7 +38,7 @@ define('DB_NAME', 'equeue_systems');
 // Application Configuration
 // -------------------------------------------------------------------------
 // PRODUCTION DEPLOYMENT CHECKLIST:
-// 1. Update BASE_URL below to: 'https://ispsc-queue-system.com/public'
+// 1. Update BASE_URL below to: 'https://ispscequeue.com/public'
 // 2. Update database credentials (DB_HOST, DB_USER, DB_PASS, DB_NAME)
 // 3. Set display_errors to 0 (line 28)
 // 4. Re-enable requireLogin() and requireRole() in this file
@@ -53,7 +53,7 @@ $currentDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 $publicPath = (strpos($currentDir, '/public') !== false) ? '/public' : '';
 
 // local PHP app to handle subdirectories
-$baseUrl = $protocol . '://' . $host . '/ISPSC-E-QUEUE/public';
+$baseUrl = $protocol . '://' . $host . '/ispscequeue/public';
 define('BASE_URL', $baseUrl);
 
 define('APP_NAME', 'E-Queue System');

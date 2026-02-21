@@ -3,7 +3,7 @@
 ## 📂 Directory Structure
 
 ```
-ISPSC-E-QUEUE/
+ispscequeue/
 ├── config/             # Configuration & DB connection
 ├── database/           # SQL schemas (queue_schema.sql)
 ├── models/             # Business Logic (User, Ticket, Service, etc.)
