@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $userModel = new User();
     $user = $userModel->login($email, $password);
     
-    if ($user && !isset($user['unverified'])) {
+    if ($user && isset($user['id'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['full_name'] = $user['full_name'];
@@ -32,9 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($user && isset($user['unverified'])) {
         $verifyLink = "verify-otp.php?email=" . urlencode($email) . "&context=verification";
         $error = "Account not verified. <a href='$verifyLink' class='underline font-black hover:text-white'>Verify Now</a>";
+    } elseif ($user && isset($user['locked_out'])) {
+        $error = "Account locked out due to too many failed attempts. Try again in " . $user['minutes_left'] . " minutes.";
+    } elseif ($user && isset($user['failed_attempts'])) {
+        $remaining = 5 - $user['failed_attempts'];
+        $error = "Invalid password. $remaining attempts remaining before lockout.";
     } else {
-
-
         $error = "Invalid credentials or password";
     }
 }

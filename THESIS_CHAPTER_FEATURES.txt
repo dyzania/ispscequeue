@@ -1,0 +1,53 @@
+CHAPTER IV
+SYSTEM FEATURES AND FUNCTIONALITIES
+
+This chapter provides a comprehensive technical overview of the ISPSC Main E-Queue System, detailing the specific features and functionalities implemented to enhance user experience and administrative efficiency.
+
+4.1 User Module Features
+
+4.1.1 Secure Authentication and Registration
+The system utilizes a secure registration process requiring unique student/user identifiers. To ensure data integrity and security, a One-Time Password (OTP) verification system is integrated, synchronizing with the user's registered contact information before granting access to the ticketing modules.
+- Access Control: Role-based access control (RBAC) categorizing users into 'user', 'staff', and 'admin' tiers with strict permission boundaries.
+- Login Lockout: Automated accounts protection that triggers a 15-minute lockout and email notification after 5 failed attempts.
+
+[INSERT FIGURE 1: User Registration and OTP Verification Screen]
+
+4.1.2 Service Selection and Requirement Verification
+A proactive "Requirement Checklist" system is implemented. Before a user can generate a ticket for specific academic or administrative services, the system displays a mandatory checklist of required documents (e.g., Clearance, ID, Receipt). This reduces service delays caused by incomplete documentation.
+
+[INSERT FIGURE 2: Requirement Checklist Modal for Service Selection]
+
+4.1.3 Real-Time Ticket Generation and Queue Positioning
+Upon document verification, the system generates a unique alphanumeric ticket number (e.g., T-101). Users are provided with real-time updates on their queue position and an estimated wait time calculated through an advanced constraint-aware algorithm that considers current staff availability and average service processing times.
+
+[INSERT FIGURE 3: Digital Ticket and Real-time Queue Status Dashboard]
+
+4.1.4 Login Lockout Security Mechanism
+To prevent brute-force attacks on user accounts, the system implements a strict "Login Lockout" policy. If a user provides an incorrect password five (5) consecutive times, the account is automatically locked for fifteen (15) minutes. During this period, an automated security warning is sent to the user's registered email address, and all subsequent login attempts are blocked until the lockout duration expires.
+
+[INSERT FIGURE 6: Login Lockout Security Warning and Blocked Attempt Message]
+
+4.2 Administrative and Analytics Features
+
+4.2.1 AI-Powered Sentiment Analytics Dashboard
+An executive dashboard is provided for administrators to monitor campus service quality. The dashboard utilizes AI-based sentiment analysis to categorize user feedback into "Positive," "Neutral," or "Negative" sentiments. This allows for data-driven decision-making regarding staff performance and service improvements.
+
+[INSERT FIGURE 4: Admin Analytics Dashboard featuring Sentiment Distribution]
+
+4.2.2 Data Privacy and Anonymized Tracking
+To maintain user confidentiality while retaining administrative traceability, the analytics feed displays "Ticket Numbers" instead of full user names. This ensures that sentiment trends can be analyzed without compromising the personal identity of the respondents in public-facing or exported reports.
+
+4.2.3 Multi-Format Data Exporting
+For external reporting and archival purposes, the system supports high-fidelity data exports. Administrators can generate comprehensive service reports in Microsoft Excel (.xlsx), Adobe PDF (.pdf), and Microsoft Word (.docx) formats, complete with date-stamped sentiment scores and service categories.
+
+4.3 Artificial Intelligence Integration
+
+4.3.1 Premium AI Assistant (E-Queue Assistant)
+A system-integrated chatbot, powered by the Step-3.5-Flash model, provides 24/7 automated support. The assistant is themed to match the institution's branding and features a "Ready-Made FAQ" section. This allows users to receive immediate answers to common queries regarding ticket processes, office requirements, and system navigation without human intervention.
+
+[INSERT FIGURE 5: AI Assistant Interface with FAQ Quick-Action Buttons]
+
+4.4 Technical Aesthetics and User Interface
+
+4.4.1 Executive Glassmorphism Design
+The system employs a "Premium Executive" UI design, utilizing glassmorphism effects, a sophisticated Red and Green color palette (#8b0101 and #0c4b05), and responsive layouts that ensure professional visual consistency across mobile and desktop devices.

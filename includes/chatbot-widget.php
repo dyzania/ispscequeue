@@ -1,6 +1,6 @@
 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'user'): ?>
 <!-- Chatbot Widget -->
-<link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/chatbot.css?v=1.6">
+<link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/chatbot.css?v=1.8">
 
 <div class="chat-wrapper" id="chatWrapper">
     <!-- Chat Launcher -->
@@ -38,6 +38,11 @@
                     <div class="welcome-icon">👋</div>
                     <h2>Hello!</h2>
                     <p>I'm your E-Queue assistant. How can I help you today?</p>
+                    <div class="faq-container mt-6">
+                        <button type="button" class="faq-btn" onclick="triggerFAQ('How do I get a ticket?')">How to get a ticket?</button>
+                        <button type="button" class="faq-btn" onclick="triggerFAQ('What are the requirements?')">Requirements?</button>
+                        <button type="button" class="faq-btn" onclick="triggerFAQ('Check my queue position')">Check my position?</button>
+                    </div>
                 </div>
             </div>
             <!-- Typing Indicator -->

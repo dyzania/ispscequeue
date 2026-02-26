@@ -2,7 +2,14 @@
 $pageTitle = 'Ticket History';
 require_once __DIR__ . '/../../models/Ticket.php';
 include __DIR__ . '/../../includes/admin-layout-header.php';
+?>
 
+<!-- Add Export Libraries -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<?php
 $ticketModel = new Ticket();
 
 $startDate = $_GET['start_date'] ?? null;
@@ -17,6 +24,21 @@ $history = $ticketModel->getGlobalHistory($startDate, $endDate);
         <div>
             <p class="text-[10px] font-black uppercase tracking-[0.3em] text-primary-600 mb-1">Logs & Archive</p>
             <h1 class="text-2xl font-black text-gray-900 font-heading tracking-tight">Ticket History</h1>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="flex items-center p-1 bg-white border border-slate-200 rounded-xl shadow-sm">
+            <button onclick="exportHistoryToExcel()" class="px-4 py-2 hover:bg-emerald-50 text-emerald-600 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center">
+                <i class="fas fa-file-excel mr-2"></i> Excel
+            </button>
+            <div class="w-px h-4 bg-slate-100 mx-1"></div>
+            <button onclick="exportHistoryToPDF()" class="px-4 py-2 hover:bg-rose-50 text-rose-600 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center">
+                <i class="fas fa-file-pdf mr-2"></i> PDF
+            </button>
+            <div class="w-px h-4 bg-slate-100 mx-1"></div>
+            <button onclick="exportHistoryToWord()" class="px-4 py-2 hover:bg-blue-50 text-blue-600 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center">
+                <i class="fas fa-file-word mr-2"></i> Word
+            </button>
         </div>
         
         <!-- Filters -->
@@ -118,5 +140,95 @@ $history = $ticketModel->getGlobalHistory($startDate, $endDate);
         </div>
     </div>
 </div>
+
+<script>
+    const historyData = <?php echo json_encode($history); ?>;
+
+    function exportHistoryToExcel() {
+        const worksheet = XLSX.utils.json_to_sheet(historyData.map(h => ({
+            'Ticket #': h.ticket_number,
+            'Customer': h.user_name,
+            'Service': h.service_name,
+            'Window': h.window_name ? `W-${h.window_number}` : '-',
+            'Notes': h.staff_notes || '-',
+            'Processing Time': h.processing_time,
+            'Completed At': new Date(h.created_at).toLocaleString()
+        })));
+        
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Ticket History");
+        XLSX.writeFile(workbook, `Ticket_History_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    function exportHistoryToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        
+        doc.setFontSize(20);
+        doc.text("Ticket History Report", 14, 22);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+        
+        const tableBody = historyData.map(h => [
+            h.ticket_number,
+            h.user_name,
+            h.service_name,
+            h.window_name ? `W-${h.window_number}` : '-',
+            h.staff_notes || '-',
+            h.processing_time,
+            new Date(h.created_at).toLocaleString()
+        ]);
+        
+        doc.autoTable({
+            startY: 40,
+            head: [['Ticket #', 'Customer', 'Service', 'Window', 'Notes', 'Proc. Time', 'Completed At']],
+            body: tableBody,
+            theme: 'striped',
+            headStyles: { fillColor: [15, 23, 42], fontWeight: 'bold' },
+            styles: { fontSize: 8, cellPadding: 3 }
+        });
+        
+        doc.save(`Ticket_History_${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+
+    function exportHistoryToWord() {
+        let content = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>Ticket History Report</title></head>
+            <body style="font-family: Arial, sans-serif;">
+                <h1 style="color: #0f172a; text-align: center;">Ticket History Report</h1>
+                <p style="color: #64748b; text-align: center;">Report Date: ${new Date().toLocaleString()}</p>
+                <hr>
+                <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+                    <tr style="background-color: #f8fafc;">
+                        <th>Ticket #</th><th>Customer</th><th>Service</th><th>Window</th><th>Notes</th><th>Proc. Time</th><th>Completed At</th>
+                    </tr>
+                    ${historyData.map(h => `
+                        <tr>
+                            <td>${h.ticket_number}</td>
+                            <td>${h.user_name}</td>
+                            <td>${h.service_name}</td>
+                            <td>${h.window_name ? `W-${h.window_number}` : '-'}</td>
+                            <td>${h.staff_notes || '-'}</td>
+                            <td>${h.processing_time}</td>
+                            <td>${new Date(h.created_at).toLocaleString()}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            </body>
+            </html>
+        `;
+        
+        const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Ticket_History_${new Date().toISOString().split('T')[0]}.doc`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
 
 <?php include __DIR__ . '/../../includes/admin-layout-footer.php'; ?>

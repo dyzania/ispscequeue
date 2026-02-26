@@ -14,10 +14,11 @@ function sendNotification($userId, $ticketId, $type, $message, $staffNotes = nul
     // 2. Get User & Ticket Details for Email
     // We join with tickets to get the ticket number, window info, and timestamps
     $stmt = $db->prepare("
-        SELECT u.email, u.full_name, t.ticket_number, t.created_at, t.completed_at, w.window_name
+        SELECT u.email, u.full_name, t.ticket_number, t.created_at, t.completed_at, w.window_name, s.service_name
         FROM users u
         LEFT JOIN tickets t ON t.id = ?
         LEFT JOIN windows w ON t.window_id = w.id
+        LEFT JOIN services s ON t.service_id = s.id
         WHERE u.id = ?
     ");
     $stmt->execute([$ticketId, $userId]);
@@ -53,6 +54,7 @@ function sendNotification($userId, $ticketId, $type, $message, $staffNotes = nul
                     $data['email'], 
                     $data['full_name'], 
                     $data['ticket_number'],
+                    $data['service_name'] ?? 'General Service',
                     $staffNotes,
                     $waitTime
                 );

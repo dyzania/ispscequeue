@@ -27,10 +27,10 @@ function loadEnv($path) {
 loadEnv(__DIR__ . '/../.env');
 
 // Database Configuration
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'equeue_system');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: '');
+define('DB_NAME', getenv('DB_NAME') ?: 'equeue_system');
 
 //equeue_system - dummy data
 //test_db - clean data  

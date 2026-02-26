@@ -273,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
                     </div>
                 `;
                 confirmBtn.disabled = false;
-                confirmBtn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                confirmBtn.classList.remove('bg-slate-100', 'bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
                 confirmBtn.classList.add('bg-primary-600', 'text-white', 'hover:bg-primary-700', 'shadow-xl', 'shadow-primary-600/20');
                 confirmBtn.querySelector('i').classList.remove('opacity-30');
             } else {
@@ -298,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
                 });
                 
                 confirmBtn.disabled = true;
-                confirmBtn.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                confirmBtn.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
                 confirmBtn.classList.remove('bg-primary-600', 'text-white', 'hover:bg-primary-700', 'shadow-xl', 'shadow-primary-600/20');
                 confirmBtn.querySelector('i').classList.add('opacity-30');
             }
@@ -316,12 +316,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
             
             if (allChecked) {
                 confirmBtn.disabled = false;
-                confirmBtn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                confirmBtn.classList.remove('bg-slate-100', 'bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
                 confirmBtn.classList.add('bg-primary-600', 'text-white', 'hover:bg-primary-700', 'shadow-xl', 'shadow-primary-600/20', 'active:scale-95');
                 confirmBtn.querySelector('i').classList.remove('opacity-30');
             } else {
                 confirmBtn.disabled = true;
-                confirmBtn.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                confirmBtn.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
                 confirmBtn.classList.remove('bg-primary-600', 'text-white', 'hover:bg-primary-700', 'shadow-xl', 'shadow-primary-600/20', 'active:scale-95');
                 confirmBtn.querySelector('i').classList.add('opacity-30');
             }

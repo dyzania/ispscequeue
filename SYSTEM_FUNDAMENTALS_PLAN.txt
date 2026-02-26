@@ -1,0 +1,39 @@
+SYSTEM FUNDAMENTALS PLAN
+ISPSC Main E-Queue System
+
+1. OVERVIEW
+The ISPSC Main E-Queue System is designed as a high-performance, web-based queue management solution tailored for educational and administrative institutions. The system's fundamental design prioritizes scalability, security, and a premium user experience.
+
+2. TECHNOLOGY STACK
+The system utilizes a modern "LAMJ" stack (Linux/Localhost, Apache, MySQL, PHP, JavaScript) with specialized UI frameworks:
+- Backend: PHP 8.x with PDO (PHP Data Objects) for secure, prepared-statement-driven database interactions.
+- Database: MySQL for relational data storage, utilizing optimized indexing and foreign key constraints.
+- Frontend: Vanilla JavaScript (ES6+) integrated with Tailwind CSS for rapid, responsive UI development.
+- UI Extras: Flowbite for interactive components and Outfit/Plus Jakarta Sans for high-fidelity typography.
+- AI Integration: OpenRouter API (Step-3.5-Flash) for natural language processing and sentiment analysis.
+
+3. ARCHITECTURAL PATTERNS
+3.1 Singleton Pattern
+The core Database class implements a Singleton pattern to ensure a single, consistent connection to the database across all modules, reducing overhead and preventing connection leaks.
+
+3.2 Decoupled Data Layer (Models)
+Business logic and database queries are abstracted into dedicated Model classes (e.g., Ticket.php, User.php, Service.php). This ensures that data manipulation is centralized and reusable.
+
+3.3 Event-Driven Real-Time Updates
+The system employs a polling-based real-time synchronization mechanism via JavaScript (live-status.js and dashboard-refresh.js), ensuring that queue positions and status updates are reflected without requiring full page reloads.
+
+4. DATABASE DESIGN PRINCIPLES
+- Relational Normalization: Data is organized to reduce redundancy (e.g., separating users, services, and transactions).
+- Integrity Constraints: Utilization of triggers and foreign keys to maintain data consistency (e.g., cascade deletions or status updates).
+- Timezone Synchronization: All transactional data is logged using 'Asia/Manila' (+08:00) to ensure accurate wait time calculations.
+
+5. SECURITY FUNDAMENTALS
+- CSRF Protection: All state-changing requests (POST/PUT) are protected by cryptographic CSRF tokens stored in sessions.
+- Input Sanitization: Comprehensive sanitization of user input using custom helper functions to prevent XSS (Cross-Site Scripting) and SQL Injection.
+- Rate Limiting: Basic session-based rate limiting on sensitive API endpoints (e.g., OTP requests) to prevent brute-force attacks.
+- Access Control: Role-based access control (RBAC) categorizing users into 'user', 'staff', and 'admin' tiers with strict permission boundaries.
+
+6. PERFORMANCE OPTIMIZATION
+- Constraint-Aware Algorithms: The system utilizes advanced logic to distribute tickets among available staff windows dynamically.
+- Resource Minimization: High-performance CSS (Tailwind) and minimal external JS libraries to ensure fast load times, even on low-bandwidth connections.
+- Polling Optimization: Synchronized intervals for live updates to balance server load and real-time responsiveness.

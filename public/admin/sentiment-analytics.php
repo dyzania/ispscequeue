@@ -184,19 +184,19 @@ $windowBreakdown = $db->query("
                     <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 hover:border-primary-100 transition-all flex flex-col">
                         <div class="flex items-center justify-between mb-6">
                             <div class="flex items-center space-x-3">
-                                <img class="w-10 h-10 rounded-lg" src="https://ui-avatars.com/api/?name=<?php echo urlencode($feedback['user_name']); ?>&background=random" alt="">
+                                <img class="w-10 h-10 rounded-lg" src="https://ui-avatars.com/api/?name=<?php echo urlencode($feedback['ticket_number']); ?>&background=0f172a&color=fff" alt="">
                                 <div>
-                                    <div class="text-sm font-black text-gray-900"><?php echo $feedback['user_name']; ?></div>
+                                    <div class="text-sm font-black text-gray-900"><?php echo $feedback['ticket_number']; ?></div>
                                     <div class="text-[10px] font-bold text-gray-400 uppercase"><?php echo date('M d, H:i', strtotime($feedback['created_at'])); ?></div>
                                 </div>
                             </div>
                             <?php 
                                 $sentimentIcons = [
-                                    'very_positive' => ['😊', 'text-primary-800', 'bg-primary-100'],
-                                    'positive' => ['🙂', 'text-primary-600', 'bg-primary-50'],
-                                    'neutral' => ['😐', 'text-slate-600', 'bg-slate-50'],
-                                    'negative' => ['🙁', 'text-secondary-600', 'bg-secondary-50'],
-                                    'very_negative' => ['😞', 'text-secondary-800', 'bg-secondary-100']
+                                    'very_positive' => ['😊', 'text-slate-900', 'bg-transparent'],
+                                    'positive' => ['🙂', 'text-slate-900', 'bg-transparent'],
+                                    'neutral' => ['😐', 'text-slate-700', 'bg-transparent'],
+                                    'negative' => ['🙁', 'text-slate-900', 'bg-transparent'],
+                                    'very_negative' => ['😞', 'text-slate-900', 'bg-transparent']
                                 ];
                                 $style = $sentimentIcons[$feedback['sentiment']] ?? $sentimentIcons['neutral'];
                             ?>
@@ -286,9 +286,8 @@ $windowBreakdown = $db->query("
     function exportToExcel() {
         const worksheet = XLSX.utils.json_to_sheet(feedbackData.map(f => ({
             'Date': new Date(f.created_at).toLocaleString(),
-            'User': f.user_name,
+            'Ticket #': f.ticket_number,
             'Service': f.service_name,
-            'Ticket': f.ticket_number,
             'Sentiment': f.sentiment.replace('_', ' ').toUpperCase(),
             'Score': f.sentiment_score,
             'Comment': f.comment
@@ -311,7 +310,7 @@ $windowBreakdown = $db->query("
         
         const tableBody = feedbackData.map(f => [
             new Date(f.created_at).toLocaleDateString(),
-            f.user_name,
+            f.ticket_number,
             f.service_name,
             f.sentiment.replace('_', ' ').toUpperCase(),
             f.sentiment_score,
@@ -320,7 +319,7 @@ $windowBreakdown = $db->query("
         
         doc.autoTable({
             startY: 40,
-            head: [['Date', 'User', 'Service', 'Sentiment', 'Score', 'Comment']],
+            head: [['Date', 'Ticket #', 'Service', 'Sentiment', 'Score', 'Comment']],
             body: tableBody,
             theme: 'striped',
             headStyles: { fillColor: [15, 23, 42], fontWeight: 'bold' },
@@ -341,12 +340,12 @@ $windowBreakdown = $db->query("
                 <hr>
                 <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
                     <tr style="background-color: #f8fafc;">
-                        <th>Date</th><th>User</th><th>Service</th><th>Sentiment</th><th>Comment</th>
+                        <th>Date</th><th>Ticket #</th><th>Service</th><th>Sentiment</th><th>Comment</th>
                     </tr>
                     ${feedbackData.map(f => `
                         <tr>
                             <td>${new Date(f.created_at).toLocaleDateString()}</td>
-                            <td>${f.user_name}</td>
+                            <td>${f.ticket_number}</td>
                             <td>${f.service_name}</td>
                             <td>${f.sentiment.replace('_', ' ')}</td>
                             <td>${f.comment}</td>

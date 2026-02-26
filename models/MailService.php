@@ -70,17 +70,17 @@ class MailService {
         try {
             $mail->addAddress($toEmail, $fullName);
             $mail->isHTML(true);
-            $mail->Subject = 'Your Turn! Ticket #' . $ticketNumber;
+            $mail->Subject = 'Service Notification: Ticket #' . $ticketNumber;
             
             $mail->Body    = "
-                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; rounded: 10px;'>
-                    <h2 style='color: #15803d;'>It's Your Turn!</h2>
-                    <p>Hello $fullName,</p>
-                    <p>Your ticket <strong>#$ticketNumber</strong> is now being called at:</p>
-                    <h3 style='color: #15803d; background: #f0fdf4; padding: 15px; border-radius: 8px; text-align: center;'>$windowName</h3>
-                    <p>Please proceed to the counter immediately. Thank you for waiting.</p>
+                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                    <h2 style='color: #1e3a8a;'>Ticket Assignment Notification</h2>
+                    <p>Dear $fullName,</p>
+                    <p>Please be informed that your ticket <strong>#$ticketNumber</strong> is now being served at:</p>
+                    <h3 style='color: #1e3a8a; background: #eff6ff; padding: 15px; border-radius: 8px; text-align: center;'>$windowName</h3>
+                    <p>Kindly proceed to the designated counter at your earliest convenience. Thank you for your patience.</p>
                     <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                    <p style='font-size: 12px; color: #666;'>Automatic notification from " . APP_NAME . ".</p>
+                    <p style='font-size: 11px; color: #64748b;'>This is an automated notification from " . APP_NAME . ". Please do not reply to this email.</p>
                 </div>
             ";
 
@@ -91,39 +91,39 @@ class MailService {
         }
     }
 
-    public function sendTicketCompleted($toEmail, $fullName, $ticketNumber, $staffNotes = null, $waitTime = null) {
+    public function sendTicketCompleted($toEmail, $fullName, $ticketNumber, $serviceName, $staffNotes = null, $waitTime = null) {
         $mail = $this->getMailer();
         if (!$mail) return false;
 
         try {
             $mail->addAddress($toEmail, $fullName);
             $mail->isHTML(true);
-            $mail->Subject = 'Transaction Completed - ' . $ticketNumber;
+            $mail->Subject = 'Official Transaction Notice - ' . $ticketNumber;
             
             $notesHtml = $staffNotes ? "
-                <div style='margin-top: 20px; padding: 15px; background-color: #f8fafc; border-left: 4px solid #15803d; border-radius: 4px;'>
-                    <p style='margin: 0; font-size: 14px; color: #475569; font-weight: bold;'>Message from Counter:</p>
-                    <p style='margin: 5px 0 0; color: #1e293b;'>$staffNotes</p>
+                <div style='margin-top: 20px; padding: 15px; background-color: #f8fafc; border-left: 4px solid #1e3a8a; border-radius: 4px;'>
+                    <p style='margin: 0; font-size: 13px; color: #64748b; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;'>Representative Remarks:</p>
+                    <p style='margin: 5px 0 0; color: #1e293b; font-style: italic;'>\"$staffNotes\"</p>
                 </div>
             " : "";
             
             $timeHtml = $waitTime ? "
-                <div style='margin-top: 15px; padding: 10px; background-color: #f0fdf4; border-radius: 8px; text-align: center;'>
-                    <p style='margin: 0; font-size: 13px; color: #15803d;'>Total Wait Time</p>
-                    <p style='margin: 0; font-size: 18px; font-weight: bold; color: #166534;'>$waitTime</p>
+                <div style='margin-top: 15px; padding: 12px; background-color: #f1f5f9; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0;'>
+                    <p style='margin: 0; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;'>Processing Duration</p>
+                    <p style='margin: 0; font-size: 16px; font-weight: bold; color: #1e3a8a;'>$waitTime</p>
                 </div>
             " : "";
 
             $mail->Body    = "
-                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
-                    <h2 style='color: #15803d;'>Transaction Completed</h2>
-                    <p>Hello $fullName,</p>
-                    <p>Your transaction for ticket <strong>#$ticketNumber</strong> has been successfully completed.</p>
+                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;'>
+                    <h2 style='color: #1e3a8a; margin-top: 0;'>Transaction Completion Notice</h2>
+                    <p>Dear $fullName,</p>
+                    <p>This is to formally notify you that your request for <strong>$serviceName</strong> associated with Ticket <strong>#$ticketNumber</strong> has been successfully processed and completed.</p>
                     $timeHtml
                     $notesHtml
-                    <p style='margin-top: 20px;'>We value your feedback! Please tell us how we did by rating your experience on our portal.</p>
-                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                    <p style='font-size: 12px; color: #666;'>Thank you for using " . APP_NAME . ".</p>
+                    <p style='margin-top: 25px; color: #334155;'>We value your input and would appreciate a moment of your time to evaluate your service experience through our online portal.</p>
+                    <hr style='border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;'>
+                    <p style='font-size: 11px; color: #94a3b8; text-align: center;'>This is a system-generated notification from " . APP_NAME . ".<br>Thank you for choosing our services.</p>
                 </div>
             ";
 
@@ -169,6 +169,32 @@ class MailService {
             return $mail->send();
         } catch (Exception $e) {
             error_log("Announcement Email Error: " . $e->getMessage());
+            return false;
+        }
+    }
+    public function sendLockoutWarning($toEmail, $fullName) {
+        $mail = $this->getMailer();
+        if (!$mail) return false;
+
+        try {
+            $mail->addAddress($toEmail, $fullName);
+            $mail->isHTML(true);
+            $mail->Subject = 'Security Warning - Account Locked Out';
+            
+            $mail->Body    = "
+                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                    <h2 style='color: #8b0101;'>Account Security Warning</h2>
+                    <p>Hello $fullName,</p>
+                    <p>There have been 5 consecutive failed login attempts on your account. As a security measure, your account has been <strong>locked out for 15 minutes</strong>.</p>
+                    <p>If this was not you, we recommend resetting your password immediately once the lockout period ends.</p>
+                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                    <p style='font-size: 12px; color: #666;'>Automatic security notification from " . APP_NAME . ".</p>
+                </div>
+            ";
+
+            return $mail->send();
+        } catch (Exception $e) {
+            error_log("Lockout Warning Email Error: " . $e->getMessage());
             return false;
         }
     }

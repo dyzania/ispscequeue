@@ -268,7 +268,9 @@ CREATE TABLE `users` (
   `otp_code` varchar(6) DEFAULT NULL,
   `otp_expiry` datetime DEFAULT NULL,
   `last_read_announcement_id` int(11) DEFAULT 0,
-  `announcement_subscription` tinyint(1) DEFAULT 0
+  `announcement_subscription` tinyint(1) DEFAULT 0,
+  `login_attempts` int(11) DEFAULT 0,
+  `lockout_until` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --

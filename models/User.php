@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/MailService.php';
 
 class User {
     private $db;
@@ -49,7 +50,7 @@ class User {
     public function login($credential, $password) {
         // Can be email or school_id
         $stmt = $this->db->prepare("
-            SELECT id, email, password, full_name, role, school_id, is_verified
+            SELECT id, email, password, full_name, role, school_id, is_verified, lockout_until, login_attempts
             FROM users 
             WHERE email = ? OR school_id = ?
         ");
@@ -57,11 +58,44 @@ class User {
         $stmt->execute([$credential, $credential]);
         $user = $stmt->fetch();
         
-        if ($user && password_verify($password, $user['password'])) {
-            if ($user['role'] === 'user' && !$user['is_verified']) {
-                return ['unverified' => true];
+        if ($user) {
+            // Check lockout
+            if ($user['lockout_until'] && strtotime($user['lockout_until']) > time()) {
+                $remaining = ceil((strtotime($user['lockout_until']) - time()) / 60);
+                return ['locked_out' => true, 'minutes_left' => $remaining];
             }
-            return $user;
+
+            if (password_verify($password, $user['password'])) {
+                // Success: reset attempts
+                $this->db->prepare("UPDATE users SET login_attempts = 0, lockout_until = NULL WHERE id = ?")
+                         ->execute([$user['id']]);
+
+                if ($user['role'] === 'user' && !$user['is_verified']) {
+                    return ['unverified' => true];
+                }
+                return $user;
+            } else {
+                // Failure: increment attempts
+                $attempts = $user['login_attempts'] + 1;
+                $lockoutUntil = null;
+                $lockedOut = false;
+
+                if ($attempts >= 5) {
+                    $lockoutUntil = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+                    $lockedOut = true;
+                    // Send email
+                    $mail = new MailService();
+                    $mail->sendLockoutWarning($user['email'], $user['full_name']);
+                }
+
+                $this->db->prepare("UPDATE users SET login_attempts = ?, lockout_until = ? WHERE id = ?")
+                         ->execute([$attempts, $lockoutUntil, $user['id']]);
+
+                if ($lockedOut) {
+                    return ['locked_out' => true, 'minutes_left' => 5];
+                }
+                return ['failed_attempts' => $attempts];
+            }
         }
         
         return false;

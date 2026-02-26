@@ -9,6 +9,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const chatContainer = document.getElementById("chatContainer");
   const typingIndicator = document.getElementById("typingIndicator");
 
+  // Expose triggerFAQ globally for the inline onclick handlers
+  window.triggerFAQ = function (question) {
+    if (typeof sendMessage === "function") {
+      sendMessage(question);
+    }
+  };
+
   let sessionId = generateSessionId();
   let isChatOpen = false;
 
