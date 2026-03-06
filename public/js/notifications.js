@@ -15,7 +15,6 @@ if (typeof EQueueNotifications === "undefined") {
         "color: #059669; font-weight: bold; font-size: 12px;",
       );
 
-      // Support both new and old variable names during migration
       this.baseUrl =
         typeof ANTIGRAVITY_BASE_URL !== "undefined"
           ? ANTIGRAVITY_BASE_URL

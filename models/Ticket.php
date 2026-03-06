@@ -189,10 +189,8 @@ class Ticket {
         return $result['position'];
     }
 
-    /**
-     * Advanced Constraint-Aware Wait Time Calculation
-     * Distributes preceding tickets across eligible windows based on service toggles and current workload.
-     */
+    //Advanced Constraint-Aware Wait Time Calculation
+    //Distributes preceding tickets across eligible windows based on service toggles and current workload.
     public function getAdvancedEstimatedWaitTime($ticketId, $timestamp = null) {
         $now = $timestamp ?: time();
         $stmt = $this->db->prepare("SELECT service_id, created_at FROM tickets WHERE id = ?");
@@ -233,7 +231,6 @@ class Ticket {
             $status = $active['status'];
             $startTime = ($status === 'serving') ? $active['served_at'] : $active['called_at'];
             
-            // If miraculously both are null, assume it just started to prevent infinite/huge EWT
             $elapsed = $startTime ? ($now - strtotime($startTime)) : 0;
             
             // Get Performance-Aware Timing (APT)
@@ -243,13 +240,10 @@ class Ticket {
             }
             $totalEst = $serviceApts[$active['service_id']];
             
-            // If just called, the window is busy but service hasn't fully started. 
-            // We assume the full service time is still ahead once they start.
             $remaining = ($status === 'called') ? $totalEst : max(0, $totalEst - $elapsed);
             $workloads[$active['window_id']] = $remaining;
         }
 
-        // 3. Fetch all waiting tickets AHEAD of this one (Global Order)
         $stmt = $this->db->prepare("
             SELECT t.service_id, s.target_time
             FROM tickets t
@@ -261,8 +255,7 @@ class Ticket {
         $stmt->execute([$targetCreatedAt, $targetCreatedAt, $ticketId]);
         $precedingTickets = $stmt->fetchAll();
 
-        // 4. Simulate distribution
-
+        // Simulate distribution
         foreach ($precedingTickets as $t) {
             $sId = $t['service_id'];
             
@@ -330,8 +323,6 @@ class Ticket {
             return $target['queue_position'];
         }
 
-        // Fallback: This is the logic the user felt was wrong, but we keep it for legacy 
-        // until new tickets are created with stored positions.
         $stmt = $this->db->prepare("
             SELECT COUNT(*) + 1 as pos
             FROM tickets
@@ -380,24 +371,6 @@ class Ticket {
     }
     
     public function callNextTicket($windowId) {
-        // Check if window already has an active ticket (called or serving)
-        // REMOVED: Allow multiple tickets to be called
-        /*
-        $stmt = $this->db->prepare("
-            SELECT COUNT(*) as active_count
-            FROM tickets
-            WHERE window_id = ?
-            AND status IN ('called', 'serving')
-        ");
-        $stmt->execute([$windowId]);
-        $activeCheck = $stmt->fetch();
-        
-        if ($activeCheck['active_count'] > 0) {
-            return ['success' => false, 'message' => 'You already have an active ticket. Please complete it first.'];
-        }
-        */
-        
-        // Get window's enabled services
         $stmt = $this->db->prepare("
             SELECT service_id 
             FROM window_services 
@@ -441,7 +414,7 @@ class Ticket {
             
             $ticketData = $this->getTicketById($ticket['id']);
             
-            // Trigger Notifications (Web Push + Email)
+            // Trigger Notifications (Web Toast + Email)
             sendNotification(
                 $ticketData['user_id'], 
                 $ticketData['id'], 
@@ -502,7 +475,7 @@ class Ticket {
         $success = $stmt->execute([$staffNotes, $ticketId]);
         
         if ($success) {
-             // Trigger Notifications (Web Push + Email)
+             // Trigger Notifications (Web Toast + Email)
              sendNotification(
                  $ticket['user_id'], 
                  $ticketId, 
@@ -517,7 +490,6 @@ class Ticket {
     
     
     private function updateQueuePositions($serviceId) {
-        // This is handled by counting in real-time, no need to store positions
         return true;
     }
     
@@ -634,7 +606,6 @@ class Ticket {
     }
 
     public function getWaitingQueueForWindow($windowId) {
-        // This leverages the logic in getWaitingQueue but specifically filtered for a window
         return $this->getWaitingQueue(null, $windowId);
     }
 

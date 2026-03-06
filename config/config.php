@@ -32,18 +32,6 @@ define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
 define('DB_NAME', getenv('DB_NAME') ?: 'equeue_system');
 
-//equeue_system - dummy data
-//test_db - clean data  
-
-// Application Configuration
-// -------------------------------------------------------------------------
-// PRODUCTION DEPLOYMENT CHECKLIST:
-// 1. Update BASE_URL below to: 'https://ispscequeue.com/public'
-// 2. Update database credentials (DB_HOST, DB_USER, DB_PASS, DB_NAME)
-// 3. Set display_errors to 0 (line 28)
-// 4. Re-enable requireLogin() and requireRole() in this file
-// -------------------------------------------------------------------------
-
 // Dynamic Base URL detection for local network/mobile access
 $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];
@@ -57,6 +45,7 @@ $baseUrl = $protocol . '://' . $host . '/ispscequeue/public';
 define('BASE_URL', $baseUrl);
 
 define('APP_NAME', 'E-Queue System');
+define('OFFICE_NAME', 'Main Office');
 
 // Email Configuration (for notifications)
 define('MAILER_PATH', __DIR__ . '/../mailer/autoload.php');

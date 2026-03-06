@@ -31,11 +31,6 @@ class Feedback {
         // Call the Python sentiment analysis API
         $data = json_encode(["text" => $comment]);
         
-        // -------------------------------------------------------------------------
-        // PRODUCTION HOSTING:
-        // If your Python server is on a different machine, update this URL to:
-        // "https://your-python-api.com/analyze" or "http://your-server-ip:8000/analyze"
-        // -------------------------------------------------------------------------
         $ch = curl_init("http://127.0.0.1:8000/analyze");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);

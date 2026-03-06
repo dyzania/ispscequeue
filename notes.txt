@@ -3,6 +3,11 @@
                         THESIS DEFENSE GUIDE
 ================================================================================
 
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+[pip install -r sentiment_analysis/requirements.txt]
+uvicorn app:app --host 127.0.0.1 --port 8000 --reload
+
 PROJECT OVERVIEW
 ================================================================================
 System Name: ISPSC E-Queue System
@@ -68,7 +73,7 @@ DATABASE STRUCTURE (queue_schema.sql)
 CORE TABLES:
 1. users: Authentication, roles (admin, staff, user), and status.
 2. tickets: Core queue data (number, service_id, window_id, status, timestamps).
-3. services: List of available services (e.g., Registrar, Accounting).
+3. services: List of available services (e.g., Admissions, Accounting).
 4. windows: Counter/Window configurations and staff assignments.
 5. window_services: Mapping services to specific windows.
 6. feedback: Customer ratings and sentiment analysis results.
@@ -94,12 +99,16 @@ KEY FEATURES & IMPLEMENTATION
    - Leverages NLP models to categorize feedback as Positive or Negative.
    - Integrated via PHP `curl` calls from the Feedback model.
 
-3. AI CHATBOT (includes/chatbot.php)
+3. AI CHATBOT (public/api/chatbot.php)
    - Integration with OpenRouter API.
    - Uses `ai_context` table to provide project-specific answers.
    - Accessible from the user dashboard for instant support.
 
-4. REAL-TIME DASHBOARDS
+4. Constraint Aware Scheduling (models/Ticket.php)
+   - Uses `windows` table to map services to specific windows.
+   - Ensures that only authorized windows can serve specific services.
+
+5. REAL-TIME DASHBOARDS
    - Vanilla JS AJAX polling to minimize server load while ensuring freshness.
    - Automatic refresh of ticket lists and status indicators.
 
@@ -170,5 +179,6 @@ A: MD5 is fast and vulnerable to brute-force and rainbow table attacks.
    secure against modern cracking techniques.
 
 ================================================================================
-END OF THESIS DEFENSE GUIDE
+NOTEES GUIDE
 ================================================================================
+

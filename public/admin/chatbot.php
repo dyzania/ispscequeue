@@ -175,20 +175,7 @@ if ($message): ?>
             </div>
         </div>
 
-        <div class="bg-indigo-600 rounded-2xl p-10 shadow-2xl shadow-indigo-200 relative overflow-hidden group">
-            <div class="relative z-10 text-white">
-                <h3 class="text-xl font-black font-heading mb-4 tracking-tight text-white">Live Testing</h3>
-                <p class="text-indigo-100 text-sm font-medium mb-8 leading-relaxed">Instantly verify knowledge base updates using the integrated chat widget.</p>
-                <button onclick="document.getElementById('chatToggleBtn').click()" class="w-full bg-white text-indigo-700 font-black py-4 rounded-lg shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center space-x-2">
-                    <i class="fas fa-comment-dots text-lg"></i>
-                    <span>Test Updates</span>
-                </button>
-            </div>
-            <!-- Decorative Icon -->
-            <div class="absolute -right-6 -bottom-6 text-9xl text-white/10 group-hover:rotate-12 transition-transform duration-700">
-                <i class="fas fa-robot"></i>
-            </div>
-        </div>
+
     </div>
 </div>
 

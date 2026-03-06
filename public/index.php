@@ -17,7 +17,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISPSC - Main Registrar E-Queue System</title>
+    <title>ISPSC - <?php echo OFFICE_NAME . ' ' . APP_NAME; ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <?php injectTailwindConfig(); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -57,7 +57,7 @@ if (isset($_SESSION['user_id'])) {
                 </div>
                 <div class="flex flex-col">
                     <span class="text-lg md:text-2xl font-black tracking-tight font-heading text-white leading-none uppercase">ISPSC</span>
-                    <span class="text-[8px] md:text-[10px] font-bold text-primary-300 tracking-widest uppercase">Main Registrar E-Queue System</span>
+                    <span class="text-[8px] md:text-[10px] font-bold text-primary-300 tracking-widest uppercase"><?php echo OFFICE_NAME . ' ' . APP_NAME; ?></span>
                 </div>
             </div>
             
@@ -220,12 +220,12 @@ if (isset($_SESSION['user_id'])) {
                 </div>
                 <div class="flex flex-col">
                     <span class="text-lg font-black tracking-tight font-heading text-white leading-none uppercase">ISPSC</span>
-                    <span class="text-[10px] font-bold text-primary-400 tracking-widest uppercase">Main E-Queue System</span>
+                    <span class="text-[10px] font-bold text-primary-400 tracking-widest uppercase"><?php echo OFFICE_NAME . ' ' . APP_NAME; ?></span>
                 </div>
             </div>
             
             <p class="text-gray-500 font-medium text-sm">
-                &copy; 2026 ISPSC Main Registrar. All rights reserved. Built for Excellence.
+                &copy; 2026 ISPSC <?php echo OFFICE_NAME; ?>. All rights reserved. Built for Excellence.
             </p>
 
             <div class="flex space-x-6 text-gray-500">

@@ -22,10 +22,11 @@ if (isset($_GET['delete'])) {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
     $title = sanitize($_POST['title']);
     $content = $_POST['content']; // Allow HTML from Quill
     $image_path = null;
+    $id = isset($_POST['announcement_id']) ? (int)$_POST['announcement_id'] : null;
 
     // Handle image upload
     if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
@@ -53,17 +54,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($title) || empty(trim(strip_tags($content)))) {
         $error = 'Title and content cannot be empty.';
     } elseif (!$error) {
-        if ($announcementModel->create($title, $content, $image_path)) {
-            // Send email notifications to all users
-            $users = $userModel->getAllUsers();
-            foreach ($users as $u) {
-                if (!empty($u['email'])) {
-                    $mailService->sendAnnouncementEmail($u['email'], $u['full_name'], $title, $content);
+        if ($_POST['action'] === 'create') {
+            if ($announcementModel->create($title, $content, $image_path)) {
+                // Send email notifications to all users
+                $users = $userModel->getAllUsers();
+                foreach ($users as $u) {
+                    if (!empty($u['email'])) {
+                        $mailService->sendAnnouncementEmail($u['email'], $u['full_name'], $title, $content);
+                    }
                 }
+                $message = 'Announcement created and email notifications sent!';
+            } else {
+                $error = 'Failed to create announcement.';
             }
-            $message = 'Announcement created and email notifications sent!';
-        } else {
-            $error = 'Failed to create announcement.';
+        } elseif ($_POST['action'] === 'update' && $id) {
+            if ($announcementModel->update($id, $title, $content, $image_path)) {
+                $message = 'Announcement updated successfully!';
+            } else {
+                $error = 'Failed to update announcement.';
+            }
         }
     }
 }
@@ -97,6 +106,9 @@ $announcements = $announcementModel->getAll();
             
             <div class="p-8">
                 <form method="POST" id="announcementForm" enctype="multipart/form-data">
+                    <input type="hidden" name="action" id="formAction" value="create">
+                    <input type="hidden" name="announcement_id" id="announcementId" value="">
+                    
                     <div class="mb-6">
                         <label for="title" class="block text-gray-700 text-xs font-black uppercase tracking-[0.2em] mb-3 ml-1">Announcement Title</label>
                         <input type="text" name="title" id="title" required
@@ -124,9 +136,14 @@ $announcements = $announcementModel->getAll();
                         <div id="editor-container" class="bg-white rounded-xl border border-slate-200 shadow-inner" style="height: 250px;"></div>
                     </div>
 
-                    <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-black py-5 rounded-xl shadow-xl shadow-slate-200 transition transform hover:-translate-y-1 active:scale-95 flex items-center justify-center">
-                        <i class="fas fa-paper-plane mr-3"></i>Post Announcement
-                    </button>
+                    <div class="flex gap-4">
+                        <button type="submit" id="submitBtn" class="flex-1 bg-slate-900 hover:bg-black text-white font-black py-5 rounded-xl shadow-xl shadow-slate-200 transition transform hover:-translate-y-1 active:scale-95 flex items-center justify-center">
+                            <i class="fas fa-paper-plane mr-3"></i>Post Announcement
+                        </button>
+                        <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-5 px-8 rounded-xl transition transform hover:-translate-y-1 active:scale-95 flex items-center justify-center">
+                            Cancel
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -166,12 +183,19 @@ $announcements = $announcementModel->getAll();
                                 <?php endif; ?>
                                 
                                 <div class="flex-1">
-                                    <div class="flex justify-between items-start mb-2">
+                                    <div class="flex justify-between items-start gap-4 mb-2">
                                         <h4 class="text-lg font-black text-slate-900 leading-tight"><?php echo $a['title']; ?></h4>
-                                        <a href="?delete=<?php echo $a['id']; ?>" onclick="return confirm('Permanent delete this announcement?')" 
-                                            class="text-slate-300 hover:text-red-500 transition-colors ml-4 p-2">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </a>
+                                        <div class="flex items-center bg-white shadow-sm border border-slate-100 rounded-xl p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0 shrink-0">
+                                            <button type="button" 
+                                                onclick="editAnnouncement(<?php echo htmlspecialchars(json_encode($a)); ?>)"
+                                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">
+                                                <i class="fas fa-edit text-sm"></i>
+                                            </button>
+                                            <a href="?delete=<?php echo $a['id']; ?>" onclick="return confirm('Permanent delete this announcement?')" 
+                                                class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                                                <i class="fas fa-trash-alt text-sm"></i>
+                                            </a>
+                                        </div>
                                     </div>
                                     <div class="text-slate-500 text-sm line-clamp-2 prose-sm mb-4">
                                         <?php echo strip_tags($a['content']); ?>
@@ -219,6 +243,30 @@ $announcements = $announcementModel->getAll();
         } else {
             fileNameDisplay.classList.add('hidden');
         }
+    }
+
+    function editAnnouncement(announcement) {
+        document.getElementById('formAction').value = 'update';
+        document.getElementById('announcementId').value = announcement.id;
+        document.getElementById('title').value = announcement.title;
+        quill.root.innerHTML = announcement.content;
+        
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save mr-3"></i>Update Announcement';
+        document.getElementById('cancelBtn').classList.remove('hidden');
+        
+        // Scroll to form
+        document.getElementById('announcementForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        document.getElementById('announcementForm').reset();
+        document.getElementById('formAction').value = 'create';
+        document.getElementById('announcementId').value = '';
+        quill.root.innerHTML = '';
+        
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-paper-plane mr-3"></i>Post Announcement';
+        document.getElementById('cancelBtn').classList.add('hidden');
+        document.getElementById('file-name').classList.add('hidden');
     }
 </script>
 

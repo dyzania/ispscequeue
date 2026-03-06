@@ -30,7 +30,7 @@ if (!$chatbot_content) {
 // Construct prompt
 $prompt = "Be precise, simple, provide a direct and complete answer, avoiding vague, generic, or overly broad explanations.
 Remove any unnecessary characters. If the question cannot be answered using the following context, 
-respond only with: 'I do not have the information needed to answer this question. Please email this inquiry to admin@registrar.com or ask at the Registrar Office.' 
+respond only with: 'I do not have the information needed to answer this question. Please email this inquiry to support@window.local or ask at the counter.' 
 
 Context: {$chatbot_content}
 

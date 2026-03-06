@@ -48,7 +48,6 @@ class User {
     }
     
     public function login($credential, $password) {
-        // Can be email or school_id
         $stmt = $this->db->prepare("
             SELECT id, email, password, full_name, role, school_id, is_verified, lockout_until, login_attempts
             FROM users 

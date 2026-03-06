@@ -89,16 +89,16 @@ if (isset($_GET['update']) && $_GET['update'] === 'password_success') {
                     </div>
                     <div class="flex flex-col">
                         <span class="text-2xl font-black tracking-tighter font-heading text-white leading-none">ISPSC MAIN</span>
-                        <span class="text-sm font-bold tracking-[0.3em] text-primary-400 mt-1 uppercase">Registrar E-Queue</span>
+                        <span class="text-sm font-bold tracking-[0.3em] text-primary-400 mt-1 uppercase"><?php echo APP_NAME; ?></span>
                     </div>
                 </a>
                 
                 <h1 class="text-6xl font-black leading-tight mb-8 font-heading text-white">
                     ISPSC MAIN <br>
-                    <span class="text-primary-400 font-black">REGISTRAR E-QUEUE.</span>
+                    <span class="text-primary-400 font-black"><?php echo strtoupper(APP_NAME); ?>.</span>
                 </h1>
                 <p class="text-gray-400 text-xl max-w-md font-medium leading-relaxed">
-                    Official e-queueing portal for ISPSC Main Registrar. Manage your walk-in service flow with precision and ease.
+                    Official e-queueing portal for ISPSC <?php echo OFFICE_NAME; ?>. Manage your walk-in service flow with precision and ease.
                 </p>
             </div>
 

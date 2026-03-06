@@ -23,11 +23,10 @@ requireRole('admin');
         .sidebar-active { background: rgba(255, 255, 255, 0.1); border-left: 4px solid #ffcd00; }
         .glass-sidebar { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); }
         
-        /* TV/4K scaling only */
+        /* TV/4K scaling*/
         @media (min-width: 1921px) {
-            html { font-size: 18px; } /* Scales rem-based values */
+            html { font-size: 18px; } 
             body { font-size: 1.125rem; }
-            /* Remove aggressive overrides for standard desktops to keep cards proportional */
         }
     </style>
 </head>
@@ -109,7 +108,7 @@ requireRole('admin');
                     </div>
                     <div class="flex flex-col">
                         <h1 class="text-2xl font-black font-heading text-white tracking-tight leading-none">ISPSC</h1>
-                        <p class="text-[10px] font-bold text-white/70 tracking-[0.2em] uppercase mt-0.5">Main E-Queue System</p>
+                        <p class="text-[10px] font-bold text-white/70 tracking-[0.2em] uppercase mt-0.5"><?php echo OFFICE_NAME . ' ' . APP_NAME; ?></p>
                     </div>
                 </div>
 

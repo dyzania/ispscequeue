@@ -4,8 +4,6 @@ from transformers import pipeline
 
 app = FastAPI(title="Sentiment Analysis API")
 
-# Firewall, ensure port 8000 is open for your PHP server's IP.
-
 model_id = "tabularisai/multilingual-sentiment-analysis"
 
 try:

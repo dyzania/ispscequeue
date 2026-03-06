@@ -45,7 +45,7 @@ if (isset($_SESSION['user_id'])) {
     <main class="max-w-2xl mx-auto px-4 py-8 md:py-20">
         <div class="mb-10 md:mb-16 text-center">
             <h1 class="text-3xl md:text-5xl font-black text-gray-900 font-heading tracking-tight mb-4">Campus News Feed</h1>
-            <p class="text-gray-500 text-sm md:text-base font-medium max-w-md mx-auto mb-8">Stay updated with the latest events, announcements, and news from the ISPSC Registrar.</p>
+            <p class="text-gray-500 text-sm md:text-base font-medium max-w-md mx-auto mb-8">Stay updated with the latest events, announcements, and news from the ISPSC <?php echo OFFICE_NAME; ?>.</p>
             
         </div>
 
@@ -67,7 +67,7 @@ if (isset($_SESSION['user_id'])) {
                                 <i class="fas fa-university text-lg md:text-xl"></i>
                             </div>
                             <div class="min-w-0">
-                                <h4 class="text-base md:text-lg font-black text-slate-900 group-hover:text-primary-600 transition-colors truncate leading-tight">ISPSC Registrar</h4>
+                                <h4 class="text-base md:text-lg font-black text-slate-900 group-hover:text-primary-600 transition-colors truncate leading-tight">ISPSC <?php echo OFFICE_NAME; ?></h4>
                                 <p class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">
                                     <i class="far fa-clock mr-1"></i>
                                     <?php 

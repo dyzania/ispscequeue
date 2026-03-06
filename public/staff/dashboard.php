@@ -227,8 +227,8 @@ if ($window) {
                                         <label for="staff-notes-<?php echo $ticket['id']; ?>" class="block text-[10px] 5xl:text-xl font-black text-gray-400 uppercase tracking-widest mb-2">Notes to User</label>
                                         <textarea id="staff-notes-<?php echo $ticket['id']; ?>" 
                                                   class="w-full px-4 5xl:px-10 py-3 5xl:py-8 bg-slate-50 border border-slate-200 rounded-xl 5xl:rounded-[32px] text-xs 5xl:text-2xl font-medium focus:ring-4 focus:ring-primary-100 focus:border-primary-400 transition-all resize-none"
-                                                  placeholder="Type transaction notes here..."
-                                                  rows="3"><?php echo $ticket['staff_notes']; ?></textarea>
+                                                  placeholder="Your document is ready for release"
+                                                  rows="3"><?php echo !empty($ticket['staff_notes']) ? $ticket['staff_notes'] : 'Your document is ready for release'; ?></textarea>
                                     </div>
                                 <?php endif; ?>
 

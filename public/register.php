@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="index.php" class="flex items-center space-x-4 mb-16 group justify-end">
                     <div class="flex flex-col text-right">
                         <span class="text-2xl font-black tracking-tighter font-heading text-white leading-none">ISPSC MAIN</span>
-                        <span class="text-sm font-bold tracking-[0.3em] text-primary-400 mt-1 uppercase">Registrar E-Queue</span>
+                        <span class="text-sm font-bold tracking-[0.3em] text-primary-400 mt-1 uppercase"><?php echo APP_NAME; ?></span>
                     </div>
                     <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl group-hover:rotate-6 transition-all duration-500 p-2">
                         <img src="img/logo.png" alt="ISPSC Logo" class="w-full h-full object-contain">
@@ -193,10 +193,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <h1 class="text-6xl font-black leading-tight mb-8 font-heading text-white text-right">
                     JOIN THE <br>
-                    <span class="text-primary-400 font-black">REGISTRAR QUEUE.</span>
+                    <span class="text-primary-400 font-black"><?php echo strtoupper(APP_NAME); ?>.</span>
                 </h1>
                 <p class="text-gray-400 text-xl max-w-sm ml-auto text-right font-medium leading-relaxed">
-                    Efficiency starts with an identity. Register now to experience the next-gen Registrar e-queueing grid.
+                    Efficiency starts with an identity. Register now to experience the next-gen <?php echo OFFICE_NAME; ?> e-queueing grid.
                 </p>
             </div>
 
