@@ -27,3 +27,9 @@
 [2026-03-05 23:06:10] [IP:::1] [USER:62] [EVENT:RATE_LIMIT_EXCEEDED] Action: user_cancel_ticket, Limit: 5
 [2026-03-05 23:06:14] [IP:::1] [USER:62] [EVENT:RATE_LIMIT_EXCEEDED] Action: user_cancel_ticket, Limit: 5
 [2026-03-05 23:06:17] [IP:::1] [USER:62] [EVENT:RATE_LIMIT_EXCEEDED] Action: user_cancel_ticket, Limit: 5
+[2026-03-07 15:26:29] [IP:::1] [USER:71] [EVENT:CSRF_FAILURE] Invalid token provided. Expected: b57f8fd45037fce0ec64ee0fd1b8d1ed334de14f2bcbcf207242349a655495b9, Got: 
+[2026-03-07 15:26:34] [IP:::1] [USER:71] [EVENT:CSRF_FAILURE] Invalid token provided. Expected: b57f8fd45037fce0ec64ee0fd1b8d1ed334de14f2bcbcf207242349a655495b9, Got: 
+[2026-03-07 15:26:45] [IP:::1] [USER:71] [EVENT:CSRF_FAILURE] Invalid token provided. Expected: b57f8fd45037fce0ec64ee0fd1b8d1ed334de14f2bcbcf207242349a655495b9, Got: 
+[2026-03-07 15:26:50] [IP:::1] [USER:71] [EVENT:CSRF_FAILURE] Invalid token provided. Expected: b57f8fd45037fce0ec64ee0fd1b8d1ed334de14f2bcbcf207242349a655495b9, Got: 
+[2026-03-07 15:26:54] [IP:::1] [USER:71] [EVENT:CSRF_FAILURE] Invalid token provided. Expected: b57f8fd45037fce0ec64ee0fd1b8d1ed334de14f2bcbcf207242349a655495b9, Got: 
+[2026-03-07 15:27:29] [IP:::1] [USER:71] [EVENT:CSRF_FAILURE] Invalid token provided. Expected: b57f8fd45037fce0ec64ee0fd1b8d1ed334de14f2bcbcf207242349a655495b9, Got: 

@@ -56,14 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
     } elseif (!$error) {
         if ($_POST['action'] === 'create') {
             if ($announcementModel->create($title, $content, $image_path)) {
-                // Send email notifications to all users
-                $users = $userModel->getAllUsers();
-                foreach ($users as $u) {
-                    if (!empty($u['email'])) {
-                        $mailService->sendAnnouncementEmail($u['email'], $u['full_name'], $title, $content);
-                    }
-                }
-                $message = 'Announcement created and email notifications sent!';
+                $message = 'Announcement created successfully!';
             } else {
                 $error = 'Failed to create announcement.';
             }

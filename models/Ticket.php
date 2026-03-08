@@ -9,7 +9,7 @@ class Ticket {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    public function createTicket($userId, $serviceId, $userNote = null) {
+    public function createTicket($userId, $serviceId, $userNote = null, $isPriority = 0) {
         // Check if user has pending feedback
         if ($this->hasPendingFeedback($userId)) {
             return [
@@ -35,11 +35,11 @@ class Ticket {
         
         // Insert ticket
         $stmt = $this->db->prepare("
-            INSERT INTO tickets (ticket_number, user_id, service_id, status, user_note, queue_position) 
-            VALUES (?, ?, ?, 'waiting', ?, ?)
+            INSERT INTO tickets (ticket_number, user_id, service_id, status, user_note, is_priority, queue_position, office_id) 
+            VALUES (?, ?, ?, 'waiting', ?, ?, ?, ?)
         ");
         
-        $stmt->execute([$ticketNumber, $userId, $serviceId, $userNote, $initialPos]);
+        $stmt->execute([$ticketNumber, $userId, $serviceId, $userNote, $isPriority, $initialPos, $_SESSION['office_id'] ?? 1]);
         $ticketId = $this->db->lastInsertId();
         
         // Update queue position
@@ -70,7 +70,8 @@ class Ticket {
         
         $count = $result['count'] + 1;
         
-        return $service['service_code'] . date('md') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
+        // Format: [ServiceCode][Day]-[ZeroPaddedCounter] e.g., COG7-001
+        return $service['service_code'] . date('j') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
     }
     
     public function hasPendingFeedback($userId) {
@@ -122,25 +123,26 @@ class Ticket {
     
     public function getCurrentTicket($userId) {
         $stmt = $this->db->prepare("
-            SELECT t.*, s.service_name, s.service_code, s.requirements, s.target_time, w.window_number, w.window_name, w.location_info,
-                   u.full_name as user_name, u.email as user_email
+            SELECT t.*, s.service_name, s.service_code, s.requirements, s.target_time, 
+                   w.window_number, w.window_name, w.location_info,
+                   u.full_name as user_name, u.email as user_email,
+                   o.name as office_name
             FROM tickets t
             JOIN services s ON t.service_id = s.id
             LEFT JOIN windows w ON t.window_id = w.id
             JOIN users u ON t.user_id = u.id
+            JOIN offices o ON t.office_id = o.id
             WHERE t.user_id = ? 
             AND t.status IN ('waiting', 'called', 'serving')
             ORDER BY t.created_at DESC
             LIMIT 1
         ");
-        
         $stmt->execute([$userId]);
         return $stmt->fetch();
     }
-    
     public function getQueuePosition($ticketId) {
         $stmt = $this->db->prepare("
-            SELECT service_id, created_at 
+            SELECT service_id, created_at, is_priority 
             FROM tickets 
             WHERE id = ?
         ");
@@ -155,10 +157,20 @@ class Ticket {
             FROM tickets 
             WHERE service_id = ? 
             AND status = 'waiting'
-            AND (created_at < ? OR (created_at = ? AND id < ?))
+            AND (
+                (is_priority > ?) OR 
+                (is_priority = ? AND (created_at < ? OR (created_at = ? AND id < ?)))
+            )
         ");
         
-        $stmt->execute([$ticket['service_id'], $ticket['created_at'], $ticket['created_at'], $ticketId]);
+        $stmt->execute([
+            $ticket['service_id'], 
+            $ticket['is_priority'], 
+            $ticket['is_priority'], 
+            $ticket['created_at'], 
+            $ticket['created_at'], 
+            $ticketId
+        ]);
         $result = $stmt->fetch();
         
         return $result['position'];
@@ -166,7 +178,7 @@ class Ticket {
 
     public function getGlobalQueuePosition($ticketId) {
         $stmt = $this->db->prepare("
-            SELECT created_at 
+            SELECT created_at, is_priority 
             FROM tickets 
             WHERE id = ?
         ");
@@ -180,10 +192,19 @@ class Ticket {
             SELECT COUNT(*) as position 
             FROM tickets 
             WHERE status = 'waiting'
-            AND (created_at < ? OR (created_at = ? AND id < ?))
+            AND (
+                (is_priority > ?) OR 
+                (is_priority = ? AND (created_at < ? OR (created_at = ? AND id < ?)))
+            )
         ");
         
-        $stmt->execute([$ticket['created_at'], $ticket['created_at'], $ticketId]);
+        $stmt->execute([
+            $ticket['is_priority'], 
+            $ticket['is_priority'], 
+            $ticket['created_at'], 
+            $ticket['created_at'], 
+            $ticketId
+        ]);
         $result = $stmt->fetch();
         
         return $result['position'];
@@ -337,14 +358,15 @@ class Ticket {
     
     public function getWaitingQueue($serviceId = null, $windowId = null) {
         $query = "
-            SELECT t.*, s.service_name, s.service_code, u.full_name as user_name, u.email as user_email
+            SELECT t.*, s.service_name, s.service_code, u.full_name as user_name, u.email as user_email, u.college
             FROM tickets t
             JOIN services s ON t.service_id = s.id
             JOIN users u ON t.user_id = u.id
             WHERE t.status = 'waiting'
+            AND t.office_id = ?
         ";
         
-        $params = [];
+        $params = [$_SESSION['office_id'] ?? 1];
         
         if ($serviceId) {
             $query .= " AND t.service_id = ?";
@@ -352,6 +374,12 @@ class Ticket {
         }
         
         if ($windowId) {
+            // Get window preferred colleges
+            $stmt = $this->db->prepare("SELECT preferred_colleges FROM windows WHERE id = ?");
+            $stmt->execute([$windowId]);
+            $window = $stmt->fetch();
+            $preferredColleges = !empty($window['preferred_colleges']) ? explode(',', $window['preferred_colleges']) : [];
+
             // Get services enabled for this window
             $query .= " AND t.service_id IN (
                 SELECT service_id 
@@ -360,9 +388,18 @@ class Ticket {
                 AND is_enabled = 1
             )";
             $params[] = $windowId;
+
+            // Filter by college if preferences are set
+            if (!empty($preferredColleges)) {
+                $placeholders = str_repeat('?,', count($preferredColleges) - 1) . '?';
+                $query .= " AND u.college IN ($placeholders)";
+                foreach ($preferredColleges as $college) {
+                    $params[] = $college;
+                }
+            }
         }
         
-        $query .= " ORDER BY t.created_at ASC, t.id ASC";
+        $query .= " ORDER BY t.is_priority DESC, t.created_at ASC, t.id ASC";
         
         $stmt = $this->db->prepare($query);
         $stmt->execute($params);
@@ -383,19 +420,36 @@ class Ticket {
         if (empty($services)) {
             return ['success' => false, 'message' => 'No services enabled for this window'];
         }
+
+        // Get window preferences for college
+        $stmt = $this->db->prepare("SELECT preferred_colleges FROM windows WHERE id = ?");
+        $stmt->execute([$windowId]);
+        $window = $stmt->fetch();
+        $preferredColleges = !empty($window['preferred_colleges']) ? explode(',', $window['preferred_colleges']) : [];
         
-        // Get next waiting ticket
+        // Build query
         $placeholders = str_repeat('?,', count($services) - 1) . '?';
-        $stmt = $this->db->prepare("
-            SELECT * 
-            FROM tickets 
-            WHERE service_id IN ($placeholders) 
-            AND status = 'waiting'
-            ORDER BY created_at ASC
-            LIMIT 1
-        ");
+        $sql = "
+            SELECT t.* 
+            FROM tickets t
+            JOIN users u ON t.user_id = u.id
+            WHERE t.service_id IN ($placeholders) 
+            AND t.status = 'waiting'
+        ";
+        $params = $services;
+
+        if (!empty($preferredColleges)) {
+            $colPlaceholders = str_repeat('?,', count($preferredColleges) - 1) . '?';
+            $sql .= " AND u.college IN ($colPlaceholders)";
+            foreach ($preferredColleges as $college) {
+                $params[] = $college;
+            }
+        }
+
+        $sql .= " ORDER BY t.is_priority DESC, t.created_at ASC LIMIT 1";
         
-        $stmt->execute($services);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         $ticket = $stmt->fetch();
         
         if (!$ticket) {
@@ -429,9 +483,16 @@ class Ticket {
                 'success' => true,
                 'ticket' => $ticketData
             ];
-        } else {
-             return ['success' => false, 'message' => 'No waiting tickets'];
         }
+    }
+
+    public function recallTicket($ticketId) {
+        $stmt = $this->db->prepare("
+            UPDATE tickets 
+            SET called_at = NOW() 
+            WHERE id = ? AND status = 'called'
+        ");
+        return $stmt->execute([$ticketId]);
     }
     
     public function startServing($ticketId) {
@@ -511,21 +572,24 @@ class Ticket {
         return $stmt->fetch();
     }
     
-    public function getAllTickets() {
+    public function getAllTickets($officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT t.*, s.service_name, u.full_name as user_name, w.window_number
             FROM tickets t
             JOIN services s ON t.service_id = s.id
             JOIN users u ON t.user_id = u.id
             LEFT JOIN windows w ON t.window_id = w.id
+            WHERE t.office_id = ?
             ORDER BY t.created_at DESC
         ");
         
-        $stmt->execute();
+        $stmt->execute([$officeId]);
         return $stmt->fetchAll();
     }
 
-    public function getRecentTickets($limit = 10) {
+    public function getRecentTickets($limit = 10, $officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT t.*, s.service_name, s.service_code, u.full_name as user_name, w.window_number,
                    TIMESTAMPDIFF(SECOND, t.served_at, t.completed_at) as processing_seconds
@@ -533,11 +597,12 @@ class Ticket {
             JOIN services s ON t.service_id = s.id
             JOIN users u ON t.user_id = u.id
             LEFT JOIN windows w ON t.window_id = w.id
+            WHERE t.office_id = ?
             ORDER BY t.created_at DESC
             LIMIT ?
         ");
         
-        $stmt->execute([$limit]);
+        $stmt->execute([$officeId, $limit]);
         $tickets = $stmt->fetchAll();
 
         foreach ($tickets as &$ticket) {
@@ -609,7 +674,8 @@ class Ticket {
         return $this->getWaitingQueue(null, $windowId);
     }
 
-    public function getQueueStats() {
+    public function getQueueStats($officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT 
                 COUNT(*) as total,
@@ -617,26 +683,28 @@ class Ticket {
                 SUM(CASE WHEN status = 'serving' THEN 1 ELSE 0 END) as serving,
                 SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
             FROM tickets
-            WHERE DATE(created_at) = CURDATE()
+            WHERE DATE(created_at) = CURDATE() AND office_id = ?
         ");
-        $stmt->execute();
+        $stmt->execute([$officeId]);
         return $stmt->fetch();
     }
 
     public function getPendingFeedbackTicket($userId) {
         $stmt = $this->db->prepare("
-            SELECT t.*, s.service_name, s.service_code, s.target_time, w.window_number, w.window_name
+            SELECT t.*, s.service_name, s.service_code, s.target_time, 
+                   w.window_number, w.window_name,
+                   o.name as office_name
             FROM tickets t
             JOIN services s ON t.service_id = s.id
             LEFT JOIN windows w ON t.window_id = w.id
+            JOIN offices o ON t.office_id = o.id
             LEFT JOIN feedback f ON t.id = f.ticket_id
             WHERE t.user_id = ? 
-            AND t.status = 'completed'
+            AND t.status = 'completed' 
             AND f.id IS NULL
-            ORDER BY t.created_at DESC
+            ORDER BY t.completed_at DESC
             LIMIT 1
         ");
-        
         $stmt->execute([$userId]);
         return $stmt->fetch();
     }
@@ -776,7 +844,8 @@ class Ticket {
         return $result['avg_seconds'] ? round($result['avg_seconds'] / 60) : 3;
     }
 
-    public function getGlobalHistory($startDate = null, $endDate = null) {
+    public function getGlobalHistory($startDate = null, $endDate = null, $officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $query = "
             SELECT t.*, s.service_name, u.full_name as user_name, w.window_name, w.window_number,
                    t.service_time_accumulated as processing_seconds
@@ -784,10 +853,10 @@ class Ticket {
             JOIN services s ON t.service_id = s.id
             JOIN users u ON t.user_id = u.id
             LEFT JOIN windows w ON t.window_id = w.id
-            WHERE t.status = 'completed'
+            WHERE t.status = 'completed' AND t.office_id = ?
         ";
         
-        $params = [];
+        $params = [$officeId];
         
         if ($startDate) {
             $query .= " AND DATE(t.created_at) >= ?";
@@ -852,31 +921,34 @@ class Ticket {
         
         return $stats;
     }
-    public function getGlobalAverageProcessTime() {
+    public function getGlobalAverageProcessTime($officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT AVG(service_time_accumulated) as avg_seconds
             FROM tickets
             WHERE status = 'completed'
             AND DATE(completed_at) = CURDATE()
+            AND office_id = ?
         ");
         
-        $stmt->execute();
+        $stmt->execute([$officeId]);
         $result = $stmt->fetch();
         
         return $result['avg_seconds'] ? round($result['avg_seconds'] / 60) : 0;
     }
 
-    public function getPeakHour() {
+    public function getPeakHour($officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT HOUR(created_at) as hour, COUNT(*) as count
             FROM tickets
-            WHERE DATE(created_at) = CURDATE()
+            WHERE DATE(created_at) = CURDATE() AND office_id = ?
             GROUP BY hour
             ORDER BY count DESC
             LIMIT 1
         ");
         
-        $stmt->execute();
+        $stmt->execute([$officeId]);
         $result = $stmt->fetch();
         
         return $result ? str_pad($result['hour'], 2, '0', STR_PAD_LEFT) . ':00' : 'N/A';

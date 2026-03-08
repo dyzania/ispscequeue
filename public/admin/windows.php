@@ -2,10 +2,14 @@
 $pageTitle = 'Operations Center';
 require_once __DIR__ . '/../../models/Window.php';
 require_once __DIR__ . '/../../models/User.php';
+require_once __DIR__ . '/../../models/Office.php';
 include __DIR__ . '/../../includes/admin-layout-header.php';
 
 $windowModel = new Window();
 $userModel = new User();
+$officeModel = new Office();
+$currentOffice = $officeModel->getOfficeById($_SESSION['office_id'] ?? 1);
+$officeCode = $currentOffice ? strtoupper($currentOffice['code']) : 'OFFICE';
 
 // Get all windows
 $windows = $windowModel->getAllWindows();
@@ -46,23 +50,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_msg = "Maximum limit of $MAX_WINDOWS windows reached.";
             } else {
                 // Auto-generate login code based on window number
-                $loginCode = strtolower(str_replace('-', '', $nextWindowStr)); // "W-01" becomes "w01"
+                $baseCode = strtolower(str_replace('-', '', $nextWindowStr)); // "w01"
+                $loginCode = strtolower($officeCode) . '-' . $baseCode; // e.g., "sas-w01"
                 $email = $loginCode . "@window.local"; // Internal email format
                 $password = $_POST['password'];
                 $full_name = "Staff " . $nextWindowStr;
                 
                 // 1. Create User (Staff)
                 if ($userModel->emailExists($email)) {
-                    $error_msg = "Login code already exists.";
+                    $error_msg = "Login code already exists. Please try again or delete orphaned staff users.";
                 } else {
-                     if ($userModel->register($email, $password, $full_name, null, 'staff')) {
+                     if ($userModel->register($email, $password, $full_name, null, 'staff', $currentOffice['id'])) {
                         // Get the ID of the new user
                         $db = Database::getInstance()->getConnection();
                         $newUserId = $db->lastInsertId();
                         
-                        // 2. Create Window linked to this user
-                        $windowName = "Window $nextNum";
-                        if ($windowModel->createWindow($nextWindowStr, $windowName, $newUserId)) {
+                        // 2. Create Window linked to this user and office
+                        $windowName = !empty($_POST['window_name']) ? sanitize($_POST['window_name']) : "Window $nextNum";
+                        if ($windowModel->createWindow($nextWindowStr, $windowName, $newUserId, $currentOffice['id'])) {
                             $success_msg = "Window $nextWindowStr created! Login Code: <strong>$loginCode</strong>";
                             // Refresh
                             $windows = $windowModel->getAllWindows();
@@ -97,6 +102,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $nextWindowStr = $nextNum ? 'W-' . str_pad($nextNum, 2, '0', STR_PAD_LEFT) : 'Full';
             } else {
                 $error_msg = "Failed to delete window.";
+            }
+        } elseif ($_POST['action'] === 'edit_window') {
+            $windowId = $_POST['window_id'];
+            $windowName = sanitize($_POST['window_name']);
+            if ($windowModel->updateWindowName($windowId, $windowName)) {
+                $success_msg = "Window name updated successfully.";
+                $windows = $windowModel->getAllWindows();
+            } else {
+                $error_msg = "Failed to update window name.";
             }
         }
     }
@@ -188,19 +202,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </span>
                                     </span>
                                 </td>
-                                <td class="px-10 py-6 text-center"> <!-- Changed text-right to text-center -->
-                                    <form id="delete-form-<?php echo $window['id']; ?>" method="POST" class="inline-block">
-                                        <input type="hidden" name="csrf_token" value="<?php echo generateCsrfToken(); ?>">
-                                        <input type="hidden" name="action" value="delete_window">
-                                        <input type="hidden" name="window_id" value="<?php echo $window['id']; ?>">
-                                        <input type="hidden" name="staff_id" value="<?php echo $window['staff_id']; ?>">
+                                <td class="px-10 py-6 text-center">
+                                    <div class="flex items-center justify-center space-x-2">
                                         <button type="button" 
-                                                onclick="handleDeleteWindow(<?php echo $window['id']; ?>, '<?php echo $window['window_number']; ?>')"
-                                                class="text-slate-300 hover:text-secondary-500 transition-all p-3 rounded-lg hover:bg-secondary-50 active:scale-95" 
-                                                title="Terminate Module">
-                                            <i class="fas fa-power-off"></i>
+                                                onclick="openEditModal(<?php echo $window['id']; ?>, '<?php echo $window['window_number']; ?>', '<?php echo htmlspecialchars(addslashes($window['window_name'])); ?>')"
+                                                class="text-slate-300 hover:text-primary-500 transition-all p-3 rounded-lg hover:bg-primary-50 active:scale-95" 
+                                                title="Edit Terminal">
+                                            <i class="fas fa-edit"></i>
                                         </button>
-                                    </form>
+                                        <form id="delete-form-<?php echo $window['id']; ?>" method="POST" class="inline-block">
+                                            <input type="hidden" name="csrf_token" value="<?php echo generateCsrfToken(); ?>">
+                                            <input type="hidden" name="action" value="delete_window">
+                                            <input type="hidden" name="window_id" value="<?php echo $window['id']; ?>">
+                                            <input type="hidden" name="staff_id" value="<?php echo $window['staff_id']; ?>">
+                                            <button type="button" 
+                                                    onclick="handleDeleteWindow(<?php echo $window['id']; ?>, '<?php echo $window['window_number']; ?>')"
+                                                    class="text-slate-300 hover:text-secondary-500 transition-all p-3 rounded-lg hover:bg-secondary-50 active:scale-95" 
+                                                    title="Terminate Module">
+                                                <i class="fas fa-power-off"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -231,11 +253,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="p-6 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between">
                 <div>
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Auto-Generated Access Code</p>
-                    <p class="text-xl font-black text-gray-900 font-mono tracking-tighter"><?php echo strtolower(str_replace('-', '', $nextWindowStr)); ?></p>
+                    <p class="text-xl font-black text-gray-900 font-mono tracking-tighter"><?php echo strtolower($officeCode) . '-' . strtolower(str_replace('-', '', $nextWindowStr)); ?></p>
                 </div>
                 <div class="w-12 h-12 bg-white rounded-md border border-slate-100 flex items-center justify-center text-primary-600 shadow-sm">
                     <i class="fas fa-key"></i>
                 </div>
+            </div>
+            
+            <div>
+                <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 ml-2">Internal Name (Optional)</label>
+                <input type="text" name="window_name" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-lg focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all text-sm font-bold" placeholder="e.g. Assessment Counters">
             </div>
             
             <div>
@@ -253,7 +280,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
+<!-- Edit Modal -->
+<div id="editModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center z-50 transition-opacity p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-10 transform transition-all border border-white">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <p class="text-[10px] font-black text-primary-600 uppercase tracking-widest mb-1">Module Configuration</p>
+                <h3 class="text-2xl font-black text-gray-900 font-heading tracking-tight leading-none" id="editModalTitle">Edit Terminal</h3>
+            </div>
+            <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-slate-300 hover:text-gray-900 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <form method="POST" class="space-y-6">
+            <input type="hidden" name="csrf_token" value="<?php echo generateCsrfToken(); ?>">
+            <input type="hidden" name="action" value="edit_window">
+            <input type="hidden" name="window_id" id="edit_window_id">
+            
+            <div>
+                <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 ml-2">Internal Name (Optional)</label>
+                <input type="text" name="window_name" id="edit_window_name" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-lg focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all text-sm font-bold" placeholder="e.g. Assessment Counters">
+                <p class="text-[10px] text-gray-400 mt-2 ml-2">A friendly name to identify this window internally.</p>
+            </div>
+            
+            <div class="flex justify-end pt-4">
+                <button type="submit" class="w-full bg-primary-600 text-white py-5 rounded-lg font-black shadow-xl shadow-primary-200 hover:bg-primary-700 hover:-translate-y-1 transition-all active:scale-95">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function openEditModal(id, number, currentName) {
+        document.getElementById('edit_window_id').value = id;
+        document.getElementById('editModalTitle').innerText = 'Edit Terminal ' + number;
+        document.getElementById('edit_window_name').value = currentName;
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+    
     async function handleDeleteWindow(windowId, windowNumber) {
         if (await equeueConfirm(`WARNING: Terminating ${windowNumber} will revoke all staff access codes. Proceed?`, 'Terminate Module')) {
             document.getElementById(`delete-form-${windowId}`).submit();

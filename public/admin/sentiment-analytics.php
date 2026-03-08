@@ -11,33 +11,40 @@ include __DIR__ . '/../../includes/admin-layout-header.php';
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <?php
+$officeId = $_SESSION['office_id'] ?? 1;
 $feedbackModel = new Feedback();
-$stats = $feedbackModel->getFeedbackStats();
-$trends = $feedbackModel->getFeedbackTrends(30); // Last 30 days
-$allFeedback = $feedbackModel->getAllFeedback();
+$stats = $feedbackModel->getFeedbackStats($officeId);
+$trends = $feedbackModel->getFeedbackTrends(30, $officeId); // Last 30 days
+$allFeedback = $feedbackModel->getAllFeedback($officeId);
 
 // Granular Breakdown Logic
 $db = Database::getInstance()->getConnection();
-$serviceBreakdown = $db->query("
+$stmt = $db->prepare("
     SELECT s.service_name, 
            AVG(f.sentiment_score) as avg_score, 
            COUNT(*) as count
     FROM feedback f
     JOIN tickets t ON f.ticket_id = t.id
     JOIN services s ON t.service_id = s.id
+    WHERE t.office_id = ?
     GROUP BY s.id
     ORDER BY avg_score DESC
-")->fetchAll();
+");
+$stmt->execute([$officeId]);
+$serviceBreakdown = $stmt->fetchAll();
 
-$windowBreakdown = $db->query("
+$stmt = $db->prepare("
     SELECT w.window_number, w.window_name,
            AVG(f.sentiment_score) as avg_score, 
            COUNT(*) as count
     FROM feedback f
     JOIN windows w ON f.window_id = w.id
+    WHERE w.office_id = ?
     GROUP BY w.id
     ORDER BY avg_score DESC
-")->fetchAll();
+");
+$stmt->execute([$officeId]);
+$windowBreakdown = $stmt->fetchAll();
 ?>
 
 <div class="space-y-10">

@@ -23,6 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['full_name'] = $user['full_name'];
         $_SESSION['school_id'] = $user['school_id'];
         
+        // Store office_id if available (for staff/admin)
+        if (isset($user['office_id']) && $user['office_id'] !== null) {
+            $_SESSION['office_id'] = $user['office_id'];
+        }
+        
         switch ($user['role']) {
             case 'admin': header('Location: admin/dashboard.php'); break;
             case 'staff': header('Location: staff/dashboard.php'); break;

@@ -27,6 +27,11 @@ if (isset($_SESSION['user_id'])) {
                 <div class="flex items-center space-x-6 lg:space-x-12 ml-auto">
                     <!-- Desktop Menu -->
                     <div class="hidden md:flex items-center space-x-2 lg:space-x-4">
+                        <?php if (isset($_SESSION['office_id'])): ?>
+                            <a href="<?php echo BASE_URL; ?>/user/dashboard.php?action=change_office" class="mr-2 text-[10px] xl:text-xs font-black uppercase tracking-widest text-primary-500 hover:text-white bg-primary-50 hover:bg-primary-500 px-3 py-1.5 rounded-lg border border-primary-100 transition-colors flex items-center shadow-sm" title="Change Office">
+                                <i class="fas fa-exchange-alt mr-2"></i> <?php echo htmlspecialchars($_SESSION['office_name'] ?? 'Office'); ?>
+                            </a>
+                        <?php endif; ?>
                         <a href="<?php echo BASE_URL; ?>/user/dashboard.php" class="px-4 xl:px-6 py-3 rounded-xl text-base xl:text-lg font-black tracking-tight <?php echo str_contains($_SERVER['PHP_SELF'], 'dashboard.php') ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-600 hover:bg-primary-50 hover:text-primary-600' ?> transition-all duration-300 whitespace-nowrap">
                             <i class="fas fa-desktop mr-2 opacity-70"></i>Live Queue
                         </a>
@@ -118,6 +123,15 @@ if (isset($_SESSION['user_id'])) {
         <!-- Mobile Navigation Menu -->
         <div class="hidden w-full md:hidden px-4 pb-4" id="navbar-user">
             <ul class="flex flex-col font-black space-y-2 p-2 bg-gray-50/50 rounded-[2rem] border border-gray-100">
+                <?php if (isset($_SESSION['office_id'])): ?>
+                <li>
+                    <a href="<?php echo BASE_URL; ?>/user/dashboard.php?action=change_office" class="flex items-center py-4 px-6 rounded-2xl text-primary-600 bg-primary-100/50 border border-primary-100 shadow-sm">
+                        <i class="fas fa-exchange-alt mr-4 text-lg"></i>
+                        <span class="flex-1">Change Office</span>
+                        <span class="text-[10px] opacity-70"><?php echo htmlspecialchars($_SESSION['office_name'] ?? 'Office'); ?></span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <li>
                     <a href="<?php echo BASE_URL; ?>/user/dashboard.php" class="flex items-center py-4 px-6 rounded-2xl <?php echo str_contains($_SERVER['PHP_SELF'], 'dashboard.php') ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-600 hover:bg-white' ?>">
                         <i class="fas fa-desktop mr-4 text-lg"></i>Live Queue

@@ -58,7 +58,10 @@ if ($window) {
             <div class="bg-white rounded-2xl p-6 5xl:p-12 shadow-xl shadow-slate-200/50 border border-white mb-2 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
                 <div class="flex items-center gap-6 5xl:gap-12 relative z-10">
                     <div class="w-16 5xl:w-32 h-16 5xl:h-32 bg-slate-900 rounded-2xl 5xl:rounded-[48px] flex items-center justify-center text-white font-black text-2xl 5xl:text-5xl shadow-lg">
-                        <?php echo $window['window_number']; ?>
+                        <?php 
+                            $name = $window['window_name'] ?? '';
+                            echo strtoupper(substr($name, 0, 2)); 
+                        ?>
                     </div>
                     <div>
                         <p class="text-xs 5xl:text-xl font-bold text-gray-400 uppercase tracking-widest mb-1 5xl:mb-4">Operational Counter</p>
@@ -82,6 +85,26 @@ if ($window) {
                                     <i class="fas fa-coffee text-[10px] 5xl:text-2xl text-white <?php echo !$window['is_active'] ? 'opacity-100' : 'opacity-0'; ?> transition-opacity"></i>
                                 </div>
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- College Toggles -->
+                    <div class="flex flex-col items-end">
+                        <p class="text-[10px] 5xl:text-xl font-black text-gray-400 uppercase tracking-widest mb-2">College Filter</p>
+                        <div class="flex items-center gap-2 5xl:gap-4 bg-slate-100 p-1.5 rounded-2xl">
+                            <?php 
+                                $preferredColleges = !empty($window['preferred_colleges']) ? explode(',', $window['preferred_colleges']) : [];
+                                $colleges = ['CAS', 'SCJE', 'CTE', 'CBME'];
+                                foreach ($colleges as $col): 
+                                    $isActive = in_array($col, $preferredColleges);
+                            ?>
+                                <button onclick="toggleCollegeFilter('<?php echo $col; ?>', this)" 
+                                        data-college="<?php echo $col; ?>"
+                                        data-active="<?php echo $isActive ? '1' : '0'; ?>"
+                                        class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all <?php echo $isActive ? 'bg-primary-500 text-white shadow-lg' : 'bg-white text-slate-400 hover:text-slate-600'; ?>">
+                                    <?php echo $col; ?>
+                                </button>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
@@ -234,9 +257,14 @@ if ($window) {
 
                                 <div class="space-y-3 5xl:space-y-8 mt-auto">
                                     <?php if ($ticket['status'] === 'called'): ?>
-                                        <button type="button" onclick="startServing(<?php echo $ticket['id']; ?>, this)" class="w-full py-3 5xl:py-8 bg-primary-600 text-white font-black rounded-xl 5xl:rounded-[32px] shadow-lg shadow-primary-200 hover:bg-primary-700 transition-all text-xs 5xl:text-2xl flex items-center justify-center gap-2">
-                                            <i class="fas fa-play"></i> Start Serving
-                                        </button>
+                                        <div class="flex gap-2">
+                                            <button type="button" onclick="recallTicket(<?php echo $ticket['id']; ?>, this)" class="flex-none w-12 h-12 5xl:w-24 5xl:h-24 bg-amber-100 text-amber-600 rounded-xl 5xl:rounded-[32px] hover:bg-amber-200 transition-all flex items-center justify-center shadow-sm" title="Re-call Ticket">
+                                                <i class="fas fa-bell"></i>
+                                            </button>
+                                            <button type="button" onclick="startServing(<?php echo $ticket['id']; ?>, this)" class="flex-1 py-3 5xl:py-8 bg-primary-600 text-white font-black rounded-xl 5xl:rounded-[32px] shadow-lg shadow-primary-200 hover:bg-primary-700 transition-all text-xs 5xl:text-2xl flex items-center justify-center gap-2">
+                                                <i class="fas fa-play"></i> Start Serving
+                                            </button>
+                                        </div>
                                         <button type="button" onclick="cancelTicket(<?php echo $ticket['id']; ?>, this)" class="w-full py-3 5xl:py-8 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl 5xl:rounded-[32px] hover:bg-slate-50 transition-all text-xs 5xl:text-2xl">
                                             No Show
                                         </button>
@@ -293,6 +321,48 @@ if ($window) {
     <script src="../js/notifications.js"></script>
     
     <script>
+        function recallTicket(ticketId, btn) {
+            if (!confirm('Re-call this ticket?')) return;
+            
+            setLoading(btn, true, false);
+            
+            fetch('../api/recall-ticket.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ ticket_id: ticketId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Immediate refresh to sync all dashboards
+                    if (window.dashboardRefreshInstance) {
+                        window.dashboardRefreshInstance.refresh(true);
+                    }
+                    
+                    // Show a quick success feedback
+                    const originalHtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    btn.classList.add('bg-emerald-100', 'text-emerald-600');
+                    setTimeout(() => {
+                        btn.innerHTML = originalHtml;
+                        btn.classList.remove('bg-emerald-100', 'text-emerald-600');
+                    }, 2000);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error('Recall error:', err);
+                alert('Connection error');
+            })
+            .finally(() => {
+                setLoading(btn, false, false);
+            });
+        }
+
         function setLoading(btn, isLoading, showText = true) {
             // console.log('setLoading called', { btn, isLoading, showText });
             try {
@@ -318,6 +388,75 @@ if ($window) {
                 console.error('Error in setLoading:', e);
                 // alert('Error in UI update: ' + e.message);
             }
+        }
+
+        function toggleCollegeFilter(college, btn) {
+            console.log('toggleCollegeFilter called', { college });
+            const isActive = btn.getAttribute('data-active') === '1';
+            const newStatus = !isActive;
+            
+            // Get all currently active colleges
+            let activeColleges = [];
+            document.querySelectorAll('[data-college]').forEach(b => {
+                if (b.getAttribute('data-active') === '1') {
+                    activeColleges.push(b.getAttribute('data-college'));
+                }
+            });
+
+            if (newStatus) {
+                if (!activeColleges.includes(college)) activeColleges.push(college);
+            } else {
+                activeColleges = activeColleges.filter(c => c !== college);
+            }
+
+            // Update UI optimistically
+            btn.setAttribute('data-active', newStatus ? '1' : '0');
+            if (newStatus) {
+                btn.classList.remove('bg-white', 'text-slate-400', 'hover:text-slate-600');
+                btn.classList.add('bg-primary-500', 'text-white', 'shadow-lg');
+            } else {
+                btn.classList.remove('bg-primary-500', 'text-white', 'shadow-lg');
+                btn.classList.add('bg-white', 'text-slate-400', 'hover:text-slate-600');
+            }
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch('../api/update-window-colleges.php', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                body: JSON.stringify({ 
+                    window_id: <?php echo $window['id']; ?>, 
+                    colleges: activeColleges,
+                    csrf_token: csrfToken
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Success toast
+                    document.dispatchEvent(new CustomEvent('equeue:toast', { 
+                        detail: { 
+                            type: 'success', 
+                            title: 'Filter Updated',
+                            message: `Queue filtered by: ${activeColleges.join(', ') || 'All Colleges'}`
+                        } 
+                    }));
+                    
+                    // Trigger immediate refresh if DashboardRefresh is available
+                    if (window.dashboardRefreshInstance) {
+                        window.dashboardRefreshInstance.refresh(true);
+                    }
+                } else {
+                    equeueAlert(data.message || 'Error updating filters', 'Filter Error');
+                }
+            })
+            .catch(err => {
+                console.error('toggleCollegeFilter error:', err);
+                equeueAlert('Error: ' + err.message, 'Network Error');
+            });
         }
 
         function toggleBreakMode(windowId, currentStatus, btn) {
@@ -610,7 +749,7 @@ if ($window) {
         }, 1000);
 
         // Initialize Real-Time Auto-Refresh
-        new DashboardRefresh([
+        window.dashboardRefreshInstance = new DashboardRefresh([
             'performance-snapshot-container',
             'archived-tickets-container',
             'waiting-tickets-container',

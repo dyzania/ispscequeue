@@ -21,8 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reqs = sanitize($_POST['requirements']);
             $targetTime = sanitize($_POST['target_time']);
             $staffNotes = isset($_POST['staff_notes']) ? sanitize($_POST['staff_notes']) : null;
+            $officeId = $_SESSION['office_id'] ?? 1;
             
-            $result = $serviceModel->createService($name, $code, $desc, $reqs, $staffNotes, $targetTime);
+            $result = $serviceModel->createService($name, $code, $desc, $reqs, $staffNotes, $targetTime, $officeId);
             if ($result['success']) {
                 $message = $result['message'];
             } else {

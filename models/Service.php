@@ -8,29 +8,32 @@ class Service {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    public function getAllServices() {
+    public function getAllServices($officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT s.*, 
                    (SELECT COUNT(*) 
                     FROM window_services ws 
                     WHERE ws.service_id = s.id AND ws.is_enabled = 1) as staff_enabled_count
             FROM services s 
-            WHERE s.is_active = 1
+            WHERE s.is_active = 1 AND s.office_id = ?
             ORDER BY s.service_name
         ");
         
-        $stmt->execute();
+        $stmt->execute([$officeId]);
         return $stmt->fetchAll();
     }
     
-    public function getAllServicesAdmin() {
+    public function getAllServicesAdmin($officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT * 
             FROM services 
+            WHERE office_id = ?
             ORDER BY service_name
         ");
         
-        $stmt->execute();
+        $stmt->execute([$officeId]);
         return $stmt->fetchAll();
     }
     
@@ -45,14 +48,14 @@ class Service {
         return $stmt->fetch();
     }
     
-    public function createService($serviceName, $serviceCode, $description, $requirements, $staffNotes = null, $targetTime = 10) {
+    public function createService($serviceName, $serviceCode, $description, $requirements, $staffNotes = null, $targetTime = 10, $officeId = 1) {
         try {
             $stmt = $this->db->prepare("
-                INSERT INTO services (service_name, service_code, description, requirements, staff_notes, target_time) 
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO services (service_name, service_code, description, requirements, staff_notes, target_time, office_id) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             
-            $success = $stmt->execute([$serviceName, $serviceCode, $description, $requirements, $staffNotes, $targetTime]);
+            $success = $stmt->execute([$serviceName, $serviceCode, $description, $requirements, $staffNotes, $targetTime, $officeId]);
             
             if ($success) {
                 return ['success' => true, 'message' => 'Service created successfully.'];

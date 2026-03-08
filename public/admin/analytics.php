@@ -4,35 +4,41 @@ include __DIR__ . '/../../includes/admin-layout-header.php';
 
 $db = Database::getInstance()->getConnection();
 
+$officeId = $_SESSION['office_id'] ?? 1;
+
 // --- Analytics Calculations ---
 // 1. Total Tickets Today
-$stmt = $db->query("SELECT COUNT(*) as count FROM tickets WHERE DATE(created_at) = CURDATE()");
+$stmt = $db->prepare("SELECT COUNT(*) as count FROM tickets WHERE DATE(created_at) = CURDATE() AND office_id = ?");
+$stmt->execute([$officeId]);
 $todayTickets = $stmt->fetch()['count'];
 
 // 2. Average Process Time (Wait Time)
-$stmt = $db->query("
+$stmt = $db->prepare("
     SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, called_at)) as avg_wait 
     FROM tickets 
-    WHERE status IN ('called', 'serving', 'completed') AND DATE(created_at) = CURDATE()
+    WHERE status IN ('called', 'serving', 'completed') AND DATE(created_at) = CURDATE() AND office_id = ?
 ");
+$stmt->execute([$officeId]);
 $avgWaitTime = round($stmt->fetch()['avg_wait'] ?? 0);
 
 // 3. Average Service Time
-$stmt = $db->query("
+$stmt = $db->prepare("
     SELECT AVG(service_time_accumulated) / 60 as avg_service
     FROM tickets 
-    WHERE status = 'completed' AND DATE(created_at) = CURDATE()
+    WHERE status = 'completed' AND DATE(created_at) = CURDATE() AND office_id = ?
 ");
+$stmt->execute([$officeId]);
 $avgServiceTime = round($stmt->fetch()['avg_service'] ?? 0);
 
 // 5. Peak Hours (Today)
-$stmt = $db->query("
+$stmt = $db->prepare("
     SELECT DATE_FORMAT(created_at, '%H') as hour_of_day, COUNT(*) as count 
     FROM tickets 
-    WHERE DATE(created_at) = CURDATE()
+    WHERE DATE(created_at) = CURDATE() AND office_id = ?
     GROUP BY hour_of_day 
     ORDER BY hour_of_day ASC
 ");
+$stmt->execute([$officeId]);
 $peakHoursDataRaw = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 // Fill missing hours
 $peakHours = [];
@@ -42,12 +48,13 @@ for($i=8; $i<=17; $i++) {
 }
 
 // 6. Status Distribution (Today)
-$stmt = $db->query("
+$stmt = $db->prepare("
     SELECT status, COUNT(*) as count 
     FROM tickets 
-    WHERE DATE(created_at) = CURDATE()
+    WHERE DATE(created_at) = CURDATE() AND office_id = ?
     GROUP BY status
 ");
+$stmt->execute([$officeId]);
 $statusStats = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 $statusStats = array_merge(['completed'=>0, 'serving'=>0, 'waiting'=>0, 'cancelled'=>0], $statusStats);
 
@@ -58,42 +65,46 @@ if (($statusStats['completed'] + $statusStats['cancelled']) > 0) {
 
 
 // 8. Wait Time & SLA Metrics
-$stmt = $db->query("
+$stmt = $db->prepare("
     SELECT MAX(TIMESTAMPDIFF(MINUTE, created_at, IFNULL(called_at, NOW()))) as max_wait
     FROM tickets 
-    WHERE status IN ('waiting', 'called', 'serving') AND DATE(created_at) = CURDATE()
+    WHERE status IN ('waiting', 'called', 'serving') AND DATE(created_at) = CURDATE() AND office_id = ?
 ");
+$stmt->execute([$officeId]);
 $longestWait = round($stmt->fetch()['max_wait'] ?? 0);
 
-$stmt = $db->query("
+$stmt = $db->prepare("
     SELECT 
         COUNT(*) as total_completed,
         SUM(CASE WHEN TIMESTAMPDIFF(MINUTE, t.served_at, t.completed_at) <= s.estimated_time THEN 1 ELSE 0 END) as within_sla
     FROM tickets t
     JOIN services s ON t.service_id = s.id
-    WHERE t.status = 'completed' AND DATE(t.created_at) = CURDATE()
+    WHERE t.status = 'completed' AND DATE(t.created_at) = CURDATE() AND t.office_id = ?
 ");
+$stmt->execute([$officeId]);
 $slaData = $stmt->fetch();
 $slaCompliance = $slaData['total_completed'] > 0 ? round(($slaData['within_sla'] / $slaData['total_completed']) * 100) : 0;
 
-$stmt = $db->query("
+$stmt = $db->prepare("
     SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, completed_at)) as avg_turnaround
     FROM tickets 
-    WHERE status = 'completed' AND DATE(created_at) = CURDATE()
+    WHERE status = 'completed' AND DATE(created_at) = CURDATE() AND office_id = ?
 ");
+$stmt->execute([$officeId]);
 $avgTurnaround = round($stmt->fetch()['avg_turnaround'] ?? 0);
 
 $currentQueueSize = $statusStats['waiting'];
 
 // 10. Service Performance
-$stmt = $db->query("
+$stmt = $db->prepare("
     SELECT s.service_name, s.service_code, COUNT(t.id) as count,
            AVG(CASE WHEN t.status='completed' THEN t.service_time_accumulated / 60 ELSE NULL END) as avg_svc_time
     FROM tickets t
     JOIN services s ON t.service_id = s.id
-    WHERE DATE(t.created_at) = CURDATE()
+    WHERE DATE(t.created_at) = CURDATE() AND t.office_id = ?
     GROUP BY s.service_name, s.service_code
 ");
+$stmt->execute([$officeId]);
 $serviceStats = $stmt->fetchAll();
 
 // Prepare JSON data for charts

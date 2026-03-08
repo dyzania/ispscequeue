@@ -33,8 +33,32 @@ CREATE TABLE `activity_logs` (
   `action` varchar(255) NOT NULL,
   `details` text DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `office_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `offices`
+--
+
+CREATE TABLE `offices` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `description` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `offices`
+--
+
+INSERT INTO `offices` (`id`, `name`, `code`, `description`) VALUES
+(1, 'Main Office', 'MAIN', 'Default Campus Main Office');
 
 -- --------------------------------------------------------
 
@@ -45,7 +69,8 @@ CREATE TABLE `activity_logs` (
 CREATE TABLE `ai_context` (
   `id` int(11) NOT NULL,
   `content` longtext DEFAULT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `office_id` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -67,7 +92,8 @@ CREATE TABLE `announcements` (
   `content` text NOT NULL,
   `image_path` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `office_id` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -187,7 +213,8 @@ CREATE TABLE `services` (
   `target_time` int(11) DEFAULT 10,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `office_id` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -225,7 +252,9 @@ CREATE TABLE `tickets` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `is_archived` tinyint(1) DEFAULT 0,
-  `service_time_accumulated` int(11) DEFAULT 0
+  `service_time_accumulated` int(11) DEFAULT 0,
+  `is_priority` tinyint(1) DEFAULT 0,
+  `office_id` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -270,7 +299,9 @@ CREATE TABLE `users` (
   `last_read_announcement_id` int(11) DEFAULT 0,
   `announcement_subscription` tinyint(1) DEFAULT 0,
   `login_attempts` int(11) DEFAULT 0,
-  `lockout_until` datetime DEFAULT NULL
+  `lockout_until` datetime DEFAULT NULL,
+  `office_id` int(11) DEFAULT NULL,
+  `college` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -304,7 +335,9 @@ CREATE TABLE `windows` (
   `staff_id` int(11) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `office_id` int(11) NOT NULL DEFAULT 1,
+  `preferred_colleges` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -455,6 +488,13 @@ ALTER TABLE `windows`
   ADD KEY `idx_active` (`is_active`);
 
 --
+-- Indexes for table `offices`
+--
+ALTER TABLE `offices`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code` (`code`);
+
+--
 -- Indexes for table `window_services`
 --
 ALTER TABLE `window_services`
@@ -472,6 +512,12 @@ ALTER TABLE `window_services`
 --
 ALTER TABLE `activity_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `offices`
+--
+ALTER TABLE `offices`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `ai_context`
@@ -572,6 +618,43 @@ ALTER TABLE `windows`
 ALTER TABLE `window_services`
   ADD CONSTRAINT `window_services_ibfk_1` FOREIGN KEY (`window_id`) REFERENCES `windows` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `window_services_ibfk_2` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `users`
+--
+ALTER TABLE `users`
+  ADD CONSTRAINT `fk_users_office` FOREIGN KEY (`office_id`) REFERENCES `offices` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `services`
+--
+ALTER TABLE `services`
+  ADD CONSTRAINT `fk_services_office` FOREIGN KEY (`office_id`) REFERENCES `offices` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `windows`
+--
+ALTER TABLE `windows`
+  ADD CONSTRAINT `fk_windows_office` FOREIGN KEY (`office_id`) REFERENCES `offices` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `tickets`
+--
+ALTER TABLE `tickets`
+  ADD CONSTRAINT `fk_tickets_office` FOREIGN KEY (`office_id`) REFERENCES `offices` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `announcements`
+--
+ALTER TABLE `announcements`
+  ADD CONSTRAINT `fk_announcements_office` FOREIGN KEY (`office_id`) REFERENCES `offices` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `ai_context`
+--
+ALTER TABLE `ai_context`
+  ADD CONSTRAINT `fk_ai_context_office` FOREIGN KEY (`office_id`) REFERENCES `offices` (`id`) ON DELETE CASCADE;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

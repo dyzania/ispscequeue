@@ -9,11 +9,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $fullName = sanitize($_POST['full_name']);
     $email = sanitize($_POST['email']);
+    $college = sanitize($_POST['college']);
     $schoolId = !empty($_POST['school_id']) ? sanitize($_POST['school_id']) : null;
     $password = $_POST['password'];
     $confirmPassword = $_POST['confirm_password'];
     
-    if ($password !== $confirmPassword) {
+    if (empty($college)) {
+        $error = "College selection is mandatory.";
+    } elseif ($password !== $confirmPassword) {
         $error = "Access keys do not match.";
     } else {
         $passwordErrors = User::validatePassword($password);
@@ -27,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Identity already registered in the grid.";
             } else {
                 // Register and get OTP
-                $otpCode = $userModel->register($email, $password, $fullName, $schoolId, 'user');
+                $otpCode = $userModel->register($email, $password, $fullName, $schoolId, 'user', null, $college);
                 
                 if ($otpCode) {
                     // Send OTP Email
@@ -121,6 +124,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <i class="fas fa-id-badge text-gray-600 group-focus-within:text-white transition-colors"></i>
                             </div>
                             <input type="text" id="school_id" name="school_id" class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all font-medium text-white placeholder-gray-600" placeholder="e.g. NLP-**-*****">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-left">
+                    <label class="block text-gray-400 text-[10px] font-black uppercase tracking-[0.3em] ml-1" for="college">College <span class="text-primary-500">*</span></label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                            <i class="fas fa-university text-gray-600 group-focus-within:text-white transition-colors"></i>
+                        </div>
+                        <select id="college" name="college" required class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all font-medium text-white appearance-none cursor-pointer">
+                            <option value="" disabled selected class="bg-primary-950">Select your College</option>
+                            <option value="CAS" class="bg-primary-950">CAS - College of Arts and Sciences</option>
+                            <option value="SCJE" class="bg-primary-950">SCJE - School of Criminal Justice Education</option>
+                            <option value="CTE" class="bg-primary-950">CTE - College of Teacher Education</option>
+                            <option value="CBME" class="bg-primary-950">CBME - College of Business Management and Entrepreneurship</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none">
+                            <i class="fas fa-chevron-down text-gray-600 group-focus-within:text-white transition-colors"></i>
                         </div>
                     </div>
                 </div>

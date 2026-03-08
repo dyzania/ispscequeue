@@ -8,9 +8,11 @@ class Announcement {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    // Get all announcements ordered by newest first.
-    public function getAll() {
-        $stmt = $this->db->query("SELECT * FROM announcements ORDER BY created_at DESC");
+    // Get all announcements ordered by newest first for an office.
+    public function getAll($officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
+        $stmt = $this->db->prepare("SELECT * FROM announcements WHERE office_id = ? ORDER BY created_at DESC");
+        $stmt->execute([$officeId]);
         return $stmt->fetchAll();
     }
     
@@ -26,9 +28,9 @@ class Announcement {
      * @param string $content
      * @param string|null $image_path */
 
-    public function create($title, $content, $image_path = null) {
-        $stmt = $this->db->prepare("INSERT INTO announcements (title, content, image_path) VALUES (?, ?, ?)");
-        return $stmt->execute([$title, $content, $image_path]);
+    public function create($title, $content, $image_path = null, $officeId = 1) {
+        $stmt = $this->db->prepare("INSERT INTO announcements (title, content, image_path, office_id) VALUES (?, ?, ?, ?)");
+        return $stmt->execute([$title, $content, $image_path, $officeId]);
     }
 
     /** Update an existing announcement.
@@ -76,13 +78,14 @@ class Announcement {
         return $result['max_id'] ?: 0;
     }
 
-    public function getUnreadCount($userId) {
+    public function getUnreadCount($userId, $officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT COUNT(*) as unread_count 
             FROM announcements 
-            WHERE id > (SELECT last_read_announcement_id FROM users WHERE id = ?)
+            WHERE office_id = ? AND id > (SELECT last_read_announcement_id FROM users WHERE id = ?)
         ");
-        $stmt->execute([$userId]);
+        $stmt->execute([$officeId, $userId]);
         $result = $stmt->fetch();
         return $result['unread_count'] ?: 0;
     }

@@ -89,6 +89,15 @@ if (isset($_SESSION['user_id'])) {
                     </a>
 
                 </div>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="user/dashboard.php" class="bg-primary-500 hover:bg-primary-600 text-white px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-primary-500/50 hover:-translate-y-1 inline-block">
+                        Enter Queue <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                <?php else: ?>
+                    <a href="login.php" class="bg-primary-500 hover:bg-primary-600 text-white px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-primary-500/50 hover:-translate-y-1 inline-block">
+                        Get Started <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                <?php endif; ?>
                 
                 <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
                 

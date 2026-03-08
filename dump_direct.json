@@ -1,0 +1,30 @@
+{
+    "offices": [
+        {
+            "id": 1,
+            "name": "Registrar Office",
+            "code": "RGSTR"
+        },
+        {
+            "id": 2,
+            "name": "Student Affair Service",
+            "code": "SAS"
+        }
+    ],
+    "users": [
+        {
+            "id": 1,
+            "email": "admin@equeue.com",
+            "full_name": "System Administrator",
+            "office_id": 1,
+            "role": "admin"
+        },
+        {
+            "id": 66,
+            "email": "sas_admin@equeue.com",
+            "full_name": "SAS Administrator",
+            "office_id": 2,
+            "role": "admin"
+        }
+    ]
+}

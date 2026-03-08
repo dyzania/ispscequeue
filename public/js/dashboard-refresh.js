@@ -1,6 +1,6 @@
 
- // dashboard refresh utility
- // silently refreshes specific dashboard segments by fetching the current page
+// dashboard refresh utility
+// silently refreshes specific dashboard segments by fetching the current page
 
 class DashboardRefresh {
   constructor(containers = [], interval = 10000) {
@@ -134,8 +134,10 @@ class DashboardRefresh {
         const currentContent = document.getElementById(id);
 
         if (newContent && currentContent) {
-          // Robust focus check
-          if (currentContent.contains(document.activeElement)) return;
+          // Robust focus check - only block if an actual input is focused
+          const active = document.activeElement;
+          const isInput = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT" || active.isContentEditable);
+          if (isInput && currentContent.contains(active)) return;
 
           // Only update if content changed
           if (newContent.innerHTML !== currentContent.innerHTML) {

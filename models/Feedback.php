@@ -96,7 +96,8 @@ class Feedback {
         return $stmt->fetch();
     }
     
-    public function getAllFeedback() {
+    public function getAllFeedback($officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT f.*, u.full_name as user_name, w.window_number, t.ticket_number, s.service_name
             FROM feedback f
@@ -104,27 +105,31 @@ class Feedback {
             JOIN tickets t ON f.ticket_id = t.id
             JOIN services s ON t.service_id = s.id
             LEFT JOIN windows w ON f.window_id = w.id
+            WHERE t.office_id = ?
             ORDER BY f.created_at DESC
         ");
         
-        $stmt->execute();
+        $stmt->execute([$officeId]);
         return $stmt->fetchAll();
     }
     
-    public function getFeedbackStats() {
+    public function getFeedbackStats($officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT 
-                COUNT(*) as total_feedback,
-                COUNT(CASE WHEN sentiment = 'very_positive' THEN 1 END) as very_positive,
-                COUNT(CASE WHEN sentiment = 'positive' THEN 1 END) as positive,
-                COUNT(CASE WHEN sentiment = 'neutral' THEN 1 END) as neutral,
-                COUNT(CASE WHEN sentiment = 'negative' THEN 1 END) as negative,
-                COUNT(CASE WHEN sentiment = 'very_negative' THEN 1 END) as very_negative,
-                AVG(sentiment_score) as avg_sentiment_score
-            FROM feedback
+                COUNT(f.id) as total_feedback,
+                COUNT(CASE WHEN f.sentiment = 'very_positive' THEN 1 END) as very_positive,
+                COUNT(CASE WHEN f.sentiment = 'positive' THEN 1 END) as positive,
+                COUNT(CASE WHEN f.sentiment = 'neutral' THEN 1 END) as neutral,
+                COUNT(CASE WHEN f.sentiment = 'negative' THEN 1 END) as negative,
+                COUNT(CASE WHEN f.sentiment = 'very_negative' THEN 1 END) as very_negative,
+                AVG(f.sentiment_score) as avg_sentiment_score
+            FROM feedback f
+            JOIN tickets t ON f.ticket_id = t.id
+            WHERE t.office_id = ?
         ");
         
-        $stmt->execute();
+        $stmt->execute([$officeId]);
         return $stmt->fetch();
     }
     
@@ -143,19 +148,22 @@ class Feedback {
         return $stmt->fetchAll();
     }
     
-    public function getFeedbackTrends($days = 7) {
+    public function getFeedbackTrends($days = 7, $officeId = null) {
+        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
         $stmt = $this->db->prepare("
             SELECT 
-                DATE(created_at) as date,
-                COUNT(*) as count,
-                AVG(sentiment_score) as avg_sentiment
-            FROM feedback
-            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-            GROUP BY DATE(created_at)
+                DATE(f.created_at) as date,
+                COUNT(f.id) as count,
+                AVG(f.sentiment_score) as avg_sentiment
+            FROM feedback f
+            JOIN tickets t ON f.ticket_id = t.id
+            WHERE f.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            AND t.office_id = ?
+            GROUP BY date
             ORDER BY date ASC
         ");
         
-        $stmt->execute([$days]);
+        $stmt->execute([$days, $officeId]);
         return $stmt->fetchAll();
     }
 }
