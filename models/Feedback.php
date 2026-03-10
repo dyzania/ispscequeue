@@ -17,14 +17,24 @@ class Feedback {
             VALUES (?, ?, ?, NULL, ?, ?, ?)
         ");
         
-        return $stmt->execute([
-            $ticketId, 
-            $userId, 
-            $windowId, 
-            $comment, 
-            $sentimentData['sentiment'],
-            $sentimentData['score']
-        ]);
+        try {
+            return $stmt->execute([
+                $ticketId, 
+                $userId, 
+                $windowId, 
+                $comment, 
+                $sentimentData['sentiment'],
+                $sentimentData['score']
+            ]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1062')) {
+                // Feedback already submitted for this ticket
+                error_log('Feedback::createFeedback() duplicate entry for ticket_id=' . $ticketId);
+                return ['duplicate' => true, 'message' => 'Feedback has already been submitted for this ticket.'];
+            }
+            error_log('Feedback::createFeedback() error: ' . $e->getMessage());
+            return false;
+        }
     }
     
     private function analyzeSentiment($comment) {

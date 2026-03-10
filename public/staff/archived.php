@@ -20,25 +20,13 @@ if ($window) {
     }
     $archivedTickets = $ticketModel->getArchivedTicketsByWindow($window['id']);
 }
+$pageTitle = 'Archived Tickets';
+require_once __DIR__ . '/../../includes/staff-layout-header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archived Tickets - <?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <?php injectTailwindConfig(); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        const ANTIGRAVITY_BASE_URL = "<?php echo defined('BASE_URL') ? BASE_URL : ''; ?>";
-    </script>
-    <script src="<?php echo BASE_URL; ?>/js/dashboard-refresh.js"></script>
-</head>
-<body class="min-h-screen">
-    <?php include __DIR__ . '/../../includes/staff-navbar.php'; ?>
 
-    <main class="container-ultra max-w-[2000px] mx-auto pt-8 pb-8 px-4 md:px-8">
+<script src="<?php echo BASE_URL; ?>/js/dashboard-refresh.js"></script>
+<script src="<?php echo BASE_URL; ?>/js/live-countdown.js"></script>
+
         <div class="mb-8 flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-black text-gray-900 font-heading">Archived Tickets</h1>
@@ -73,14 +61,32 @@ if ($window) {
                                 </div>
                                 <div>
                                     <p class="font-black text-gray-900 text-lg"><?php echo $ticket['ticket_number']; ?></p>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest -mt-1"><?php echo $ticket['user_name']; ?></p>
+                                    <div class="px-2 py-0.5 bg-blue-50 rounded-md inline-block -ml-2 mb-1">
+                                        <p class="text-sm font-black text-blue-700 uppercase tracking-wide"><?php echo $ticket['user_name']; ?></p>
+                                    </div>
                                     <p class="text-[10px] font-bold text-primary-600 uppercase tracking-widest"><?php echo $ticket['service_name']; ?></p>
                                 </div>
                             </div>
                             <div class="text-right">
                                 <div class="flex items-center gap-2 justify-end">
                                     <i class="fas fa-clock text-xs text-amber-500"></i>
-                                    <span class="text-xs font-black text-amber-600 elapsed-timer" data-seconds="<?php echo $ticket['elapsed_seconds']; ?>">0s</span>
+                                    <span class="text-xs font-black text-amber-600" 
+                                          data-live-countdown="1"
+                                          data-countdown-mode="elapsed"
+                                          data-ticket-id="<?php echo $ticket['id']; ?>"
+                                          data-target-timestamp="<?php echo (time() - $ticket['elapsed_seconds']) * 1000; ?>"
+                                          data-server-now="<?php echo time() * 1000; ?>">
+                                        <?php 
+                                            $m = floor($ticket['elapsed_seconds'] / 60);
+                                            $h = floor($m / 60);
+                                            $m = $m % 60;
+                                            if ($h > 0) {
+                                                echo "{$h}h {$m}m";
+                                            } else {
+                                                echo "{$m}m"; 
+                                            }
+                                        ?>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -132,7 +138,7 @@ if ($window) {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'X-CSRF-Token': '<?php echo generateCsrfToken(); ?>'
+                        'X-CSRF-Token': document.querySelector('meta[name=\"csrf-token\"]').content
                     },
                     body: JSON.stringify({ ticket_id: ticketId })
                 });
@@ -154,7 +160,7 @@ if ($window) {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'X-CSRF-Token': '<?php echo generateCsrfToken(); ?>'
+                        'X-CSRF-Token': document.querySelector('meta[name=\"csrf-token\"]').content
                     },
                     body: JSON.stringify({ ticket_id: ticketId, notes: notes })
                 });
@@ -167,18 +173,11 @@ if ($window) {
             } catch (e) { console.error(e); }
             setLoading(btn, false);
         }
+    </script>
 
-        setInterval(() => {
-            document.querySelectorAll('.elapsed-timer').forEach(el => {
-                let seconds = parseInt(el.getAttribute('data-seconds')) + 1;
-                el.setAttribute('data-seconds', seconds);
-                let m = Math.floor(seconds / 60);
-                let s = seconds % 60;
-                el.innerText = `${m}m ${s}s`;
-            });
-        }, 1000);
-
+    <script src=\"<?php echo BASE_URL; ?>/js/dashboard-refresh.js\"></script>
+    <script src=\"<?php echo BASE_URL; ?>/js/live-countdown.js\"></script>
+    <script>
         new DashboardRefresh(['archived-tickets-container', 'archived-count-sync'], 3000);
     </script>
-</body>
-</html>
+<?php require_once __DIR__ . '/../../includes/staff-layout-footer.php'; ?>

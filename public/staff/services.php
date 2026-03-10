@@ -13,25 +13,12 @@ if (!$window) {
 }
 
 $services = $windowModel->getWindowServices($window['id']);
+
+$pageTitle = 'My Services';
+require_once __DIR__ . '/../../includes/staff-layout-header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Services - <?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <?php injectTailwindConfig(); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        const ANTIGRAVITY_BASE_URL = "<?php echo defined('BASE_URL') ? BASE_URL : ''; ?>";
-    </script>
-    <meta name="csrf-token" content="<?php echo generateCsrfToken(); ?>">
-</head>
-<body class="min-h-screen">
-    <?php include __DIR__ . '/../../includes/staff-navbar.php'; ?>
-    
-    <div class="container mx-auto px-4 py-8">
+
+<div class="w-full">
         <div class="max-w-4xl mx-auto">
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-6 border-b border-gray-200">
@@ -79,7 +66,6 @@ $services = $windowModel->getWindowServices($window['id']);
         </div>
     </div>
 
-    <script src="../js/notifications.js"></script>
     <script>
         async function toggleService(serviceId) {
             try {
@@ -121,6 +107,5 @@ $services = $windowModel->getWindowServices($window['id']);
             }
         }
     </script>
-    <script src="../js/notifications.js"></script>
-</body>
-</html>
+</div>
+<?php require_once __DIR__ . '/../../includes/staff-layout-footer.php'; ?>

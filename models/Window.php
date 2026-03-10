@@ -94,6 +94,12 @@ class Window {
         return $stmt->fetch();
     }
     
+    public function isWindowNumberTaken($windowNumber, $officeId) {
+        $stmt = $this->db->prepare("SELECT id FROM windows WHERE window_number = ? AND office_id = ?");
+        $stmt->execute([$windowNumber, $officeId]);
+        return $stmt->fetch() ? true : false;
+    }
+
     public function createWindow($windowNumber, $windowName, $staffId = null, $officeId = 1) {
         $stmt = $this->db->prepare("
             INSERT INTO windows (window_number, window_name, staff_id, office_id) 

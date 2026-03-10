@@ -7,6 +7,12 @@ require_once __DIR__ . '/../../models/Feedback.php';
 requireLogin();
 requireRole('user');
 
+// Ensure office is selected
+if (!isset($_SESSION['office_id'])) {
+    header('Location: dashboard.php');
+    exit;
+}
+
 $ticketModel = new Ticket();
 $feedbackModel = new Feedback();
 
@@ -15,16 +21,14 @@ $ticket = $ticketModel->getCurrentTicket(getUserId());
 
 // Function to format duration in seconds to "Xh Ym Zs"
 function formatDuration($seconds) {
-    if ($seconds <= 0) return "0s";
+    if ($seconds < 60) return "0m";
     
     $h = floor($seconds / 3600);
     $m = floor(($seconds % 3600) / 60);
-    $s = $seconds % 60;
     
     $parts = [];
     if ($h > 0) $parts[] = $h . "h";
-    if ($m > 0) $parts[] = $m . "m";
-    if ($s > 0 || empty($parts)) $parts[] = $s . "s";
+    if ($m > 0 || (empty($parts) && $m >= 0)) $parts[] = $m . "m";
     
     return implode(" ", $parts);
 }
@@ -35,6 +39,7 @@ if (!$ticket) {
 }
 
 $position = $ticket ? $ticketModel->getGlobalQueuePosition($ticket['id']) : 0;
+$ticketsAhead = $ticket ? $ticketModel->getTicketsAhead($ticket['id']) : 0;
 $initialPosition = $ticket ? $ticketModel->getInitialQueuePosition($ticket['id']) : 0;
 
 // Use new Advanced Wait Time calculation
@@ -44,15 +49,17 @@ $estimatedWait = formatDuration(round($estimatedWaitSeconds));
 // Average Processing Time (APT)
 $avgProcessSeconds = $ticket ? $ticketModel->getPreciseAverageProcessTime($ticket['service_id']) : null;
 
+$isArchived = $ticket && (int)($ticket['is_archived'] ?? 0) === 1;
 $isWaiting = $ticket && $ticket['status'] === 'waiting';
-$isCalled = $ticket && $ticket['status'] === 'called';
-$isServing = $ticket && $ticket['status'] === 'serving';
+$isCalled = $ticket && $ticket['status'] === 'called' && !$isArchived;
+$isServing = $ticket && ($ticket['status'] === 'serving' || $isArchived); // Show as SERVING if archived
 $isCompleted = $ticket && $ticket['status'] === 'completed';
 
 // Calculate remaining time for serving state in PHP to prevent reset on refresh
 $servingRemainingSeconds = null;
-if ($isServing && $avgProcessSeconds && ($ticket['served_at'] ?? null)) {
-    $servedAt = strtotime($ticket['served_at']);
+if ($isServing && $avgProcessSeconds) {
+    $startTime = $ticket['served_at'] ?: $ticket['called_at'];
+    $servedAt = strtotime($startTime ?? '');
     if ($servedAt) {
         $elapsed = time() - $servedAt;
         $servingRemainingSeconds = max(0, $avgProcessSeconds - $elapsed);
@@ -82,25 +89,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
         exit;
     }
 }
+$pageTitle = 'My Ticket';
+require_once __DIR__ . '/../../includes/user-layout-header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Ticket - <?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <?php injectTailwindConfig(); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        const ANTIGRAVITY_BASE_URL = "<?php echo defined('BASE_URL') ? BASE_URL : ''; ?>";
-    </script>
-    <script src="<?php echo BASE_URL; ?>/js/dashboard-refresh.js"></script>
-</head>
-<body class="min-h-screen pb-20">
-    <?php include __DIR__ . '/../../includes/user-navbar.php'; ?>
 
-    <main class="container-ultra px-4 md:px-10 py-8 pb-20" id="ticket-main-content">
+<script src="<?php echo BASE_URL; ?>/js/dashboard-refresh.js"></script>
+
+<div class="container-ultra mx-auto px-4 md:px-10 w-full max-w-full overflow-x-hidden flex flex-col space-y-8 md:space-y-12 5xl:space-y-24 pb-12 md:pb-20 5xl:pb-32" id="ticket-main-content">
         <?php if (!$ticket): ?>
             <div class="max-w-2xl mx-auto mt-20 text-center bg-white p-12 3xl:p-20 rounded-[40px] 3xl:rounded-[56px] shadow-2xl shadow-slate-200 border border-slate-100">
                 <div class="w-24 3xl:w-32 h-24 3xl:h-32 bg-primary-50 rounded-3xl 3xl:rounded-[48px] flex items-center justify-center mx-auto mb-8 animate-float shadow-division">
@@ -115,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
         <?php else: ?>
             
             <!-- Ticket Status Card -->
-            <div class="bg-white rounded-[32px] md:rounded-[64px] p-2 shadow-ultra border border-slate-50 mb-8 md:mb-16">
+            <div class="bg-white rounded-[32px] md:rounded-[64px] p-2 shadow-ultra border border-slate-50">
                 <div class="bg-slate-900 rounded-[28px] md:rounded-[56px] p-6 md:p-20 text-white relative overflow-hidden">
                     <div class="relative z-10">
                         <div class="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 md:gap-20">
@@ -131,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                     <span class="text-xl md:text-4xl font-black uppercase tracking-[0.2em] <?php echo $isCompleted ? 'text-secondary-300' : 'text-primary-300'; ?>">
                                         <?php 
                                             if ($isCompleted) echo "COMPLETED";
-                                            elseif ($isCalled) echo "PROCEED";
+                                            elseif ($isCalled) echo "CALLING";
                                             elseif ($isServing) echo "SERVING";
                                             else echo strtoupper($ticket['status']);
                                         ?>
@@ -162,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                             <div class="flex items-baseline space-x-3">
                                                 <span class="text-2xl md:text-5xl font-black <?php echo ($isWaiting) ? 'text-amber-300' : 'text-white'; ?>">
                                                     <?php 
-                                                        if ($isWaiting) echo '#' . ($position + 1);
+                                                        if ($isWaiting) echo '#' . $position;
                                                         elseif ($isCalled) echo "PROCEED";
                                                         elseif ($isServing) echo "SERVING";
                                                         elseif ($isCompleted) echo '#' . $initialPosition;
@@ -170,7 +165,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                                 </span>
                                                 <?php if ($isWaiting): ?>
                                                     <span class="text-[10px] md:text-lg font-bold text-amber-300">
-                                                        (<?php echo $position; ?> ahead)
+                                                        <?php if ($position === 1): ?>
+                                                            (0 ahead)
+                                                        <?php else: ?>
+                                                            (<?php echo $ticketsAhead; ?> ahead)
+                                                        <?php endif; ?>
                                                     </span>
                                                 <?php endif; ?>
                                             </div>
@@ -201,7 +200,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                                 <div class="pt-3 md:pt-5 border-t border-white/10">
                                                     <span class="text-[8px] md:text-sm font-black uppercase tracking-widest text-white mb-1 md:mb-2 block">
                                                         <?php 
-                                                            if ($isServing) echo "Estimated Process Time";
+                                                            if ($isCalled) echo "Proceed to Window";
+                                                            elseif ($isServing) echo "Estimated Process Time";
                                                             elseif ($isCompleted) echo "Total Service Processed";
                                                             else echo "Estimated Waiting Time";
                                                         ?>
@@ -217,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                                                 if ($servedAt) {
                                                                     $targetTimestampMs = ($servedAt + $avgProcessSeconds) * 1000;
                                                                 }
-                                                            } elseif (($isWaiting || $isCalled) && $estimatedWaitSeconds > 0) {
+                                                            } elseif ($isWaiting && $estimatedWaitSeconds > 0) {
                                                                 $targetTimestampMs = ($now + $estimatedWaitSeconds) * 1000;
                                                             }
                                                           ?>
@@ -227,7 +227,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                                                             <?php if ($isServing): ?>data-is-serving="1"<?php endif; ?>
                                                           <?php endif; ?>>
                                                         <?php 
-                                                            if ($isServing) echo $servingRemainingTimeFormatted ?: "-";
+                                                            if ($isCalled) echo "GO NOW";
+                                                            elseif ($isServing) echo $servingRemainingTimeFormatted ?: "-";
                                                             elseif ($isCompleted) {
                                                                 $compAt = ($ticket['completed_at'] ?? null) ? strtotime($ticket['completed_at']) : time();
                                                                 $servAt = ($ticket['served_at'] ?? null) ? strtotime($ticket['served_at']) : (($ticket['called_at'] ?? null) ? strtotime($ticket['called_at']) : $compAt);
@@ -388,10 +389,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
                         <div class="absolute -right-6 -bottom-6 text-[100px] text-gray-50/50 pointer-events-none z-0 rotate-12"><i class="fas fa-folder-open"></i></div>
                     </div>
                 <?php endif; ?>
-
-            
+            </div>
         <?php endif; ?>
-    </main>
+    </div> <!-- Closing container-ultra -->
 
     <script src="<?php echo BASE_URL; ?>/js/live-countdown.js"></script>
     <script>
@@ -477,8 +477,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
             });
         }
     </script>
-
-    <?php include __DIR__ . '/../../includes/chatbot-widget.php'; ?>
-    <script src="<?php echo BASE_URL; ?>/js/notifications.js"></script>
-</body>
-</html>
+<?php require_once __DIR__ . '/../../includes/user-layout-footer.php'; ?>

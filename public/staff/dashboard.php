@@ -24,26 +24,13 @@ if ($window) {
     $archivedTickets = $ticketModel->getArchivedTicketsByWindow($window['id']);
     $waitingTickets = $ticketModel->getWaitingQueueForWindow($window['id']);
 }
+$pageTitle = 'Staff Counter';
+require_once __DIR__ . '/../../includes/staff-layout-header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Counter - <?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <?php injectTailwindConfig(); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <meta name="csrf-token" content="<?php echo generateCsrfToken(); ?>">
-    <script>
-        const ANTIGRAVITY_BASE_URL = "<?php echo defined('BASE_URL') ? BASE_URL : ''; ?>";
-    </script>
-    <script src="<?php echo BASE_URL; ?>/js/dashboard-refresh.js"></script>
-</head>
-<body class="min-h-screen">
-    <?php include __DIR__ . '/../../includes/staff-navbar.php'; ?>
 
-    <main class="container-ultra max-w-[2000px] mx-auto pt-2 pb-8 px-4 md:px-8">
+<script src="<?php echo BASE_URL; ?>/js/dashboard-refresh.js"></script>
+<script src="<?php echo BASE_URL; ?>/js/live-countdown.js"></script>
+
         <?php if (!$window): ?>
             <div class="max-w-2xl mx-auto mt-20 text-center bg-white p-12 rounded-2xl shadow-2xl shadow-slate-200 border border-slate-100">
                 <div class="w-24 h-24 bg-rose-50 rounded-xl flex items-center justify-center mx-auto mb-8">
@@ -54,23 +41,45 @@ if ($window) {
             </div>
         <?php else: ?>
             
-            <!-- Compact Header -->
-            <div class="bg-white rounded-2xl p-6 5xl:p-12 shadow-xl shadow-slate-200/50 border border-white mb-2 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-                <div class="flex items-center gap-6 5xl:gap-12 relative z-10">
-                    <div class="w-16 5xl:w-32 h-16 5xl:h-32 bg-slate-900 rounded-2xl 5xl:rounded-[48px] flex items-center justify-center text-white font-black text-2xl 5xl:text-5xl shadow-lg">
+            <!-- Compact Header with Integrated Filters -->
+            <div class="bg-white rounded-2xl px-4 py-2 5xl:px-8 5xl:py-4 shadow-xl shadow-slate-200/50 border border-white mb-6 flex flex-col xl:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                <!-- Operational Counter -->
+                <div class="flex items-center gap-4 5xl:gap-8 relative z-10 shrink-0">
+                    <div class="w-12 5xl:w-24 h-12 5xl:h-24 bg-slate-900 rounded-xl 5xl:rounded-[32px] flex items-center justify-center text-white font-black text-xl 5xl:text-4xl shadow-lg">
                         <?php 
                             $name = $window['window_name'] ?? '';
                             echo strtoupper(substr($name, 0, 2)); 
                         ?>
                     </div>
                     <div>
-                        <p class="text-xs 5xl:text-xl font-bold text-gray-400 uppercase tracking-widest mb-1 5xl:mb-4">Operational Counter</p>
-                        <h2 class="text-2xl 5xl:text-5xl font-black text-gray-900 leading-none"><?php echo $window['window_name']; ?></h2>
+                        <p class="text-[10px] 5xl:text-lg font-bold text-gray-400 uppercase tracking-widest mb-0.5 5xl:mb-2">Operational Counter</p>
+                        <h2 class="text-xl 5xl:text-4xl font-black text-gray-900 leading-none"><?php echo $window['window_name']; ?></h2>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-6 5xl:gap-12 relative z-10">
-                    <div class="flex flex-col items-end">
+                <!-- Integrated College Filters -->
+                <div class="flex-1 flex flex-col items-center px-8 border-x border-slate-100 relative z-10">
+                    <p class="text-[10px] 5xl:text-xl font-black text-gray-400 uppercase tracking-[0.3em] mb-3">Campus Watch</p>
+                    <div class="flex flex-wrap justify-center gap-2 5xl:gap-4">
+                        <?php 
+                            $preferredColleges = !empty($window['preferred_colleges']) ? explode(',', $window['preferred_colleges']) : [];
+                            $colleges = ['CAS', 'SCJE', 'CBME', 'CTE'];
+                            foreach ($colleges as $col): 
+                                $isActive = in_array($col, $preferredColleges);
+                        ?>
+                            <button onclick="toggleCollegeFilter('<?php echo $col; ?>', this)" 
+                                    data-active="<?php echo $isActive ? '1' : '0'; ?>"
+                                    data-college="<?php echo $col; ?>"
+                                    class="college-pill px-6 py-2.5 5xl:px-12 5xl:py-6 rounded-xl 5xl:rounded-[32px] text-[10px] 5xl:text-xl font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 <?php echo $isActive ? 'bg-primary-600 text-white shadow-xl shadow-primary-600/30' : 'bg-slate-50 text-slate-400 border border-slate-100 hover:bg-white hover:text-slate-600 hover:shadow-sm'; ?>">
+                                <?php echo $col; ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Service Status -->
+                <div class="flex items-center gap-6 5xl:gap-12 relative z-10 shrink-0">
+                    <div class="flex flex-col items-center xl:items-end">
                         <p class="text-[10px] 5xl:text-xl font-black text-gray-400 uppercase tracking-widest mb-2">Service Status</p>
                         <div class="flex items-center gap-4">
                             <span class="text-xs font-black uppercase tracking-wider <?php echo $window['is_active'] ? 'text-emerald-600' : 'text-rose-600'; ?>">
@@ -87,77 +96,57 @@ if ($window) {
                             </button>
                         </div>
                     </div>
-
-                    <!-- College Toggles -->
-                    <div class="flex flex-col items-end">
-                        <p class="text-[10px] 5xl:text-xl font-black text-gray-400 uppercase tracking-widest mb-2">College Filter</p>
-                        <div class="flex items-center gap-2 5xl:gap-4 bg-slate-100 p-1.5 rounded-2xl">
-                            <?php 
-                                $preferredColleges = !empty($window['preferred_colleges']) ? explode(',', $window['preferred_colleges']) : [];
-                                $colleges = ['CAS', 'SCJE', 'CTE', 'CBME'];
-                                foreach ($colleges as $col): 
-                                    $isActive = in_array($col, $preferredColleges);
-                            ?>
-                                <button onclick="toggleCollegeFilter('<?php echo $col; ?>', this)" 
-                                        data-college="<?php echo $col; ?>"
-                                        data-active="<?php echo $isActive ? '1' : '0'; ?>"
-                                        class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all <?php echo $isActive ? 'bg-primary-500 text-white shadow-lg' : 'bg-white text-slate-400 hover:text-slate-600'; ?>">
-                                    <?php echo $col; ?>
-                                </button>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
                 </div>
-                
-                <!-- Decorative BG -->
-                <div class="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-slate-50 to-transparent opacity-50 pointer-events-none"></div>
             </div>
 
             <!-- Performance Snapshot Row -->
             <div id="performance-snapshot-container">
                 <?php $staffStats = $ticketModel->getStaffDailyStats(getUserId()); ?>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-                        <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Served Today</p>
-                            <h4 class="text-2xl font-black text-slate-900"><?php echo $staffStats['total_served']; ?></h4>
+                    <!-- Served Today -->
+                    <div class="bg-white px-4 py-2 5xl:px-10 5xl:py-5 rounded-2xl shadow-xl shadow-slate-200/50 border border-white flex items-center gap-4 5xl:gap-8 relative overflow-hidden group">
+                        <div class="w-12 5xl:w-24 h-12 5xl:h-24 bg-secondary-900 rounded-xl 5xl:rounded-[32px] flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110 shrink-0">
+                            <i class="fas fa-check-double text-xl 5xl:text-4xl"></i>
                         </div>
-                        <div class="w-12 h-12 bg-secondary-50 rounded-xl flex items-center justify-center text-secondary-600">
-                            <i class="fas fa-check-double text-xl"></i>
+                        <div>
+                            <p class="text-[10px] 5xl:text-xl font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Served Today</p>
+                            <h4 class="text-3xl 5xl:text-7xl font-black text-slate-900 leading-none"><?php echo $staffStats['total_served']; ?></h4>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-                        <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Avg. Speed</p>
-                            <h4 class="text-2xl font-black text-slate-900">
-                                <?php echo $staffStats['avg_processing_time']; ?>
-                            </h4>
+
+                    <!-- Avg Speed -->
+                    <div class="bg-white px-4 py-2 5xl:px-10 5xl:py-5 rounded-2xl shadow-xl shadow-slate-200/50 border border-white flex items-center gap-4 5xl:gap-8 relative overflow-hidden group">
+                        <div class="w-12 5xl:w-24 h-12 5xl:h-24 bg-emerald-600 rounded-xl 5xl:rounded-[32px] flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110 shrink-0">
+                            <i class="fas fa-bolt text-xl 5xl:text-4xl"></i>
                         </div>
-                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-bolt text-xl"></i>
+                        <div>
+                            <p class="text-[10px] 5xl:text-xl font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Avg. Speed</p>
+                            <h4 class="text-3xl 5xl:text-7xl font-black text-slate-900 leading-none"><?php echo $staffStats['avg_processing_time']; ?></h4>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+
+                    <!-- Services Offline -->
+                    <div class="bg-white px-4 py-2 5xl:px-10 5xl:py-5 rounded-2xl shadow-xl shadow-slate-200/50 border border-white flex items-center gap-4 5xl:gap-8 relative overflow-hidden group">
+                        <div class="w-12 5xl:w-24 h-12 5xl:h-24 bg-primary-600 rounded-xl 5xl:rounded-[32px] flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110 shrink-0">
+                            <i class="fas fa-toggle-off text-xl 5xl:text-4xl"></i>
+                        </div>
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Services Offline</p>
+                            <p class="text-[10px] 5xl:text-xl font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Services Offline</p>
                             <?php 
                                 $allServices = $windowModel->getWindowServices($window['id']);
                                 $offlineCount = count(array_filter($allServices, function($s) { return !$s['is_enabled']; }));
                             ?>
-                            <h4 class="text-2xl font-black text-primary-600"><?php echo $offlineCount; ?></h4>
-                        </div>
-                        <div class="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-primary-500">
-                            <i class="fas fa-toggle-off text-xl"></i>
+                            <h4 class="text-3xl 5xl:text-7xl font-black text-primary-600 leading-none"><?php echo $offlineCount; ?></h4>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Balanced 50/50 Grid Layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                <!-- Updated Section (Waitlist) - 50% -->
-                <div class="space-y-6" id="waiting-tickets-container">
+            <!-- Adjusted to 40/60 Grid Layout (2/5 and 3/5) -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+ 
+                 <!-- Waitlist Section - 40% (2/5) -->
+                 <div class="lg:col-span-2 space-y-6" id="waiting-tickets-container">
                      <div class="flex items-center justify-between mb-2">
                         <h3 class="text-xl 5xl:text-4xl font-black text-gray-900 font-heading">Upcoming</h3>
                         <span class="px-3 5xl:px-6 py-1 5xl:py-3 bg-slate-100 text-slate-500 rounded-lg 5xl:rounded-2xl text-xs 5xl:text-2xl font-black uppercase tracking-wide"><?php echo count($waitingTickets); ?> Waiting</span>
@@ -170,7 +159,7 @@ if ($window) {
                                 <p class="font-bold 5xl:text-4xl text-slate-400">Queue is empty</p>
                             </div>
                         <?php else: ?>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 5xl:gap-8 p-6 5xl:p-14">
+                            <div class="grid grid-cols-1 gap-4 5xl:gap-8 p-6 5xl:p-14">
                                 <?php foreach (array_slice($waitingTickets, 0, 12) as $ticket): ?>
                                 <div class="bg-white rounded-[24px] 5xl:rounded-[48px] p-4 5xl:p-14 flex items-center justify-between hover:bg-slate-50 border border-slate-200 shadow-division transition-all duration-300 group">
                                     <div class="flex items-center space-x-4 5xl:space-x-16 min-w-0 flex-1">
@@ -178,18 +167,21 @@ if ($window) {
                                             <span class="text-white font-black text-xs 5xl:text-4xl"><?php echo $ticket['service_code']; ?></span>
                                         </div>
                                         <div class="min-w-0 flex-1">
-                                            <div class="flex items-center space-x-3 mb-1 5xl:mb-4">
+                                            <div class="flex items-center space-x-3 mb-2 5xl:mb-4">
                                                 <p class="font-black text-gray-900 text-lg 5xl:text-5xl leading-none tracking-tight"><?php echo $ticket['ticket_number']; ?></p>
                                             </div>
-                                            <p class="text-[10px] 5xl:text-3xl font-bold text-slate-400 uppercase tracking-wider truncate"><?php echo $ticket['service_name']; ?></p>
-                                            <p class="text-[10px] 5xl:text-2xl font-black text-slate-500 uppercase tracking-widest mt-1 truncate"><?php echo $ticket['user_name']; ?></p>
+                                            <!-- Subtly Highlighted Client Name -->
+                                            <div class="bg-primary-50 px-3 5xl:px-8 py-1.5 5xl:py-4 rounded-md 5xl:rounded-xl mb-2 5xl:mb-4 inline-block">
+                                                <p class="text-base 5xl:text-4xl font-black text-primary-700 leading-none tracking-wide"><?php echo $ticket['user_name']; ?></p>
+                                            </div>
+                                            <p class="text-xs 5xl:text-3xl font-bold text-slate-500 uppercase tracking-wider truncate"><?php echo $ticket['service_name']; ?></p>
                                         </div>
                                     </div>
                                     <div class="w-2 5xl:w-5 h-2 5xl:h-5 rounded-full bg-primary-500 shadow-lg shadow-primary-100 group-hover:scale-125 transition-transform duration-200"></div>
                                 </div>
                                 <?php endforeach; ?>
                                 <?php if(count($waitingTickets) > 12): ?>
-                                    <div class="md:col-span-2 p-4 5xl:p-10 text-center text-xs 5xl:text-2xl font-bold text-gray-400 bg-slate-50 rounded-xl">
+                                    <div class="p-4 5xl:p-10 text-center text-xs 5xl:text-2xl font-bold text-gray-400 bg-slate-50 rounded-xl">
                                         + <?php echo count($waitingTickets) - 12; ?> more in queue
                                     </div>
                                 <?php endif; ?>
@@ -198,8 +190,8 @@ if ($window) {
                     </div>
                 </div>
 
-                <!-- Active Transactions Section - 50% -->
-                <div class="space-y-6" id="active-transaction-container">
+                <!-- Active Transactions Section - 60% (3/5) -->
+                <div class="lg:col-span-3 space-y-6" id="active-transaction-container">
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="text-xl 5xl:text-4xl font-black text-gray-900 font-heading">Active Transaction</h3>
                         <?php if (!empty($activeTickets)): ?>
@@ -209,10 +201,11 @@ if ($window) {
                         <?php endif; ?>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-2xl shadow-premium border border-white overflow-hidden min-h-[500px] flex flex-col">
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 p-6 5xl:p-14 flex-1">
                     <?php if (!empty($activeTickets)): ?>
                         <?php foreach ($activeTickets as $ticket): ?>
-                        <div class="bg-white rounded-2xl overflow-hidden shadow-2xl shadow-primary-100 border border-white relative group flex flex-col">
+                        <div class="bg-white rounded-[24px] 5xl:rounded-[48px] overflow-hidden shadow-division border border-slate-200 hover:bg-slate-50 transition-all duration-300 relative group flex flex-col">
                             <!-- Card Header -->
                             <div class="bg-slate-900 p-6 5xl:p-16 text-white relative overflow-hidden">
                                 <div class="relative z-10 text-center">
@@ -225,8 +218,10 @@ if ($window) {
                             <!-- Card Body -->
                             <div class="p-6 5xl:p-16 flex-1 flex flex-col">
                                 <div class="text-center mb-6 5xl:mb-12">
-                                    <h4 class="text-xl 5xl:text-4xl font-black text-gray-900 leading-tight mb-1"><?php echo $ticket['user_name']; ?></h4>
-                                    <p class="text-xs 5xl:text-2xl font-bold text-primary-600 uppercase tracking-widest"><?php echo $ticket['service_name']; ?></p>
+                                    <div class="bg-slate-100 px-4 py-2 5xl:px-8 5xl:py-4 rounded-xl 5xl:rounded-3xl mb-4 5xl:mb-6 inline-block">
+                                        <h4 class="text-lg 5xl:text-3xl font-black text-slate-800 leading-tight tracking-tight mb-0"><?php echo $ticket['user_name']; ?></h4>
+                                    </div>
+                                    <p class="text-sm 5xl:text-3xl font-bold text-primary-600 uppercase tracking-[0.2em]"><?php echo $ticket['service_name']; ?></p>
                                 </div>
 
                                 <?php if (!empty($ticket['user_note'])): ?>
@@ -246,7 +241,7 @@ if ($window) {
                                 <?php endif; ?>
 
                                 <?php if ($ticket['status'] === 'serving'): ?>
-                                    <div class="mb-6 5xl:mb-12">
+                                    <div class="mb-3 5xl:mb-6">
                                         <label for="staff-notes-<?php echo $ticket['id']; ?>" class="block text-[10px] 5xl:text-xl font-black text-gray-400 uppercase tracking-widest mb-2">Notes to User</label>
                                         <textarea id="staff-notes-<?php echo $ticket['id']; ?>" 
                                                   class="w-full px-4 5xl:px-10 py-3 5xl:py-8 bg-slate-50 border border-slate-200 rounded-xl 5xl:rounded-[32px] text-xs 5xl:text-2xl font-medium focus:ring-4 focus:ring-primary-100 focus:border-primary-400 transition-all resize-none"
@@ -281,32 +276,42 @@ if ($window) {
                             </div>
                         </div>
                         <?php endforeach; ?>
-
-                        <!-- Call Next Mini-Button -->
-                        <div class="md:col-span-2 mt-2">
+                        
+                        <!-- Call Next Mini-Button adjacent to Active Card -->
+                        <div class="flex flex-col items-center justify-center p-6 5xl:p-10 border-2 border-dashed border-slate-300 rounded-[20px] 5xl:rounded-[40px] bg-slate-200 min-h-[200px] relative">
+                            <div class="text-center mb-3 5xl:mb-6">
+                                <i class="fas fa-users text-3xl 5xl:text-6xl text-slate-400 mb-2"></i>
+                                <p class="text-xs 5xl:text-xl font-bold text-slate-500">Ready for more?</p>
+                            </div>
                             <?php if ($window['is_active']): ?>
-                                <button type="button" onclick="callNext(<?php echo $window['id']; ?>, this)" class="relative z-10 w-full py-4 5xl:py-10 border-2 border-dashed border-primary-200 text-primary-500 font-bold rounded-2xl hover:bg-primary-50 hover:border-primary-300 transition-all flex items-center justify-center gap-2 5xl:gap-6 text-sm 5xl:text-3xl">
-                                    <i class="fas fa-plus"></i> Call Another
+                                <button type="button" onclick="callNext(<?php echo $window['id']; ?>, this)" class="relative z-10 w-auto px-8 5xl:px-14 py-3 5xl:py-5 bg-red-700 border border-transparent text-white font-black rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg hover:bg-red-800 transition-all flex items-center justify-center gap-2 5xl:gap-5 text-base 5xl:text-3xl group mx-auto">
+                                    <span class="w-8 h-8 5xl:w-12 5xl:h-12 rounded-full bg-white/20 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-plus text-xs 5xl:text-xl"></i>
+                                    </span>
+                                    Call Another Ticket
                                 </button>
                             <?php else: ?>
-                                <button disabled class="w-full py-4 5xl:py-10 border-2 border-dashed border-slate-200 text-slate-400 font-bold rounded-2xl cursor-not-allowed flex items-center justify-center gap-2 5xl:gap-6 text-sm 5xl:text-3xl">
+                                <button disabled class="w-auto px-6 5xl:px-12 py-2 5xl:py-4 border border-slate-400 bg-slate-400 text-white font-bold rounded-xl cursor-not-allowed flex items-center justify-center gap-2 5xl:gap-4 text-sm 5xl:text-2xl shadow-sm mx-auto">
                                     <i class="fas fa-ban"></i> Go Online to Call
                                 </button>
                             <?php endif; ?>
                         </div>
+                        
+                        </div> <!-- end grid -->
                     <?php else: ?>
-                        <div class="bg-white rounded-2xl p-8 5xl:p-32 text-center shadow-xl shadow-slate-200/50 border border-slate-100 py-20 5xl:py-40 col-span-full">
-                            <div class="w-20 5xl:w-48 h-20 5xl:h-48 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6 5xl:mb-16 animate-pulse">
-                                <i class="fas fa-bell text-primary-500 text-2xl 5xl:text-7xl"></i>
-                            </div>
-                            <h3 class="text-xl 5xl:text-5xl font-black text-gray-900 mb-2 5xl:mb-10">Ready to Serve</h3>
+                        <div class="flex flex-col items-center justify-center p-8 5xl:p-32 text-center py-20 5xl:py-40 col-span-full flex-1">
+                            <i class="fas fa-bell text-4xl 5xl:text-8xl mb-4 5xl:mb-10 text-slate-300"></i>
+                            <p class="font-bold 5xl:text-4xl text-slate-400">Ready to Serve</p>
                             <?php if ($window['is_active']): ?>
-                                <button onclick="callNext(<?php echo $window['id']; ?>, this)" class="mt-6 5xl:mt-10 px-8 5xl:px-20 py-4 5xl:py-10 bg-primary-600 text-white font-black rounded-2xl 5xl:rounded-[40px] shadow-lg shadow-primary-200 hover:bg-primary-700 hover:-translate-y-1 transition-all text-sm 5xl:text-4xl uppercase tracking-widest">
+                                <button onclick="callNext(<?php echo $window['id']; ?>, this)" class="mt-6 5xl:mt-10 relative z-10 w-auto px-8 5xl:px-14 py-3 5xl:py-5 bg-red-700 border border-transparent text-white font-black rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg hover:bg-red-800 transition-all flex items-center justify-center gap-2 5xl:gap-5 text-base 5xl:text-3xl group mx-auto">
+                                    <span class="w-8 h-8 5xl:w-12 5xl:h-12 rounded-full bg-white/20 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-plus text-xs 5xl:text-xl"></i>
+                                    </span>
                                     Call Next Ticket
                                 </button>
                             <?php else: ?>
-                                <button disabled class="mt-6 5xl:mt-10 px-8 5xl:px-20 py-4 5xl:py-10 bg-slate-200 text-slate-400 font-black rounded-2xl 5xl:rounded-[40px] cursor-not-allowed text-sm 5xl:text-4xl uppercase tracking-widest">
-                                    You are Offline
+                                <button disabled class="mt-6 5xl:mt-10 px-8 5xl:px-20 py-4 5xl:py-10 bg-slate-300 text-slate-500 font-black rounded-2xl 5xl:rounded-[40px] cursor-not-allowed text-sm 5xl:text-4xl uppercase tracking-widest border-2 border-slate-400 shadow-sm">
+                                    Go Online to Call
                                 </button>
                             <?php endif; ?>
                         </div>
@@ -337,13 +342,22 @@ if ($window) {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
+                    // Success toast
+                    document.dispatchEvent(new CustomEvent('equeue:toast', { 
+                        detail: { 
+                            type: 'success', 
+                            title: 'Ticket Re-called',
+                            message: 'The ticket has been announced again.'
+                        } 
+                    }));
+
                     // Immediate refresh to sync all dashboards
                     if (window.dashboardRefreshInstance) {
                         window.dashboardRefreshInstance.refresh(true);
                     }
                     
-                    // Show a quick success feedback
-                    const originalHtml = btn.innerHTML;
+                    // Show a quick success feedback on button
+                    const originalHtml = btn.getAttribute('data-original-text') || btn.innerHTML;
                     btn.innerHTML = '<i class="fas fa-check"></i>';
                     btn.classList.add('bg-emerald-100', 'text-emerald-600');
                     setTimeout(() => {
@@ -390,7 +404,32 @@ if ($window) {
             }
         }
 
-        function toggleCollegeFilter(college, btn) {
+        function selectAllColleges(select) {
+    const pills = document.querySelectorAll('.college-pill');
+    const colleges = [];
+    
+    pills.forEach(pill => {
+        const college = pill.getAttribute('data-college');
+        pill.setAttribute('data-active', select ? '1' : '0');
+        
+        if (select) {
+            pill.classList.remove('bg-slate-50', 'text-slate-400', 'border', 'border-slate-100', 'hover:bg-slate-100', 'hover:text-slate-600');
+            pill.classList.add('bg-primary-500', 'text-white', 'shadow-lg', 'shadow-primary-500/30');
+            colleges.push(college);
+        } else {
+            pill.classList.add('bg-slate-50', 'text-slate-400', 'border', 'border-slate-100', 'hover:bg-slate-100', 'hover:text-slate-600');
+            pill.classList.remove('bg-primary-500', 'text-white', 'shadow-lg', 'shadow-primary-500/30');
+        }
+    });
+
+    fetch('dashboard.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `action=update_college_filters&colleges=${JSON.stringify(colleges)}`
+    }).then(() => location.reload());
+}
+
+function toggleCollegeFilter(college, btn) {
             console.log('toggleCollegeFilter called', { college });
             const isActive = btn.getAttribute('data-active') === '1';
             const newStatus = !isActive;
@@ -412,11 +451,9 @@ if ($window) {
             // Update UI optimistically
             btn.setAttribute('data-active', newStatus ? '1' : '0');
             if (newStatus) {
-                btn.classList.remove('bg-white', 'text-slate-400', 'hover:text-slate-600');
-                btn.classList.add('bg-primary-500', 'text-white', 'shadow-lg');
+                btn.className = "college-pill px-8 py-3 5xl:px-16 5xl:py-8 rounded-2xl 5xl:rounded-[40px] text-xs 5xl:text-2xl font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 bg-primary-600 text-white shadow-xl shadow-primary-600/30";
             } else {
-                btn.classList.remove('bg-primary-500', 'text-white', 'shadow-lg');
-                btn.classList.add('bg-white', 'text-slate-400', 'hover:text-slate-600');
+                btn.className = "college-pill px-8 py-3 5xl:px-16 5xl:py-8 rounded-2xl 5xl:rounded-[40px] text-xs 5xl:text-2xl font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 bg-slate-50 text-slate-400 border border-slate-100 hover:bg-white hover:text-slate-600 hover:shadow-sm";
             }
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -725,28 +762,6 @@ if ($window) {
             }
         }
 
-        // Live Timer for Archived Tickets
-        setInterval(() => {
-            document.querySelectorAll('.elapsed-timer').forEach(el => {
-                let seconds = parseInt(el.getAttribute('data-seconds'));
-                seconds++;
-                el.setAttribute('data-seconds', seconds);
-                
-                // Format: Xd Xh Xm Xs
-                let d = Math.floor(seconds / (3600*24));
-                let h = Math.floor(seconds % (3600*24) / 3600);
-                let m = Math.floor(seconds % 3600 / 60);
-                let s = Math.floor(seconds % 60);
-                
-                let timeStr = '';
-                if(d > 0) timeStr += d + 'd ';
-                if(h > 0) timeStr += h + 'h ';
-                if(m > 0 || h > 0 || d > 0) timeStr += m + 'm ';
-                timeStr += s + 's';
-                
-                el.innerText = timeStr;
-            });
-        }, 1000);
 
         // Initialize Real-Time Auto-Refresh
         window.dashboardRefreshInstance = new DashboardRefresh([
@@ -817,6 +832,4 @@ if ($window) {
             }
         });
     </script>
-    <script src="<?php echo BASE_URL; ?>/js/notifications.js"></script>
-</body>
-</html>
+<?php require_once __DIR__ . '/../../includes/staff-layout-footer.php'; ?>

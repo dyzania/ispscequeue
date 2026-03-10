@@ -17,40 +17,33 @@ foreach ($offices as &$office) {
     $office['waiting'] = $stmt->fetchColumn();
 }
 unset($office); // break reference
+
+$pageTitle = 'Select Office';
+require_once __DIR__ . '/../../includes/user-layout-header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Office - <?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <?php injectTailwindConfig(); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .grid-bg {
-            background-color: #0f172a;
-            background-image: 
-                radial-gradient(at 40% 20%, hsla(110,100%,74%,0.15) 0px, transparent 50%),
-                radial-gradient(at 80% 0%, hsla(189,100%,56%,0.15) 0px, transparent 50%),
-                radial-gradient(at 0% 50%, hsla(355,100%,93%,0.1) 0px, transparent 50%);
-        }
-        .office-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .office-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(34, 197, 94, 0.1), 0 10px 10px -5px rgba(34, 197, 94, 0.04);
-            border-color: rgba(34, 197, 94, 0.5);
-        }
-    </style>
-</head>
-<body class="bg-primary-950 font-sans grid-bg min-h-screen flex flex-col">
 
-    <?php include __DIR__ . '/../../includes/user-navbar.php'; ?>
+<style>
+    .grid-bg {
+        background-color: #0f172a;
+        background-image: 
+            radial-gradient(at 40% 20%, hsla(110,100%,74%,0.15) 0px, transparent 50%),
+            radial-gradient(at 80% 0%, hsla(189,100%,56%,0.15) 0px, transparent 50%),
+            radial-gradient(at 0% 50%, hsla(355,100%,93%,0.1) 0px, transparent 50%);
+    }
+    .office-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .office-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(34, 197, 94, 0.1), 0 10px 10px -5px rgba(34, 197, 94, 0.04);
+        border-color: rgba(34, 197, 94, 0.5);
+    }
+    /* Override body for this page */
+    body { background-color: #0f172a !important; }
+</style>
 
-    <main class="flex-grow flex flex-col items-center justify-center p-6 lg:p-12">
-        <div class="max-w-5xl w-full">
+<div class="grid-bg min-h-[calc(100vh-8rem)] flex flex-col items-center justify-center p-6 lg:p-12 transition-all duration-300 rounded-[32px] mx-4 md:mx-10 overflow-hidden relative shadow-2xl border border-white/5">
+        <div class="max-w-5xl w-full relative z-10">
             <!-- Header -->
             <div class="text-center mb-16">
                 <!--
@@ -115,6 +108,5 @@ unset($office); // break reference
             </div>
             
         </div>
-    </main>
-</body>
-</html>
+    </div>
+<?php require_once __DIR__ . '/../../includes/user-layout-footer.php'; ?>

@@ -33,10 +33,10 @@ function formatDuration($seconds) {
 }
 ?>
 
-<div class="h-full flex flex-col space-y-4 max-w-full overflow-x-hidden" id="admin-dashboard-container">
+<div class="flex flex-col space-y-4 max-w-full overflow-x-hidden" id="admin-dashboard-container">
     <!-- Top Row: Windows Status (Persistent UI) -->
-    <div class="relative group flex-none mb-4">
-        <div class="overflow-hidden -my-10 py-10 px-4 -mx-4" id="window-carousel-viewport">
+    <div class="relative group flex-none mb-4 z-10 w-full mt-4">
+        <div class="overflow-x-hidden overflow-y-visible -mt-10 pt-10 -mb-10 pb-10 px-4 -mx-4 h-full" id="window-carousel-viewport">
             <div id="window-carousel-track" class="flex gap-4 select-none" style="will-change: transform;">
                 <?php 
                 $allWindows = $windowModel->getAllWindows();
@@ -52,52 +52,78 @@ function formatDuration($seconds) {
                     }
                 ?>
                 <div class="window-slide flex-none w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)]" data-window-id="<?php echo $window['id']; ?>">
-                    <div class="window-card rounded-[32px] lg:rounded-[48px] 5xl:rounded-[80px] p-6 lg:p-8 3xl:p-12 5xl:p-20 border transition-all duration-300 group/card overflow-hidden flex flex-col h-full <?php echo $statusClass; ?>">
-                        <div class="flex items-start justify-between mb-4 5xl:mb-8">
-                            <div class="flex items-center space-x-2 lg:space-x-3 3xl:space-x-6 5xl:space-x-10">
-                                <div class="w-10 h-10 lg:w-12 lg:h-12 3xl:w-20 3xl:h-24 5xl:w-32 5xl:h-40 bg-primary-600 rounded-lg lg:rounded-xl 3xl:rounded-[32px] 5xl:rounded-[48px] flex items-center justify-center text-white shadow-lg shadow-primary-900/20 group-hover/card:rotate-6 transition-transform relative overflow-hidden flex-none">
-                                    <span class="text-base lg:text-lg 3xl:text-4xl 5xl:text-6xl font-black relative z-10"><?php echo str_replace('W-', '', $window['window_number']); ?></span>
+                    <div class="window-card rounded-[32px] lg:rounded-[40px] 5xl:rounded-[60px] p-4 lg:p-6 3xl:p-8 5xl:p-12 border transition-all duration-300 group/card overflow-hidden flex flex-col h-full min-h-[360px] 3xl:min-h-[480px] 5xl:min-h-[750px] <?php echo $statusClass; ?>">
+                        <div class="flex items-start justify-between mb-3 5xl:mb-8 flex-none">
+                            <div class="flex items-center space-x-2 lg:space-x-3 3xl:space-x-5 5xl:space-x-10">
+                                <div class="w-10 h-10 lg:w-12 lg:h-12 3xl:w-18 3xl:h-22 5xl:w-30 5xl:h-38 bg-primary-600 rounded-lg lg:rounded-xl 3xl:rounded-[24px] 5xl:rounded-[32px] flex items-center justify-center text-white shadow-lg shadow-primary-900/20 group-hover/card:rotate-6 transition-transform relative overflow-hidden flex-none">
+                                    <span class="text-sm lg:text-lg 3xl:text-3xl 5xl:text-5xl font-black relative z-10"><?php echo str_replace('W-', '', $window['window_number']); ?></span>
                                     <div class="absolute inset-0 bg-white/10 group-hover/card:scale-150 transition-transform duration-700"></div>
                                 </div>
                                 <div class="min-w-0">
-                                    <h4 class="text-sm lg:text-base 3xl:text-3xl 5xl:text-5xl font-black text-gray-900 tracking-tight leading-none mb-1 5xl:mb-4 truncate window-name"><?php echo $window['window_name']; ?></h4>
-                                    <p class="text-[11px] lg:text-[12px] 3xl:text-sm 5xl:text-2xl font-bold text-gray-400 uppercase tracking-[0.2em]"><?php echo $window['window_number']; ?></p>
+                                    <h4 class="text-lg lg:text-3xl 3xl:text-4xl 5xl:text-6xl font-black text-gray-900 tracking-tight leading-none mb-0.5 5xl:mb-3 truncate window-name"><?php echo $window['window_name']; ?></h4>
+                                    <p class="text-[9px] lg:text-[11px] 3xl:text-xs 5xl:text-xl font-bold text-gray-400 uppercase tracking-[0.2em]"><?php echo $window['window_number']; ?></p>
                                 </div>
                             </div>
-                            <div class="flex flex-col items-end">
-                                <span class="window-status-badge px-3 5xl:px-6 py-1 5xl:py-2 rounded-lg 5xl:rounded-xl text-xs 3xl:text-sm 5xl:text-xl font-black tracking-widest uppercase mb-2 <?php echo $isActive ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'; ?>">
+                            <div class="flex flex-col items-end shrink-0">
+                                <span class="window-status-badge px-3 5xl:px-6 py-1 5xl:py-2 rounded-lg 5xl:rounded-xl text-[10px] 3xl:text-xs 5xl:text-xl font-black tracking-widest uppercase mb-1 <?php echo $isActive ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'; ?>">
                                     <?php echo $isActive ? 'Online' : 'Offline'; ?>
                                 </span>
                             </div>
                         </div>
 
-                        <?php 
-                        $servingStatus = $window['serving_status'];
-                        $isServing = ($isActive && $servingTicket);
-                        $containerClasses = $isServing 
-                            ? ($servingStatus === 'called' ? 'bg-yellow-400 shadow-inner' : 'bg-secondary-700 shadow-inner') 
-                            : 'bg-secondary-200/70';
-                        $labelClasses = $isServing ? 'text-black/50' : 'text-secondary-900/40';
-                        if ($isServing && $servingStatus === 'serving') $labelClasses = 'text-white/40';
-                        
-                        $statusText = 'Idle';
-                        if (!$isActive) $statusText = 'Offline';
-                        elseif ($servingStatus === 'called') $statusText = 'Calling';
-                        elseif ($servingStatus === 'serving') $statusText = 'Processing';
-                        ?>
-                        <div class="serving-container <?php echo $containerClasses; ?> rounded-2xl 3xl:rounded-[32px] 5xl:rounded-[50px] p-3 lg:p-4 3xl:p-6 5xl:p-10 mb-4 5xl:mb-8 border border-transparent transition-all duration-500">
-                            <p class="serving-label text-xs 3xl:text-sm 5xl:text-xl font-black <?php echo $labelClasses; ?> uppercase tracking-[0.3em] mb-2 transition-colors"><?php echo $statusText; ?></p>
-                            <div class="serving-ticket-display flex items-center justify-between min-h-[3.5rem] 3xl:min-h-[5rem] 5xl:min-h-[8rem]">
-                                <?php if ($isServing): ?>
-                                    <span class="text-5xl font-black <?php echo $servingStatus === 'called' ? 'text-black' : 'text-white'; ?> font-heading transition-colors"><?php echo $servingTicket; ?></span>
-                                    <span class="flex h-5 w-5 3xl:h-6 3xl:w-6 5xl:h-10 5xl:w-10 relative">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full <?php echo $servingStatus === 'called' ? 'bg-black' : 'bg-white'; ?> opacity-40"></span>
-                                        <span class="relative inline-flex rounded-full h-5 w-5 3xl:h-6 3xl:w-6 5xl:h-10 5xl:w-10 <?php echo $servingStatus === 'called' ? 'bg-black' : 'bg-white'; ?>"></span>
-                                    </span>
-                                <?php else: ?>
-                                    <span class="text-2xl 3xl:text-4xl 5xl:text-6xl font-black text-secondary-900/40 font-heading transition-colors"><?php echo !$isActive ? 'OFFLINE' : 'IDLE'; ?></span>
-                                    <i class="fas <?php echo !$isActive ? 'fa-power-off' : 'fa-moon'; ?> <?php echo !$isActive ? 'text-secondary-300' : 'text-secondary-900/40'; ?> text-2xl 3xl:text-4xl 5xl:text-6xl transition-colors"></i>
-                                <?php endif; ?>
+                        <!-- Prominent Vertical Split Container -->
+                        <div class="flex flex-col flex-1 gap-3 5xl:gap-8 min-h-0 mt-2">
+                            <!-- Upcoming (40%) -->
+                            <?php 
+                            $upcomingTickets = $ticketModel->getWaitingQueue(null, $window['id']);
+                            $upcoming = $upcomingTickets[0] ?? null;
+                            ?>
+                            <div class="upcoming-container bg-slate-50/50 rounded-[20px] lg:rounded-[28px] 5xl:rounded-[44px] p-4 3xl:p-6 5xl:p-12 border border-slate-100 flex-none h-[100px] 3xl:h-[130px] 5xl:h-[260px] flex flex-col justify-center overflow-hidden">
+                                <p class="text-[9px] 3xl:text-xs 5xl:text-xl font-black text-slate-400 uppercase tracking-[0.3em] mb-1 5xl:mb-4">Next in Line</p>
+                                <div class="flex items-center justify-between">
+                                    <?php if ($upcoming): ?>
+                                        <div class="flex items-center space-x-3 5xl:space-x-8">
+                                            <span class="text-2xl 3xl:text-3xl 5xl:text-6xl font-black text-slate-700 font-heading"><?php echo $upcoming['ticket_number']; ?></span>
+                                            <?php if ($upcoming['is_priority']): ?>
+                                                <i class="fas fa-star text-amber-500 text-[10px] 5xl:text-2xl animate-pulse"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                        <span class="text-[10px] 3xl:text-xs 5xl:text-xl font-black text-slate-300 uppercase tracking-widest"><?php echo $upcoming['service_code']; ?></span>
+                                    <?php else: ?>
+                                        <span class="text-sm 3xl:text-xl 5xl:text-4xl font-black text-slate-300 uppercase tracking-widest">---</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <!-- Active (60%) -->
+                            <?php 
+                            $servingStatus = $window['serving_status'];
+                            $isServing = ($isActive && $servingTicket);
+                            $containerClasses = $isServing 
+                                ? ($servingStatus === 'called' ? 'bg-yellow-400 shadow-inner' : 'bg-secondary-700 shadow-inner') 
+                                : 'bg-secondary-200/70';
+                            $labelClasses = $isServing ? 'text-black/50' : 'text-secondary-900/40';
+                            if ($isServing && $servingStatus === 'serving') $labelClasses = 'text-white/40';
+                            
+                            $statusText = 'Idle';
+                            if (!$isActive) $statusText = 'Offline';
+                            elseif ($servingStatus === 'called') $statusText = 'Calling';
+                            elseif ($servingStatus === 'serving') $statusText = 'Processing';
+                            ?>
+                            <div class="serving-container <?php echo $containerClasses; ?> rounded-[24px] lg:rounded-[32px] 5xl:rounded-[48px] p-4 3xl:p-6 5xl:p-12 border border-transparent transition-all duration-500 flex-1 flex flex-col justify-center overflow-hidden min-h-0">
+                                <p class="serving-label text-[9px] 3xl:text-xs 5xl:text-xl font-black <?php echo $labelClasses; ?> uppercase tracking-[0.2em] mb-1 5xl:mb-4 transition-colors"><?php echo $statusText; ?></p>
+                                <div class="serving-ticket-display flex items-center justify-center relative">
+                                    <?php if ($isServing): ?>
+                                        <span class="text-6xl 3xl:text-8xl 5xl:text-[15rem] font-black <?php echo $servingStatus === 'called' ? 'text-black' : 'text-white'; ?> font-heading transition-colors tracking-tighter"><?php echo $servingTicket; ?></span>
+                                        <span class="flex h-5 w-5 3xl:h-8 3xl:w-8 5xl:h-20 5xl:w-20 absolute right-0 top-1/2 -translate-y-1/2">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full <?php echo $servingStatus === 'called' ? 'bg-black' : 'bg-white'; ?> opacity-40"></span>
+                                            <span class="relative inline-flex rounded-full h-5 w-5 3xl:h-8 3xl:w-8 5xl:h-20 5xl:w-20 <?php echo $servingStatus === 'called' ? 'bg-black' : 'bg-white'; ?>"></span>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-2xl 3xl:text-4xl 5xl:text-6xl font-black text-secondary-900/40 font-heading transition-colors"><?php echo !$isActive ? 'OFFLINE' : 'IDLE'; ?></span>
+                                        <i class="fas <?php echo !$isActive ? 'fa-power-off' : 'fa-moon'; ?> <?php echo !$isActive ? 'text-secondary-300' : 'text-secondary-900/40'; ?> text-2xl 3xl:text-4xl 5xl:text-6xl transition-colors"></i>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -109,14 +135,20 @@ function formatDuration($seconds) {
 
     <!-- Hidden Sync Source for Window Data (Refreshed silently) -->
     <div id="window-sync-source" class="hidden">
-        <?php foreach ($allWindows as $w): ?>
+        <?php foreach ($allWindows as $w): 
+            $upTickets = $ticketModel->getWaitingQueue(null, $w['id']);
+            $up = $upTickets[0] ?? null;
+        ?>
             <div class="sync-item" 
                  data-id="<?php echo $w['id']; ?>" 
                  data-active="<?php echo $w['is_active'] ? '1' : '0'; ?>"
                  data-ticket="<?php echo $w['serving_ticket'] ?: ''; ?>"
                  data-status="<?php echo $w['serving_status'] ?: ''; ?>"
                  data-is-priority="<?php echo $w['is_priority'] ?? 0; ?>"
-                 data-called-at="<?php echo $w['called_at'] ?: ''; ?>">
+                 data-called-at="<?php echo $w['called_at'] ?: ''; ?>"
+                 data-upcoming-ticket="<?php echo $up['ticket_number'] ?? ''; ?>"
+                 data-upcoming-code="<?php echo $up['service_code'] ?? ''; ?>"
+                 data-upcoming-priority="<?php echo ($up && $up['is_priority']) ? '1' : '0'; ?>">
             </div>
         <?php endforeach; ?>
     </div>
@@ -248,9 +280,9 @@ function formatDuration($seconds) {
             this.synth = window.speechSynthesis;
             this.lastAnnouncedTickets = new Set();
             this.isInitialized = false;
-            // Robust storage retrieval
+            // Robust storage retrieval: Default to 'true' (enabled) if not explicitly set to 'false'
             const savedState = localStorage.getItem('voice_enabled');
-            this.isEnabled = savedState !== null ? savedState === 'true' : true; 
+            this.isEnabled = (savedState === null || savedState === 'true'); 
             this.isUnlocked = false;
             
             console.log('VoiceAnnouncer: State loaded from storage', { isEnabled: this.isEnabled });
@@ -324,7 +356,7 @@ function formatDuration($seconds) {
                 statusText.innerText = 'Syncing...';
                 statusText.className = 'text-xs 5xl:text-2xl font-bold text-yellow-500 transition-colors uppercase animate-pulse';
             } else {
-                statusText.innerText = 'Online';
+                statusText.innerText = 'System Active';
                 statusText.className = 'text-xs 5xl:text-2xl font-bold text-emerald-500 transition-colors uppercase';
             }
         }
@@ -449,15 +481,46 @@ function formatDuration($seconds) {
                 
                 // Update Status Badge
                 if (badge) {
-                    badge.className = `window-status-badge px-3 5xl:px-6 py-1 5xl:py-2 rounded-lg 5xl:rounded-xl text-xs 3xl:text-sm 5xl:text-xl font-black tracking-widest uppercase mb-2 ${isActive ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`;
+                    badge.className = `window-status-badge px-3 5xl:px-6 py-1 5xl:py-2 rounded-lg 5xl:rounded-xl text-[10px] 3xl:text-xs 5xl:text-xl font-black tracking-widest uppercase mb-1 ${isActive ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`;
                     badge.textContent = isActive ? 'Online' : 'Offline';
                 }
 
+                // Update Upcoming Container
+                const upcomingContainer = slide.querySelector('.upcoming-container');
+                if (upcomingContainer) {
+                    const upTicket = item.dataset.upcomingTicket;
+                    const upCode = item.dataset.upcomingCode;
+                    const upPriority = item.dataset.upcomingPriority === '1';
+                    
+                    let html = '';
+                    if (upTicket) {
+                        html = `
+                            <p class="text-[9px] 3xl:text-xs 5xl:text-xl font-black text-slate-400 uppercase tracking-[0.3em] mb-1 5xl:mb-4">Next in Line</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3 5xl:space-x-8">
+                                    <span class="text-2xl 3xl:text-3xl 5xl:text-6xl font-black text-slate-700 font-heading">${upTicket}</span>
+                                    ${upPriority ? '<i class="fas fa-star text-amber-500 text-[10px] 5xl:text-2xl animate-pulse"></i>' : ''}
+                                </div>
+                                <span class="text-[10px] 3xl:text-xs 5xl:text-xl font-black text-slate-300 uppercase tracking-widest">${upCode}</span>
+                            </div>`;
+                    } else {
+                        html = `
+                            <p class="text-[9px] 3xl:text-xs 5xl:text-xl font-black text-slate-400 uppercase tracking-[0.3em] mb-1 5xl:mb-4">Next in Line</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm 3xl:text-xl 5xl:text-4xl font-black text-slate-300 uppercase tracking-widest">---</span>
+                            </div>`;
+                    }
+                    if (upcomingContainer.innerHTML !== html) {
+                        upcomingContainer.innerHTML = html;
+                        upcomingContainer.className = "upcoming-container bg-slate-50/50 rounded-[20px] lg:rounded-[28px] 5xl:rounded-[44px] p-4 3xl:p-6 5xl:p-12 border border-slate-100 flex-none h-[100px] 3xl:h-[130px] 5xl:h-[260px] flex flex-col justify-center overflow-hidden";
+                    }
+                }
+
                 if (card) {
-                    const baseClasses = "window-card rounded-[32px] lg:rounded-[48px] 5xl:rounded-[80px] p-6 lg:p-8 3xl:p-12 5xl:p-20 border transition-all duration-300 group/card overflow-hidden flex flex-col h-full";
+                    const baseClasses = "window-card rounded-[32px] lg:rounded-[40px] 5xl:rounded-[60px] p-4 lg:p-6 3xl:p-8 5xl:p-12 border transition-all duration-300 group/card overflow-hidden flex flex-col h-full min-h-[360px] 3xl:min-h-[480px] 5xl:min-h-[750px]";
                     if (!isActive) {
                         card.className = `${baseClasses} bg-white/50 border-gray-200 grayscale opacity-40`;
-                    if (ticket) {
+                    } else if (ticket) {
                         const priorityClasses = isPriority ? 'border-amber-400 ring-4 ring-amber-100 ring-inset brightness-110' : 'border-indigo-300 ring-4 ring-indigo-100/30';
                         card.className = `${baseClasses} bg-white shadow-premium opacity-100 -translate-y-1 ${priorityClasses}`;
                     } else {
@@ -472,7 +535,7 @@ function formatDuration($seconds) {
                     const isServing = isActive && ticket;
 
                     if (servingContainer) {
-                        const baseContainer = "serving-container rounded-2xl 3xl:rounded-[32px] 5xl:rounded-[50px] p-3 lg:p-4 3xl:p-6 5xl:p-10 mb-4 5xl:mb-8 border border-transparent transition-all duration-500";
+                        const baseContainer = "serving-container rounded-[24px] lg:rounded-[32px] 5xl:rounded-[48px] p-4 3xl:p-6 5xl:p-12 border border-transparent transition-all duration-500 flex-1 flex flex-col justify-center overflow-hidden min-h-0";
                         if (!isServing) {
                             servingContainer.className = `${baseContainer} bg-secondary-200/70`;
                         } else {
@@ -499,14 +562,15 @@ function formatDuration($seconds) {
                     }
 
                     let html = '';
+                    display.className = "serving-ticket-display flex items-center justify-center relative";
                     if (isServing) {
                         const textColor = status === 'called' ? 'text-black' : 'text-white';
                         const dotColor = status === 'called' ? 'bg-black' : 'bg-white';
                         html = `
-                            <span class="text-5xl font-black ${textColor} font-heading transition-colors">${ticket}</span>
-                            <span class="flex h-5 w-5 3xl:h-6 3xl:w-6 5xl:h-10 5xl:w-10 relative">
+                            <span class="text-6xl 3xl:text-8xl 5xl:text-[15rem] font-black ${textColor} font-heading transition-colors tracking-tighter">${ticket}</span>
+                            <span class="flex h-5 w-5 3xl:h-8 3xl:w-8 5xl:h-20 5xl:w-20 absolute right-0 top-1/2 -translate-y-1/2">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${dotColor} opacity-40"></span>
-                                <span class="relative inline-flex rounded-full h-5 w-5 3xl:h-6 3xl:w-6 5xl:h-10 5xl:w-10 ${dotColor}"></span>
+                                <span class="relative inline-flex rounded-full h-5 w-5 3xl:h-8 3xl:w-8 5xl:h-20 5xl:w-20 ${dotColor}"></span>
                             </span>`;
                     } else {
                         html = `
@@ -652,6 +716,10 @@ function formatDuration($seconds) {
         if (e.detail.id === 'window-sync-source') {
             syncCarouselData();
             announcer.scanForCalledTickets();
+        }
+        // Restore voice toggle state and listeners if the container was replaced
+        if (e.detail.id === 'main-content-sync') {
+            announcer.init(); 
         }
     });
 

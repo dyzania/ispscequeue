@@ -64,10 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const ANTIGRAVITY_BASE_URL = "<?php echo defined('BASE_URL') ? BASE_URL : ''; ?>";
     </script>
 </head>
-<body class="min-h-screen">
+<body class="bg-slate-50 min-h-screen text-slate-900 overflow-x-hidden flex">
     <?php include __DIR__ . '/../../includes/user-navbar.php'; ?>
 
-    <main class="container-ultra px-4 md:px-10 py-12 pb-20">
+    <div class="flex-1 flex flex-col min-w-0 max-w-full transition-all duration-300 lg:ml-72">
+    <main class="container-ultra px-4 md:px-10 pt-28 pb-16">
         <div class="max-w-4xl mx-auto">
             <div class="mb-12">
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -204,6 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </main>
+    </div><!-- end flex wrapper -->
 
     <?php include __DIR__ . '/../../includes/chatbot-widget.php'; ?>
     <script src="<?php echo BASE_URL; ?>/js/notifications.js"></script>

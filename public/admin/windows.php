@@ -56,32 +56,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $password = $_POST['password'];
                 $full_name = "Staff " . $nextWindowStr;
                 
-                // 1. Create User (Staff)
-                if ($userModel->emailExists($email)) {
+                // 1. Check if window number is already taken in this office
+                if ($windowModel->isWindowNumberTaken($nextWindowStr, $currentOffice['id'])) {
+                    $error_msg = "Window number $nextWindowStr is already in use in this office.";
+                } else if ($userModel->emailExists($email)) {
                     $error_msg = "Login code already exists. Please try again or delete orphaned staff users.";
                 } else {
-                     if ($userModel->register($email, $password, $full_name, null, 'staff', $currentOffice['id'])) {
-                        // Get the ID of the new user
+                    try {
                         $db = Database::getInstance()->getConnection();
-                        $newUserId = $db->lastInsertId();
-                        
-                        // 2. Create Window linked to this user and office
-                        $windowName = !empty($_POST['window_name']) ? sanitize($_POST['window_name']) : "Window $nextNum";
-                        if ($windowModel->createWindow($nextWindowStr, $windowName, $newUserId, $currentOffice['id'])) {
-                            $success_msg = "Window $nextWindowStr created! Login Code: <strong>$loginCode</strong>";
-                            // Refresh
-                            $windows = $windowModel->getAllWindows();
-                            $windowCount = count($windows);
-                            $nextNum = getNextWindowNumber($windows);
-                            $nextWindowStr = $nextNum ? 'W-' . str_pad($nextNum, 2, '0', STR_PAD_LEFT) : 'Full';
+                        $db->beginTransaction();
+
+                        if ($userModel->register($email, $password, $full_name, null, 'staff', $currentOffice['id'])) {
+                            $newUserId = $db->lastInsertId();
+                            
+                            $windowName = !empty($_POST['window_name']) ? sanitize($_POST['window_name']) : "Window $nextNum";
+                            if ($windowModel->createWindow($nextWindowStr, $windowName, $newUserId, $currentOffice['id'])) {
+                                $db->commit();
+                                $success_msg = "Window $nextWindowStr created! Login Code: <strong>$loginCode</strong>";
+                                // Refresh stats
+                                $windows = $windowModel->getAllWindows();
+                                $windowCount = count($windows);
+                                $nextNum = getNextWindowNumber($windows);
+                                $nextWindowStr = $nextNum ? 'W-' . str_pad($nextNum, 2, '0', STR_PAD_LEFT) : 'Full';
+                            } else {
+                                $db->rollBack();
+                                $error_msg = "Failed to create window record.";
+                            }
                         } else {
-                            $error_msg = "Failed to create window record.";
-                            // Deleting user to keep clean:
-                            $db->exec("DELETE FROM users WHERE id = $newUserId");
+                            $db->rollBack();
+                            $error_msg = "Failed to create staff user credentials.";
                         }
-                     } else {
-                         $error_msg = "Failed to create staff user credentials.";
-                     }
+                    } catch (Exception $e) {
+                        if (isset($db) && $db->inTransaction()) {
+                            $db->rollBack();
+                        }
+                        $error_msg = "System Error: " . $e->getMessage();
+                    }
                 }
             }
         } elseif ($_POST['action'] === 'delete_window') {

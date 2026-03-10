@@ -70,28 +70,16 @@ function formatDuration($seconds) {
     
     return implode(" ", $parts);
 }
+// Premium header inclusion
+require_once __DIR__ . '/../../includes/user-layout-header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queue Dashboard - <?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <?php injectTailwindConfig(); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        const ANTIGRAVITY_BASE_URL = "<?php echo defined('BASE_URL') ? BASE_URL : ''; ?>";
-    </script>
-    <script src="<?php echo BASE_URL; ?>/js/dashboard-refresh.js"></script>
-</head>
-<body class="min-h-screen">
-    <?php include __DIR__ . '/../../includes/user-navbar.php'; ?>
 
-    <main class="container-ultra px-4 md:px-10 py-8 4xl:py-20">
+<script src="<?php echo BASE_URL; ?>/js/dashboard-refresh.js"></script>
+
+<div class="container-ultra mx-auto px-4 md:px-10 w-full max-w-full overflow-x-hidden flex flex-col space-y-8 md:space-y-12 5xl:space-y-24 pb-12 md:pb-20 5xl:pb-32">
         <div id="header-sync">
             <!-- Welcome Header -->
-            <div class="mb-6 md:mb-10 4xl:mb-20 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
                 <div>
                     <p class="text-primary-600 font-black tracking-[0.3em] uppercase text-[10px] md:text-xs mb-2 3xl:text-lg 5xl:text-2xl"><?php echo htmlspecialchars($_SESSION['office_name'] ?? ''); ?></p>
                     <h1 class="text-3xl md:text-4xl 3xl:text-6xl 5xl:text-8xl font-black text-gray-900 mb-1 font-heading tracking-tight leading-none">Live Dashboard</h1>
@@ -148,7 +136,7 @@ function formatDuration($seconds) {
                 $btnClass = ($accentBase === 'amber') ? "bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200" : "bg-primary-50 text-primary-700 hover:bg-primary-600 hover:text-white shadow-primary-100";
             ?>
                 <!-- Unified Ticket Status Banner -->
-                <div class="mb-6 4xl:mb-20 <?php echo $bgClass; ?> rounded-[1.5rem] md:rounded-[2rem] 5xl:rounded-[60px] p-4 md:p-6 3xl:p-10 5xl:p-20 shadow-premium flex flex-col gap-6 overflow-hidden relative group">
+                <div class="<?php echo $bgClass; ?> rounded-[1.5rem] md:rounded-[2rem] 5xl:rounded-[60px] p-4 md:p-6 3xl:p-10 5xl:p-20 shadow-premium flex flex-col gap-6 overflow-hidden relative group">
                     <!-- Top Section: Identity (Icon | Label + Number) -->
                     <div class="flex items-center space-x-4 md:space-x-6 3xl:space-x-10 5xl:space-x-20">
                         <div class="w-12 h-12 md:w-16 3xl:w-24 5xl:w-40 <?php echo $iconBg; ?> rounded-xl md:rounded-2xl 3xl:rounded-[32px] 5xl:rounded-[48px] flex items-center justify-center shrink-0">
@@ -185,10 +173,10 @@ function formatDuration($seconds) {
             <?php endif; ?>
         </div>
 
-        <div class="flex flex-col gap-10 5xl:gap-20">
+
             <!-- Windows Section -->
-            <div class="w-full space-y-8 5xl:space-y-16">
-                <div class="flex items-center justify-between border-b border-gray-100 5xl:pb-10">
+            <div class="w-full space-y-4 md:space-y-6 5xl:space-y-12">
+                <div class="flex items-center justify-between pb-4 md:pb-6 5xl:pb-12">
                     <h3 class="text-2xl 3xl:text-4xl 5xl:text-6xl font-black text-gray-900 font-heading">Service Windows</h3>
                     <div id="window-count-sync">
                         <span class="px-4 py-1.5 5xl:px-8 5xl:py-3 bg-green-100 text-green-700 rounded-full text-xs 3xl:text-sm 5xl:text-2xl font-black tracking-widest uppercase flex items-center">
@@ -213,15 +201,17 @@ function formatDuration($seconds) {
                             <div class="sync-item" 
                                  data-id="<?php echo $window['id']; ?>" 
                                  data-active="1" 
-                                 data-ticket="<?php echo $window['serving_ticket']; ?>">
+                                 data-ticket="<?php echo $window['serving_ticket']; ?>"
+                                 data-status="<?php echo $window['serving_status']; ?>">
                             </div>
                         <?php endforeach; ?>
                     </div>
 
-                    <div id="window-container" class="flex flex-nowrap gap-4 5xl:gap-12 w-full overflow-x-auto scrollbar-hide py-4 -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth cursor-grab active:cursor-grabbing">
+                <div class="relative w-full overflow-x-hidden overflow-y-visible -mb-12">
+                    <div id="window-container" class="flex flex-nowrap gap-4 5xl:gap-12 overflow-x-auto scrollbar-hide pt-4 pb-8 scroll-smooth cursor-grab active:cursor-grabbing">
                         <?php foreach ($activeWindows as $window): ?>
-                            <div class="window-item flex-none w-[280px] md:w-[320px] lg:w-[calc(25%-12px)] 5xl:w-[calc(25%-36px)]" data-window-id="<?php echo $window['id']; ?>">
-                                    <div class="window-card bg-white rounded-[32px] 5xl:rounded-[60px] p-6 3xl:p-10 5xl:p-16 shadow-division border border-gray-50 hover:shadow-premium transition-all duration-300 group h-full">
+                            <div class="window-item flex-none w-[280px] md:w-[350px] lg:w-[calc(25%-12px)] 5xl:w-[calc(25%-36px)]" data-window-id="<?php echo $window['id']; ?>">
+                                    <div class="window-card bg-white rounded-[40px] 5xl:rounded-[80px] p-8 3xl:p-12 5xl:p-20 shadow-division border border-gray-50 hover:shadow-premium transition-all duration-300 group h-full flex flex-col">
                                         <div class="flex items-start justify-between mb-8 5xl:mb-16">
                                             <div class="flex items-center space-x-4 3xl:space-x-6 5xl:space-x-10">
                                                 <div class="w-14 3xl:w-20 5xl:w-32 h-14 3xl:h-24 5xl:h-40 bg-primary-600 rounded-2xl 3xl:rounded-[32px] 5xl:rounded-[48px] flex items-center justify-center text-white shadow-lg shadow-primary-900/20 group-hover:rotate-6 transition-transform relative overflow-hidden">
@@ -243,26 +233,32 @@ function formatDuration($seconds) {
                                         <!-- Now Serving Display -->
                                         <?php 
                                         $isServing = !empty($window['serving_ticket']);
+                                        $servingStatus = $window['serving_status'] ?? 'serving';
                                         $containerClasses = $isServing 
-                                            ? 'bg-secondary-700 shadow-inner' 
+                                            ? ($servingStatus === 'called' ? 'bg-yellow-400 shadow-inner' : 'bg-secondary-700 shadow-inner') 
                                             : 'bg-secondary-200/70';
-                                        $labelClasses = $isServing ? 'text-white/50' : 'text-secondary-900/40';
+                                        $labelClasses = $isServing 
+                                            ? ($servingStatus === 'called' ? 'text-black/50' : 'text-white/50') 
+                                            : 'text-secondary-900/40';
+                                        $statusLabel = $isServing 
+                                            ? ($servingStatus === 'called' ? 'Calling' : 'Now Serving') 
+                                            : 'Now Serving';
                                         ?>
-                                        <div class="serving-container <?php echo $containerClasses; ?> rounded-2xl 3xl:rounded-[24px] 5xl:rounded-[40px] p-5 3xl:p-6 5xl:p-10 mb-2 border border-transparent transition-all duration-500">
-                                            <p class="serving-label text-[9px] 3xl:text-xs 5xl:text-lg font-black <?php echo $labelClasses; ?> uppercase tracking-[0.3em] mb-2 transition-colors">Now Serving</p>
+                                        <div class="serving-container <?php echo $containerClasses; ?> rounded-[28px] 3xl:rounded-[36px] 5xl:rounded-[60px] p-6 3xl:p-8 5xl:p-14 mb-2 border border-transparent transition-all duration-500 flex-1 flex flex-col justify-center">
+                                            <p class="serving-label text-[10px] 3xl:text-sm 5xl:text-2xl font-black <?php echo $labelClasses; ?> uppercase tracking-[0.3em] mb-4 transition-colors"><?php echo $statusLabel; ?></p>
                                             <div class="serving-ticket-display">
                                             <?php if ($isServing): ?>
                                                 <div class="flex items-center justify-between">
-                                                    <span class="text-xl 3xl:text-3xl 5xl:text-5xl font-black text-white font-heading transition-colors"><?php echo $window['serving_ticket']; ?></span>
-                                                    <span class="flex h-3 w-3 3xl:h-4 3xl:w-4 5xl:h-8 5xl:w-8 relative">
-                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-40"></span>
-                                                        <span class="relative inline-flex rounded-full h-3 w-3 3xl:h-4 3xl:w-4 5xl:h-8 5xl:w-8 bg-white"></span>
+                                                    <span class="text-3xl 3xl:text-5xl 5xl:text-8xl font-black <?php echo $servingStatus === 'called' ? 'text-black' : 'text-white'; ?> font-heading transition-colors tracking-tighter"><?php echo $window['serving_ticket']; ?></span>
+                                                    <span class="flex h-4 w-4 3xl:h-6 3xl:w-6 5xl:h-12 5xl:w-12 relative">
+                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full <?php echo $servingStatus === 'called' ? 'bg-black' : 'bg-white'; ?> opacity-40"></span>
+                                                        <span class="relative inline-flex rounded-full h-4 w-4 3xl:h-6 3xl:w-6 5xl:h-12 5xl:w-12 <?php echo $servingStatus === 'called' ? 'bg-black' : 'bg-white'; ?>"></span>
                                                     </span>
                                                 </div>
                                             <?php else: ?>
                                                 <div class="flex items-center justify-between">
-                                                    <span class="text-xl 3xl:text-3xl 5xl:text-5xl font-black text-secondary-900/40 font-heading transition-colors">Counter Idle</span>
-                                                    <i class="fas fa-moon text-secondary-300 text-lg 3xl:text-2xl 5xl:text-4xl transition-colors"></i>
+                                                    <span class="text-2xl 3xl:text-4xl 5xl:text-6xl font-black text-secondary-900/40 font-heading transition-colors">Idle</span>
+                                                    <i class="fas fa-moon text-secondary-300 text-2xl 3xl:text-3xl 5xl:text-5xl transition-colors"></i>
                                                 </div>
                                             <?php endif; ?>
                                             </div>
@@ -271,20 +267,21 @@ function formatDuration($seconds) {
                                 </div>
                         <?php endforeach; ?>
                     </div>
+                </div>
 
                 <?php endif; ?>
             </div>
 
             <!-- Queue List Section -->
-            <div class="w-full space-y-8 5xl:space-y-16" id="waitlist-sync">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-4 5xl:pb-10">
+            <div class="w-full space-y-4 md:space-y-6 5xl:space-y-12" style="margin-top: 1rem" id="waitlist-sync">
+                <div class="flex items-center justify-between pb-4 md:pb-6 5xl:pb-12">
                     <h3 class="text-2xl 5xl:text-5xl font-black text-gray-900 font-heading">Queue Waitlist</h3>
                     <i class="fas fa-sync-alt text-gray-300 5xl:text-4xl animate-spin-slow cursor-pointer hover:text-primary-600 transition-colors"></i>
                 </div>
                 <!-- Rest of waitlist unchanged -->
 
                 <div class="bg-white rounded-[40px] 5xl:rounded-[64px] shadow-premium border border-gray-50 overflow-hidden group/waitlist">
-                    <div id="queueTableBody" class="grid grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-slate-100/80">
+                    <div id="queueTableBody" class="grid grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-slate-100/80 border-b-2 border-slate-200">
                         <?php if (empty($waitingTickets)): ?>
                             <div class="lg:col-span-2 p-12 5xl:p-32 text-center py-20 5xl:py-40">
                                 <div class="w-16 h-16 5xl:w-32 5xl:h-32 bg-gray-50 rounded-2xl 5xl:rounded-[48px] flex items-center justify-center mx-auto mb-4 5xl:mb-10 text-gray-300">
@@ -347,12 +344,10 @@ function formatDuration($seconds) {
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                    </div>
                 </div>
             </div>
         </div>
-    </main>
-
+    </div>
     <style>
         @keyframes spin-slow {
             from { transform: rotate(0deg); }
@@ -403,13 +398,36 @@ function formatDuration($seconds) {
 
                 if (servingContainer) {
                     const baseContainer = "serving-container rounded-2xl 3xl:rounded-[24px] 5xl:rounded-[40px] p-5 3xl:p-6 5xl:p-10 mb-2 border border-transparent transition-all duration-500";
-                    servingContainer.className = isServing 
-                        ? `${baseContainer} bg-secondary-700 shadow-inner`
-                        : `${baseContainer} bg-secondary-200/70`;
+                    const status = item.dataset.status || 'serving';
+                    
+                    if (!isServing) {
+                        servingContainer.className = `${baseContainer} bg-secondary-200/70`;
+                    } else {
+                        servingContainer.className = (status === 'called')
+                            ? `${baseContainer} bg-yellow-400 shadow-inner`
+                            : `${baseContainer} bg-secondary-700 shadow-inner`;
+                    }
                 }
 
                 if (servingLabel) {
-                    servingLabel.className = `serving-label text-[9px] 3xl:text-xs 5xl:text-lg font-black uppercase tracking-[0.3em] mb-2 transition-colors ${isServing ? 'text-white/50' : 'text-secondary-900/40'}`;
+                    const status = item.dataset.status || 'serving';
+                    const isServing = !!ticket;
+                    
+                    let labelColor = 'text-secondary-900/40';
+                    let statusText = 'Now Serving';
+                    
+                    if (isServing) {
+                        if (status === 'called') {
+                            labelColor = 'text-black/50';
+                            statusText = 'Calling';
+                        } else {
+                            labelColor = 'text-white/50';
+                            statusText = 'Now Serving';
+                        }
+                    }
+                    
+                    servingLabel.className = `serving-label text-[9px] 3xl:text-xs 5xl:text-lg font-black uppercase tracking-[0.3em] mb-2 transition-colors ${labelColor}`;
+                    servingLabel.textContent = statusText;
                 }
 
                 const badge = slide.querySelector('.window-status-badge');
@@ -418,21 +436,25 @@ function formatDuration($seconds) {
                 }
 
                 if (display) {
+                    const status = item.dataset.status || 'serving';
                     let html = '';
                     if (isServing) {
+                        const textColor = status === 'called' ? 'text-black' : 'text-white';
+                        const dotColor = status === 'called' ? 'bg-black' : 'bg-white';
+                        
                         html = `
                             <div class="flex items-center justify-between">
-                                <span class="text-xl 3xl:text-3xl 5xl:text-5xl font-black text-white font-heading transition-colors">${ticket}</span>
-                                <span class="flex h-3 w-3 3xl:h-4 3xl:w-4 5xl:h-8 5xl:w-8 relative">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-40"></span>
-                                    <span class="relative inline-flex rounded-full h-3 w-3 3xl:h-4 3xl:w-4 5xl:h-8 5xl:w-8 bg-white"></span>
+                                <span class="text-3xl 3xl:text-5xl 5xl:text-8xl font-black ${textColor} font-heading transition-colors tracking-tighter">${ticket}</span>
+                                <span class="flex h-4 w-4 3xl:h-6 3xl:w-6 5xl:h-12 5xl:w-12 relative">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${dotColor} opacity-40"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 3xl:h-6 3xl:w-6 5xl:h-12 5xl:w-12 ${dotColor}"></span>
                                 </span>
                             </div>`;
                     } else {
                         html = `
                             <div class="flex items-center justify-between">
-                                <span class="text-xl 3xl:text-3xl 5xl:text-5xl font-black text-secondary-900/40 font-heading transition-colors">Counter Idle</span>
-                                <i class="fas fa-moon text-secondary-900/40 text-lg 3xl:text-2xl 5xl:text-4xl transition-colors"></i>
+                                <span class="text-2xl 3xl:text-4xl 5xl:text-6xl font-black text-secondary-900/40 font-heading transition-colors">Idle</span>
+                                <i class="fas fa-moon text-secondary-900/40 text-2xl 3xl:text-3xl 5xl:text-5xl transition-colors"></i>
                             </div>`;
                     }
                     if (display.innerHTML !== html) display.innerHTML = html;
@@ -492,7 +514,4 @@ function formatDuration($seconds) {
     <script src="<?php echo BASE_URL; ?>/js/live-countdown.js"></script>
     
 
-    <?php include __DIR__ . '/../../includes/chatbot-widget.php'; ?>
-    <script src="<?php echo BASE_URL; ?>/js/notifications.js"></script>
-</body>
-</html>
+<?php require_once __DIR__ . '/../../includes/user-layout-footer.php'; ?>

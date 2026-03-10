@@ -27,7 +27,8 @@ class Ticket {
         }
         
         // Calculate initial queue position (Global Count + 1)
-        $stmt = $this->db->query("SELECT COUNT(*) + 1 as pos FROM tickets WHERE status = 'waiting' AND DATE(created_at) = CURDATE()");
+        $stmt = $this->db->prepare("SELECT COUNT(*) + 1 as pos FROM tickets WHERE status = 'waiting' AND DATE(created_at) = CURDATE() AND office_id = ?");
+        $stmt->execute([$_SESSION['office_id'] ?? 1]);
         $initialPos = $stmt->fetch()['pos'] ?? 1;
 
         // Generate unique ticket number
@@ -39,7 +40,24 @@ class Ticket {
             VALUES (?, ?, ?, 'waiting', ?, ?, ?, ?)
         ");
         
-        $stmt->execute([$ticketNumber, $userId, $serviceId, $userNote, $isPriority, $initialPos, $_SESSION['office_id'] ?? 1]);
+        try {
+            $stmt->execute([$ticketNumber, $userId, $serviceId, $userNote, $isPriority, $initialPos, $_SESSION['office_id'] ?? 1]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1062')) {
+                // Duplicate ticket number — regenerate and retry once
+                $ticketNumber = $this->generateTicketNumber($serviceId) . '-' . substr(uniqid(), -3);
+                try {
+                    $stmt->execute([$ticketNumber, $userId, $serviceId, $userNote, $isPriority, $initialPos, $_SESSION['office_id'] ?? 1]);
+                } catch (PDOException $retryEx) {
+                    error_log('Ticket::createTicket() retry failed: ' . $retryEx->getMessage());
+                    return ['success' => false, 'message' => 'Failed to generate a unique ticket. Please try again.'];
+                }
+            } else {
+                error_log('Ticket::createTicket() error: ' . $e->getMessage());
+                return ['success' => false, 'message' => 'An error occurred while creating your ticket.'];
+            }
+        }
+        
         $ticketId = $this->db->lastInsertId();
         
         // Update queue position
@@ -142,7 +160,7 @@ class Ticket {
     }
     public function getQueuePosition($ticketId) {
         $stmt = $this->db->prepare("
-            SELECT service_id, created_at, is_priority 
+            SELECT service_id, created_at, is_priority, office_id 
             FROM tickets 
             WHERE id = ?
         ");
@@ -156,6 +174,7 @@ class Ticket {
             SELECT COUNT(*) as position 
             FROM tickets 
             WHERE service_id = ? 
+            AND office_id = ?
             AND status = 'waiting'
             AND (
                 (is_priority > ?) OR 
@@ -165,6 +184,7 @@ class Ticket {
         
         $stmt->execute([
             $ticket['service_id'], 
+            $ticket['office_id'],
             $ticket['is_priority'], 
             $ticket['is_priority'], 
             $ticket['created_at'], 
@@ -177,37 +197,103 @@ class Ticket {
     }
 
     public function getGlobalQueuePosition($ticketId) {
+        $metrics = $this->getQueueMetrics($ticketId);
+        if (!$metrics) return 0;
+
+        // Batch formula: tickets 1..N are #1, tickets N+1..2N are #2, etc.
+        // ceil((rank + 1) / totalWindows)
+        return (int)ceil(($metrics['rank'] + 1) / max(1, $metrics['totalWindows']));
+    }
+
+    public function getTicketsAhead($ticketId) {
+        $metrics = $this->getQueueMetrics($ticketId);
+        return $metrics ? $metrics['rank'] : 0;
+    }
+
+    private function getQueueMetrics($ticketId) {
         $stmt = $this->db->prepare("
-            SELECT created_at, is_priority 
-            FROM tickets 
-            WHERE id = ?
+            SELECT t.created_at, t.is_priority, t.office_id, t.service_id, u.college
+            FROM tickets t
+            JOIN users u ON t.user_id = u.id
+            WHERE t.id = ?
         ");
-        
         $stmt->execute([$ticketId]);
         $ticket = $stmt->fetch();
-        
-        if (!$ticket) return 0;
-        
+        if (!$ticket) return null;
+
+        // 1. Find all active windows that CAN serve this ticket's college and service
         $stmt = $this->db->prepare("
-            SELECT COUNT(*) as position 
-            FROM tickets 
-            WHERE status = 'waiting'
-            AND (
-                (is_priority > ?) OR 
-                (is_priority = ? AND (created_at < ? OR (created_at = ? AND id < ?)))
-            )
+            SELECT w.id, w.preferred_colleges
+            FROM windows w
+            JOIN window_services ws ON ws.window_id = w.id AND ws.is_enabled = 1
+            WHERE w.is_active = 1
+            AND w.office_id = ?
+            AND ws.service_id = ?
         ");
+        $stmt->execute([$ticket['office_id'], $ticket['service_id']]);
+        $windows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        $stmt->execute([
-            $ticket['is_priority'], 
-            $ticket['is_priority'], 
-            $ticket['created_at'], 
-            $ticket['created_at'], 
-            $ticketId
-        ]);
-        $result = $stmt->fetch();
+        $myEligibleWindows = [];
+        $competingColleges = [];
+        $servesAll = false;
         
-        return $result['position'];
+        foreach ($windows as $w) {
+            $prefs = !empty($w['preferred_colleges']) ? explode(',', $w['preferred_colleges']) : [];
+            if (empty($prefs) || in_array($ticket['college'], $prefs)) {
+                $myEligibleWindows[] = $w;
+                
+                // Track which colleges compete for these windows
+                if (empty($prefs)) {
+                    $servesAll = true;
+                } else {
+                    $competingColleges = array_merge($competingColleges, $prefs);
+                }
+            }
+        }
+        
+        $totalWindows = count($myEligibleWindows);
+        $competingColleges = array_unique($competingColleges);
+
+        // 2. Count tickets ahead that are eligible for the SAME windows
+        $sql = "
+            SELECT COUNT(*) as rank
+            FROM tickets t
+            JOIN users u ON t.user_id = u.id
+            WHERE t.service_id = ?
+            AND t.office_id = ?
+            AND t.status = 'waiting'
+            AND (
+                (t.is_priority > ?) OR 
+                (t.is_priority = ? AND (t.created_at < ? OR (t.created_at = ? AND t.id < ?)))
+            )
+        ";
+        
+        $params = [
+            $ticket['service_id'],
+            $ticket['office_id'],
+            $ticket['is_priority'], $ticket['is_priority'],
+            $ticket['created_at'], $ticket['created_at'], $ticketId
+        ];
+        
+        // If there are eligible windows, filter the rank by competing colleges
+        // If there are NO eligible windows (totalWindows = 0), we just count ALL tickets ahead in the service
+        if ($totalWindows > 0 && !$servesAll && !empty($competingColleges)) {
+            $placeholders = str_repeat('?,', count($competingColleges));
+            $placeholders = rtrim($placeholders, ',');
+            $sql .= " AND u.college IN ($placeholders)";
+            foreach ($competingColleges as $c) {
+                $params[] = $c;
+            }
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $rank = (int)($stmt->fetch()['rank'] ?? 0);
+        
+        return [
+            'totalWindows' => $totalWindows > 0 ? $totalWindows : 1, // Avoid division by zero
+            'rank' => $rank
+        ];
     }
 
     //Advanced Constraint-Aware Wait Time Calculation
@@ -334,7 +420,7 @@ class Ticket {
     }
 
     public function getInitialQueuePosition($ticketId) {
-        $stmt = $this->db->prepare("SELECT queue_position, created_at, status FROM tickets WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT queue_position, created_at, status, office_id FROM tickets WHERE id = ?");
         $stmt->execute([$ticketId]);
         $target = $stmt->fetch();
         if (!$target) return 0;
@@ -349,10 +435,11 @@ class Ticket {
             FROM tickets
             WHERE created_at <= ? AND id <= ?
             AND DATE(created_at) = DATE(?)
+            AND office_id = ?
             AND (completed_at IS NULL OR completed_at > ?)
             AND status != 'cancelled'
         ");
-        $stmt->execute([$target['created_at'], $ticketId, $target['created_at'], $target['created_at']]);
+        $stmt->execute([$target['created_at'], $ticketId, $target['created_at'], $target['office_id'], $target['created_at']]);
         return $stmt->fetch()['pos'] ?? 1;
     }
     
@@ -492,7 +579,8 @@ class Ticket {
             SET called_at = NOW() 
             WHERE id = ? AND status = 'called'
         ");
-        return $stmt->execute([$ticketId]);
+        $stmt->execute([$ticketId]);
+        return $stmt->rowCount() > 0;
     }
     
     public function startServing($ticketId) {
@@ -636,7 +724,7 @@ class Ticket {
     public function getArchivedTicketsByWindow($windowId) {
         $stmt = $this->db->prepare("
             SELECT t.*, s.service_name, s.service_code, u.full_name as user_name,
-                   TIMESTAMPDIFF(SECOND, t.served_at, NOW()) as elapsed_seconds
+                   TIMESTAMPDIFF(SECOND, IFNULL(t.served_at, t.called_at), NOW()) as elapsed_seconds
             FROM tickets t
             JOIN services s ON t.service_id = s.id
             JOIN users u ON t.user_id = u.id

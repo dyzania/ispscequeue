@@ -6,26 +6,15 @@ require_once __DIR__ . '/../../models/Ticket.php';
 requireLogin();
 requireRole('user');
 
+
 $ticketModel = new Ticket();
 $history = $ticketModel->getUserTicketHistory(getUserId());
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transaction History - <?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <?php injectTailwindConfig(); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        const ANTIGRAVITY_BASE_URL = "<?php echo defined('BASE_URL') ? BASE_URL : ''; ?>";
-    </script>
-</head>
-<body class="min-h-screen pb-20">
-    <?php include __DIR__ . '/../../includes/user-navbar.php'; ?>
 
-    <main class="container-ultra px-4 md:px-10 py-8">
+$pageTitle = 'Transaction History';
+require_once __DIR__ . '/../../includes/user-layout-header.php';
+?>
+
+<div class="container-ultra px-4 md:px-10">
         <div class="max-w-6xl mx-auto">
             <div class="flex items-center justify-between mb-10">
                 <div>
@@ -123,10 +112,5 @@ $history = $ticketModel->getUserTicketHistory(getUserId());
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-        </div>
-    </main>
-
-    <?php include __DIR__ . '/../../includes/chatbot-widget.php'; ?>
-    <script src="<?php echo BASE_URL; ?>/js/notifications.js"></script>
-</body>
-</html>
+    </div>
+<?php require_once __DIR__ . '/../../includes/user-layout-footer.php'; ?>

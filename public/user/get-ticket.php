@@ -7,6 +7,12 @@ require_once __DIR__ . '/../../models/Ticket.php';
 requireLogin();
 requireRole('user');
 
+// Ensure office is selected
+if (!isset($_SESSION['office_id'])) {
+    header('Location: dashboard.php');
+    exit;
+}
+
 $serviceModel = new Service();
 $ticketModel = new Ticket();
 $db = Database::getInstance()->getConnection();
@@ -34,25 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
         $error = $result['message'];
     }
 }
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="<?php echo $_SESSION['csrf_token']; ?>">
-    <title>Get Ticket - <?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <?php injectTailwindConfig(); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        const ANTIGRAVITY_BASE_URL = "<?php echo defined('BASE_URL') ? BASE_URL : ''; ?>";
-    </script>
-</head>
-<body class="min-h-screen">
-    <?php include __DIR__ . '/../../includes/user-navbar.php'; ?>
 
-    <main class="container-ultra px-4 md:px-10 py-8 pb-20">
+$pageTitle = 'Get Ticket';
+require_once __DIR__ . '/../../includes/user-layout-header.php';
+?>
+
+<div class="container-ultra px-4 md:px-10 pb-12 md:pb-20 5xl:pb-32">
         <div class="mb-12">
             <p class="text-[10px] 3xl:text-xs font-black uppercase tracking-[0.4em] text-primary-600 mb-2">Service Selection</p>
             <h1 class="text-4xl 3xl:text-7xl font-black text-gray-900 font-heading tracking-tight leading-none">Get Your Ticket</h1>
@@ -187,7 +180,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
             </div>
         <?php endif; ?>
         </div>
-    </main>
 
     <!-- Requirement Checklist Modal -->
     <div id="checklistModal" class="fixed inset-0 z-50 hidden overflow-y-auto overflow-x-hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -247,8 +239,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
         }
     </style>
 
-    <?php include __DIR__ . '/../../includes/chatbot-widget.php'; ?>
-    <script src="<?php echo BASE_URL; ?>/js/notifications.js"></script>
     <script>
         let currentActiveServiceId = null;
 
@@ -306,7 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
             modal.classList.remove('hidden');
             setTimeout(() => {
                 content.classList.remove('scale-95', 'opacity-0');
-            }, 10);
+            }, 300);
         }
 
         function validateChecklist() {
@@ -356,5 +346,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
             if (e.target === document.getElementById('checklistModal')) closeChecklist();
         });
     </script>
-</body>
-</html>
+<?php require_once __DIR__ . '/../../includes/user-layout-footer.php'; ?>

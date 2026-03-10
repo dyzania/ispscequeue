@@ -139,21 +139,81 @@ class DashboardRefresh {
           const isInput = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT" || active.isContentEditable);
           if (isInput && currentContent.contains(active)) return;
 
-          // Only update if content changed
-          if (newContent.innerHTML !== currentContent.innerHTML) {
-            currentContent.innerHTML = newContent.innerHTML;
+          // Morph content instead of replacing innerHTML to prevent flickering
+          this.morphNodes(currentContent, newContent);
 
-            const event = new CustomEvent("dashboard:updated", {
-              detail: { id: id },
-            });
-            document.dispatchEvent(event);
-          }
+          const event = new CustomEvent("dashboard:updated", {
+            detail: { id: id },
+          });
+          document.dispatchEvent(event);
         }
       });
 
       this.lastRefresh = Date.now();
     } catch (error) {
       console.warn("Silent refresh stalled:", error.message);
+    }
+  }
+
+  /**
+   * Surgical DOM Morphing
+   * Only updates what changed to preserve element identity (and timers)
+   */
+  morphNodes(oldNode, newNode) {
+    // 1. If nodes are different types, replace entirely
+    if (oldNode.nodeType !== newNode.nodeType || oldNode.tagName !== newNode.tagName) {
+      oldNode.parentNode.replaceChild(newNode.cloneNode(true), oldNode);
+      return;
+    }
+
+    // 2. Handle Text Nodes
+    if (oldNode.nodeType === Node.TEXT_NODE) {
+      if (oldNode.textContent !== newNode.textContent) {
+        oldNode.textContent = newNode.textContent;
+      }
+      return;
+    }
+
+    // 3. Handle Element Nodes
+    if (oldNode.nodeType === Node.ELEMENT_NODE) {
+      // Sync attributes
+      const oldAttrs = oldNode.attributes;
+      const newAttrs = newNode.attributes;
+
+      // Remove old attributes not in new
+      for (let i = oldAttrs.length - 1; i >= 0; i--) {
+        const name = oldAttrs[i].name;
+        if (!newNode.hasAttribute(name)) oldNode.removeAttribute(name);
+      }
+
+      // Add/Update new attributes
+      for (let i = 0; i < newAttrs.length; i++) {
+        const { name, value } = newAttrs[i];
+        if (oldNode.getAttribute(name) !== value) {
+          oldNode.setAttribute(name, value);
+        }
+      }
+
+      // Special case: don't recurse into inputs to preserve user state
+      if (oldNode.tagName === 'INPUT' || oldNode.tagName === 'TEXTAREA') return;
+
+      // Morph children
+      const oldChildren = Array.from(oldNode.childNodes);
+      const newChildren = Array.from(newNode.childNodes);
+
+      const max = Math.max(oldChildren.length, newChildren.length);
+      for (let i = 0; i < max; i++) {
+        if (!oldChildren[i]) {
+          // New child added
+          oldNode.appendChild(newChildren[i].cloneNode(true));
+        } else if (!newChildren[i]) {
+          // Old child removed
+          oldNode.removeChild(oldChildren[i]);
+        } else {
+          // Morph existing child
+          this.morphNodes(oldChildren[i], newChildren[i]);
+        }
+      }
     }
   }
 }

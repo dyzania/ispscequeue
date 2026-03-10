@@ -68,3 +68,35 @@ The system includes several layers of protection to prevent "ticket-cancel spam"
 - **CSRF Protection**: Every cancellation or ticket generation request requires a unique cryptographic token stored in the session.
 - **Ownership Validation**: The backend verifies that the `user_id` on the ticket matches the currently logged-in user before allowing any status changes.
 - **Security Logs**: All rate limit violations and unauthorized attempts are logged to [logs/security.log](file:///c:/xampp/htdocs/ispscequeue/logs/security.log) for administrative review.
+
+---
+
+## 🏛️ Layout & Aesthetic Refactoring
+
+The system has undergone a major layout consolidation to achieve a "Premium" and consistent UX across all portals:
+
+### 1. Unified Layout Fragments
+- **Consolidated Headers/Footers**: Replaced ad-hoc HTML in `public/user` and `public/staff` with unified fragments ([user-layout-header.php](file:///c:/xampp/htdocs/ispscequeue/includes/user-layout-header.php), [staff-layout-header.php](file:///c:/xampp/htdocs/ispscequeue/includes/staff-layout-header.php)).
+- **Standardized Dependencies**: Centralized Tailwind CSS, Font Awesome, and custom counting scripts to ensure identical behavior and styling across the entire platform.
+
+### 2. Admin Dashboard Enhancements
+- **Premium Window Cards**: Enlarged the window carousel cards in the Admin portal to provide a high-visibility, "executive" feel.
+- **40/60 Information Split**: Implemented a vertical layout split for window cards:
+    - **Top 40% (Upcoming)**: Shows the "Next in Line" ticket number and service code for immediate clarity.
+    - **Bottom 60% (Active)**: A larger, high-contrast block for the "Now Serving" ticket, complete with live status animations.
+- **Real-Time Synchronization**: Updated the dynamic dashboard sync logic to update both the Upcoming and Active ticket data without page flickers.
+
+### 3. User Dashboard Optimization
+- **Compact Resilience**: Reverted the window cards in the user portal to a more efficient, compact layout, ensuring they remain legible without over-enlargement, while maintaining the premium `glass-morphism` effects.
+- **Improved Hierarchy**: Streamlined the layout to focus on the user's active ticket and current position.
+
+### 4. Structural & Functional Integrity
+- **Get Ticket Restored**: Repaired the `get-ticket.php` page by removing redundant tags and duplicate script inclusions that were breaking the JavaScript-driven requirement checklist.
+- **Staff Layout Gaps**: Restored the modern "side gaps" in the Staff portal by centralizing padding in the `staff-layout-header.php` fragment.
+- **DOM Desynchronization Fix**: Removed trailing `</div>` and extra `</main>` tags across multiple files to ensure perfect nesting with the new unified layout system.
+- **College Filter Refinement**: Significantly enlarged the campus watch filters (CAS, SCJE, etc.) and updated their border-radius to match the dashboard's premium containers, using more vibrant colors for active states.
+- **Queue Focus Refactor**: Transitioned the 'Upcoming Tickets' section to a single-column layout for better readability.
+- **Extreme Client Highlighting**: Implemented maximum visual emphasis for client names using high-contrast dark badges (`bg-slate-900`), vibrant primary accents, and a radiated glow effect for the active transaction to ensure absolute visibility.
+- **Compact Staff "High-Density" Layout**: Significantly reduced the vertical height of staff metrics (Served Today, Avg. Speed, etc.) and operational headers by compacting padding and scaling down icons. This is paired with a further refined "Medium-Small" font size for active client names to optimize space efficiency.
+- **Mega-Centered Admin Tickets**: Centered and significantly enlarged Admin ticket numbers (up to `text-[15rem]` on 5XL) for absolute visibility, complemented by a reduced and more balanced font size for client names in the Staff portal.
+- **Fine-Tuned "Medium-Plus" Admin Layout**: Incrementally increased the admin dashboard height (min-h: 360px - 750px) and scaled up UI elements (icons, typography) to find the perfect balance between compactness and prominence, satisfying the request for a "lil bit taller" profile.

@@ -41,10 +41,19 @@ class User {
         
         $isVerified = ($role !== 'user') ? 1 : 0; // Staff/Admin verified by default
         
-        if ($stmt->execute([$email, $hashedPassword, $full_name, $school_id, $college, $role, $otpCode, $otpExpiry, $isVerified, $office_id])) {
-            return $otpCode;
+        try {
+            if ($stmt->execute([$email, $hashedPassword, $full_name, $school_id, $college, $role, $otpCode, $otpExpiry, $isVerified, $office_id])) {
+                return $otpCode;
+            }
+            return false;
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1062')) {
+                // Duplicate entry — email or school_id already exists
+                return ['duplicate' => true, 'message' => 'An account with this email or School ID already exists.'];
+            }
+            error_log('User::register() error: ' . $e->getMessage());
+            return false;
         }
-        return false;
     }
     
     public function login($credential, $password) {
@@ -214,7 +223,15 @@ class User {
         $params[] = $id;
 
         $stmt = $this->db->prepare($q);
-        return $stmt->execute($params);
+        try {
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1062')) {
+                return ['duplicate' => true, 'message' => 'This email is already in use by another account.'];
+            }
+            error_log('User::updateUser() error: ' . $e->getMessage());
+            return false;
+        }
     }
     
     public function deleteUser($id) {

@@ -13,7 +13,7 @@ if (!$ticketId) {
 }
 
 $ticketModel = new Ticket();
-$position = $ticketModel->getQueuePosition($ticketId);
+$position = $ticketModel->getGlobalQueuePosition($ticketId);
 
 echo json_encode([
     'success' => true,
