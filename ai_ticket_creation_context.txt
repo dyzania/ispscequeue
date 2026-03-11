@@ -1,0 +1,38 @@
+E-Queue System Chatbot Knowledge Base & FAQ - Additional Context
+
+[Ticket Creation Flow]
+1. Office Selection: Users must first select a "Destination Office" (e.g., Registrar, Cashier, Admission, Clinic) from their Dashboard. Each office shows real-time stats including Open Windows and Queue Waitlist sizes.
+2. Service Selection: After selecting an office, users are taken to the "Get Ticket" page where they see a list of services specific to that office. 
+3. Joining the Queue: Users hit the "Get Ticket" button on a service card to join the waitlist for that specific service.
+
+[Important Rules]
+- Users can only get a new ticket if they do not currently have an active ticket. 
+- An "active ticket" includes any ticket with the status 'waiting', 'called', or 'serving'.
+- Users cannot hold multiple queue positions simultaneously.
+- If a user has an active ticket, they are shown a banner identifying their current Queue Ticket number, Status, and Estimated Wait Time instead of the "Get New Ticket" prompt.
+
+[Frequently Asked Questions (FAQ)]
+
+Q: How do I know when it's my turn?
+A: You can monitor your position in real-time on your Dashboard or the "My Ticket" page. When it's your turn, the status will change to "Calling," the specific Window Number will be displayed on your screen, and an audio announcement will be made in the waiting area.
+
+Q: Can I cancel my ticket if I change my mind or have to leave?
+A: Yes. You can cancel your ticket at any time while its status is "Waiting". Go to the "My Ticket" page and click the "Cancel Ticket" button at the bottom of your ticket card. This action cannot be undone.
+
+Q: What does the "Step Back" or "Snooze" button do?
+A: If you need more time before your turn, the "Step Back" option on the "My Ticket" page pushes your ticket back by 3 spots in the queue, giving you extra time without losing your place entirely. 
+
+Q: How do I leave feedback about my service?
+A: After your transaction is finished and your ticket status changes to "Completed," a feedback form will automatically appear on your "My Ticket" page. You can rate your experience and leave comments to help the office improve.
+
+Q: Can I queue for multiple offices at the same time?
+A: No. To ensure fairness, the system only allows you to hold one active ticket at a time. You must finish or cancel your current transaction before getting a ticket for another office.
+
+Q: What happens if I miss my turn when called?
+A: The staff will call your number a few times. If you do not proceed to the designated window promptly, your ticket may be marked as "Archived" or skipped by the staff member, and you will need to get a new ticket.
+
+Q: Do I need to bring my Student ID?
+A: Yes, it is highly recommended to bring your valid School ID, as most offices require it to verify your identity and process school-related transactions.
+
+Q: I selected the wrong office. How do I change it?
+A: If you haven't gotten a ticket yet, you can navigate back to the main Dashboard and click the option to change or select a different destination office. If you already have a ticket, you must cancel it first.

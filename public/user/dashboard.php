@@ -95,40 +95,41 @@ require_once __DIR__ . '/../../includes/user-layout-header.php';
             </div>
         </div>
 
-        <div id="notification-sync">
-            <?php 
-            $bannerTicket = null;
-            $bannerType = ''; 
+        <?php 
+        $bannerTicket = null;
+        $bannerType = ''; 
+        
+        if ($pendingFeedback) {
+            $bannerTicket = $pendingFeedback;
+            $bannerType = 'completed';
+            $accentBase = 'amber';
+            $statusText = 'Completed';
+            $icon = 'fa-star';
+            $actionLabel = 'Give Feedback';
+            $actionIcon = 'fa-comment-dots';
+            $actionUrl = 'my-ticket.php';
+        } elseif ($currentTicket) {
+            $bannerTicket = $currentTicket;
+            $bannerType = $currentTicket['status'];
+            $accentBase = 'primary';
+            $actionUrl = 'my-ticket.php';
+            $actionIcon = 'fa-chevron-right';
+            $actionLabel = 'View Position';
             
-            if ($pendingFeedback) {
-                $bannerTicket = $pendingFeedback;
-                $bannerType = 'completed';
-                $accentBase = 'amber';
-                $statusText = 'Completed';
-                $icon = 'fa-star';
-                $actionLabel = 'Give Feedback';
-                $actionIcon = 'fa-comment-dots';
-                $actionUrl = 'my-ticket.php';
-            } elseif ($currentTicket) {
-                $bannerTicket = $currentTicket;
-                $bannerType = $currentTicket['status'];
-                $accentBase = 'primary';
-                $actionUrl = 'my-ticket.php';
-                $actionIcon = 'fa-chevron-right';
-                $actionLabel = 'View Position';
-                
-                if ($bannerType === 'called') {
-                    $statusText = 'You are being called';
-                    $icon = 'fa-bullhorn animate-bounce';
-                } elseif ($bannerType === 'serving') {
-                    $statusText = 'Now Serving';
-                    $icon = 'fa-concierge-bell';
-                } else {
-                    $statusText = 'Waiting in Line';
-                    $icon = 'fa-clock';
-                }
+            if ($bannerType === 'called') {
+                $statusText = 'You are being called';
+                $icon = 'fa-bullhorn animate-bounce';
+            } elseif ($bannerType === 'serving') {
+                $statusText = 'Now Serving';
+                $icon = 'fa-concierge-bell';
+            } else {
+                $statusText = 'Waiting in Line';
+                $icon = 'fa-clock';
             }
-
+        }
+        ?>
+        <div id="notification-sync" class="<?php echo !$bannerTicket ? 'hidden' : ''; ?>">
+            <?php 
             if ($bannerTicket): 
                 $bgClass = ($accentBase === 'amber') ? "bg-white border border-amber-100" : "bg-white border border-primary-100";
                 $iconBg = ($accentBase === 'amber') ? "bg-amber-50 shadow-lg shadow-amber-100" : "bg-primary-50 shadow-lg shadow-primary-100";

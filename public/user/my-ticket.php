@@ -321,7 +321,7 @@ require_once __DIR__ . '/../../includes/user-layout-header.php';
                                     </div>
                                 </div>
 
-                                <button type="submit" class="w-full bg-primary-600 text-white py-6 rounded-3xl font-black text-xl shadow-2xl shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4 uppercase tracking-widest">
+                                <button type="submit" class="w-full bg-primary-600 text-white py-4 rounded-3xl font-black text-base shadow-2xl shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4 uppercase tracking-widest">
                                     <span>Submit Feedback</span>
                                     <i class="fas fa-paper-plane"></i>
                                 </button>

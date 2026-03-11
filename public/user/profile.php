@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="pt-10">
-                                <button type="submit" class="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white py-5 rounded-3xl font-black text-xl shadow-xl shadow-primary-900/20 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4 group uppercase tracking-widest">
+                                <button type="submit" class="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white py-4 rounded-3xl font-black text-base shadow-xl shadow-primary-900/20 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4 group uppercase tracking-widest">
                                     <span>Save Changes</span>
                                     <i class="fas fa-check-circle group-hover:scale-125 transition-transform"></i>
                                 </button>
