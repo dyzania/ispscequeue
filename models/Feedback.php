@@ -8,13 +8,20 @@ class Feedback {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    public function createFeedback($ticketId, $userId, $windowId, $comment) {
+    public function createFeedback($ticketId, $userId, $windowId, $comment, $csatData = []) {
         // Perform sentiment analysis on comment
         $sentimentData = $this->analyzeSentiment($comment);
         
         $stmt = $this->db->prepare("
-            INSERT INTO feedback (ticket_id, user_id, window_id, rating, comment, sentiment, sentiment_score) 
-            VALUES (?, ?, ?, NULL, ?, ?, ?)
+            INSERT INTO feedback (
+                ticket_id, user_id, window_id, rating, comment, sentiment, sentiment_score,
+                client_type, client_type_others, contact_means, contact_means_others,
+                cc_awareness, cc_visibility, cc_helpfulness,
+                rating_responsiveness_1, rating_responsiveness_2, rating_reliability,
+                rating_access, rating_communication, rating_costs, rating_integrity,
+                rating_courtesy, rating_outcome
+            ) 
+            VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         try {
@@ -24,7 +31,23 @@ class Feedback {
                 $windowId, 
                 $comment, 
                 $sentimentData['sentiment'],
-                $sentimentData['score']
+                $sentimentData['score'],
+                $csatData['client_type'] ?? null,
+                $csatData['client_type_others'] ?? null,
+                $csatData['contact_means'] ?? null,
+                $csatData['contact_means_others'] ?? null,
+                $csatData['cc_awareness'] ?? null,
+                $csatData['cc_visibility'] ?? null,
+                $csatData['cc_helpfulness'] ?? null,
+                $csatData['rating_responsiveness_1'] ?? null,
+                $csatData['rating_responsiveness_2'] ?? null,
+                $csatData['rating_reliability'] ?? null,
+                $csatData['rating_access'] ?? null,
+                $csatData['rating_communication'] ?? null,
+                $csatData['rating_costs'] ?? null,
+                $csatData['rating_integrity'] ?? null,
+                $csatData['rating_courtesy'] ?? null,
+                $csatData['rating_outcome'] ?? null
             ]);
         } catch (PDOException $e) {
             if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1062')) {
@@ -106,8 +129,7 @@ class Feedback {
         return $stmt->fetch();
     }
     
-    public function getAllFeedback($officeId = null) {
-        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
+    public function getAllFeedback() {
         $stmt = $this->db->prepare("
             SELECT f.*, u.full_name as user_name, w.window_number, t.ticket_number, s.service_name
             FROM feedback f
@@ -115,16 +137,14 @@ class Feedback {
             JOIN tickets t ON f.ticket_id = t.id
             JOIN services s ON t.service_id = s.id
             LEFT JOIN windows w ON f.window_id = w.id
-            WHERE t.office_id = ?
             ORDER BY f.created_at DESC
         ");
         
-        $stmt->execute([$officeId]);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
     
-    public function getFeedbackStats($officeId = null) {
-        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
+    public function getFeedbackStats() {
         $stmt = $this->db->prepare("
             SELECT 
                 COUNT(f.id) as total_feedback,
@@ -135,11 +155,9 @@ class Feedback {
                 COUNT(CASE WHEN f.sentiment = 'very_negative' THEN 1 END) as very_negative,
                 AVG(f.sentiment_score) as avg_sentiment_score
             FROM feedback f
-            JOIN tickets t ON f.ticket_id = t.id
-            WHERE t.office_id = ?
         ");
         
-        $stmt->execute([$officeId]);
+        $stmt->execute();
         return $stmt->fetch();
     }
     
@@ -158,22 +176,19 @@ class Feedback {
         return $stmt->fetchAll();
     }
     
-    public function getFeedbackTrends($days = 7, $officeId = null) {
-        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
+    public function getFeedbackTrends($days = 7) {
         $stmt = $this->db->prepare("
             SELECT 
-                DATE(f.created_at) as date,
-                COUNT(f.id) as count,
-                AVG(f.sentiment_score) as avg_sentiment
-            FROM feedback f
-            JOIN tickets t ON f.ticket_id = t.id
-            WHERE f.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-            AND t.office_id = ?
+                DATE(created_at) as date,
+                COUNT(id) as count,
+                AVG(sentiment_score) as avg_sentiment
+            FROM feedback
+            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
             GROUP BY date
             ORDER BY date ASC
         ");
         
-        $stmt->execute([$days, $officeId]);
+        $stmt->execute([$days]);
         return $stmt->fetchAll();
     }
 }

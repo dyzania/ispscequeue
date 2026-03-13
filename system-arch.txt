@@ -1,0 +1,81 @@
+The system follows a modern, decoupled microservices architecture, which separates user interfaces from backend application logic and specialized processing modules. As detailed in the architecture diagram (Figure X), the system is divided into four main layers: user roles, a unified hosting environment, a dedicated application programming interface (API) layer, and external AI services.
+
+This modularity provides several key benefits critical to this research:
+
+Scalability: Each service can be scaled independently based on load.
+
+Maintainability: Individual components can be developed, tested, and updated without risk to the core application logic.
+
+Extensibility: New models or services can be added to the external services layer with minimal disruption.
+
+3.2 System Components and Layers
+The following sections detail the responsibilities and technical specifications of each architectural layer:
+
+3.2.1 User Roles
+This outermost layer defines the system's human actors and external systems that interact with the application.
+
+User/Client: Regular users who generate the primary content or request the analyses (e.g., submitting text for sentiment scoring or generating content via LLM).
+
+Staff Member: Users with moderated internal system access for management, content oversight, or specialized operational tasks.
+
+System Administrator: Privileged users responsible for system configuration, user management, API key rotation, and health monitoring.
+
+Organization API (B2B Client): An extension of the user layer, representing a programmatic (server-to-server) connection allowing other applications to utilize the system's analysis endpoints.
+
+3.2.2 Application Hosting Environment
+This single, unified environment hosts all essential internal logic and data storage for the core application, divided into User Interface and Core Backend.
+
+User Interface (UI):
+
+Implementation: Developed as a single-page application (SPA) utilizing a modern framework (such as React, Vue, or Angular) coupled with Tailwind CSS for utility-first styling.
+
+Responsibility: The frontend is entirely responsible for user experience, data presentation, and managing user state. It communicates exclusively with the Core Backend via API calls, ensuring the data is processed only when required.
+
+Core Backend System:
+
+Centralized API/Logic: Implemented in PHP, this component acts as the system's operational orchestrator. It manages the business logic, handles incoming UI requests, authenticates users, manages sessions, and serves as the middleware connecting the frontend, the database, and all external services.
+
+Data Integrity (MySQL): A MySQL Database Server is utilized for relational data storage. The PHP logic interacts with MySQL via standard SQL queries, storing critical application data, including user profiles, transaction logs, and the structured results derived from AI analysis.
+
+3.2.3 AI and External Services
+This layer isolates all third-party and computational functions into dedicated services, accessed solely through the Backend API logic.
+
+Microservice: Python Sentiment Analysis:
+
+Design: This is a localized microservice running a Python FastAPI application. It is decoupled from the main PHP backend.
+
+Implementation Details:
+
+HuggingFace ML Model: This service hosts or references a specific, pre-trained HuggingFace model dedicated to sentiment classification (e.g., a fine-tuned BERT model). Using the microservice pattern keeps the memory-intensive ML dependencies isolated.
+
+In-Memory Cache (Redis): To optimize performance and reduce computational load, a Redis cache is integrated. Analysis results for frequently encountered input strings are cached, providing sub-millisecond response times for repeated queries.
+
+External Service: OpenRouter LLM Gateway:
+
+Design: The system utilizes OpenRouter as a centralized API gateway to manage interaction with large language models (LLMs).
+
+Implementation Detail: This single API endpoint allows the PHP backend to remain agnostic to specific model providers. By configuring queries via the OpenRouter gateway, the application can dynamic load-balance or switch between providers.
+
+3.2.4 External Services Layer API (and Email)
+This final layer manages necessary utility functions that must communicate outside the core hosting boundary.
+
+Internal Library (PHPMailer Integration): The core PHP application utilizes the PHPMailer internal library to handle complex email compositions (e.g., MIME types, attachments, HTML formatting).
+
+SMTP Mail Server: Once PHPMailer constructs the message object, the actual message transmission is delegated to a dedicated SMTP Mail Server (e.g., Gmail SMTP or a specialized service like SendGrid). This separates the logic of message creation from the reliability and reputation management required for email delivery.
+
+3.3 Data Flow Summary
+A typical data flow following an analysis request is illustrated below:
+
+The User submits input via the Tailwind/JS Frontend.
+
+The Frontend sends an API request (JSON) to the PHP API Logic.
+
+The PHP Backend first validates the request and logs the metadata in the MySQL Database.
+
+The PHP Backend then makes simultaneous or sequential external API calls to:
+a. The Python Microservice, which performs sentiment analysis (using cache or model inference).
+b. The OpenRouter Gateway, which queries the selected LLM provider.
+
+The AI results are returned to the PHP Backend, where they are aggregated and stored in the MySQL Database.
+
+A single structured JSON response containing all analysis data is sent back to the Frontend for display to the user.

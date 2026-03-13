@@ -9,10 +9,9 @@ class Announcement {
     }
     
     // Get all announcements ordered by newest first for an office.
-    public function getAll($officeId = null) {
-        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
-        $stmt = $this->db->prepare("SELECT * FROM announcements WHERE office_id = ? ORDER BY created_at DESC");
-        $stmt->execute([$officeId]);
+    public function getAll() {
+        $stmt = $this->db->prepare("SELECT * FROM announcements ORDER BY created_at DESC");
+        $stmt->execute();
         return $stmt->fetchAll();
     }
     
@@ -28,9 +27,9 @@ class Announcement {
      * @param string $content
      * @param string|null $image_path */
 
-    public function create($title, $content, $image_path = null, $officeId = 1) {
-        $stmt = $this->db->prepare("INSERT INTO announcements (title, content, image_path, office_id) VALUES (?, ?, ?, ?)");
-        return $stmt->execute([$title, $content, $image_path, $officeId]);
+    public function create($title, $content, $image_path = null) {
+        $stmt = $this->db->prepare("INSERT INTO announcements (title, content, image_path) VALUES (?, ?, ?)");
+        return $stmt->execute([$title, $content, $image_path]);
     }
 
     /** Update an existing announcement.
@@ -78,14 +77,13 @@ class Announcement {
         return $result['max_id'] ?: 0;
     }
 
-    public function getUnreadCount($userId, $officeId = null) {
-        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
+    public function getUnreadCount($userId) {
         $stmt = $this->db->prepare("
             SELECT COUNT(*) as unread_count 
             FROM announcements 
-            WHERE office_id = ? AND id > (SELECT last_read_announcement_id FROM users WHERE id = ?)
+            WHERE id > (SELECT last_read_announcement_id FROM users WHERE id = ?)
         ");
-        $stmt->execute([$officeId, $userId]);
+        $stmt->execute([$userId]);
         $result = $stmt->fetch();
         return $result['unread_count'] ?: 0;
     }

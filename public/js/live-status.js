@@ -44,10 +44,8 @@ class LiveQueueStatus {
         navigator.mediaSession.playbackState = "playing";
       }
 
-      console.log("Live Status Activated (Audio Playing)");
       return true;
     } catch (err) {
-      console.error("Live Status failed to start:", err);
       return false;
     }
   }
@@ -65,7 +63,7 @@ class LiveQueueStatus {
       try {
         navigator.mediaSession.setActionHandler(action, handler);
       } catch (error) {
-        console.warn(`MediaSession action "${action}" not supported.`);
+        // action not supported
       }
     }
   }

@@ -8,6 +8,7 @@ $isHistory = str_contains($_SERVER['PHP_SELF'], 'history.php');
 $isProfile = str_contains($_SERVER['PHP_SELF'], 'profile.php');
 
 // Get unread announcements count
+// Get unread announcements count
 $unreadAnnouncements = 0;
 if (isset($_SESSION['user_id'])) {
     if (!isset($announcementModel)) {
@@ -41,45 +42,21 @@ if (isset($_SESSION['user_id'])) {
     </div>
 
     <nav class="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
-        <?php if (isset($_SESSION['office_id'])): ?>
-            <div class="px-6 mb-4">
-                <p class="text-[10px] font-black uppercase tracking-widest text-gray-500">Navigation</p>
-            </div>
+        <div class="px-6 mb-4">
+            <p class="text-[10px] font-black uppercase tracking-widest text-gray-500">Navigation</p>
+        </div>
 
-            <a href="dashboard.php" class="flex items-center px-6 py-4 rounded-xl text-sm font-bold tracking-tight transition-all duration-300 <?php echo $isDashboard ? 'bg-primary-600/20 text-white border-l-4 border-primary-500 pl-5' : 'text-gray-400 hover:bg-white/5 hover:text-white' ?>">
-                <i class="fas fa-desktop mr-4 text-lg <?php echo $isDashboard ? 'text-primary-500' : 'opacity-70'; ?>"></i>Live Queue
-            </a>
-            
-            <a href="get-ticket.php" class="flex items-center px-6 py-4 rounded-xl text-sm font-bold tracking-tight transition-all duration-300 <?php echo $isGetTicket ? 'bg-primary-600/20 text-white border-l-4 border-primary-500 pl-5' : 'text-gray-400 hover:bg-white/5 hover:text-white' ?>">
-                <i class="fas fa-ticket-alt mr-4 text-lg <?php echo $isGetTicket ? 'text-primary-500' : 'opacity-70'; ?>"></i>Get Ticket
-            </a>
+        <a href="dashboard.php" class="flex items-center px-6 py-4 rounded-xl text-sm font-bold tracking-tight transition-all duration-300 <?php echo $isDashboard ? 'bg-primary-600/20 text-white border-l-4 border-primary-500 pl-5' : 'text-gray-400 hover:bg-white/5 hover:text-white' ?>">
+            <i class="fas fa-desktop mr-4 text-lg <?php echo $isDashboard ? 'text-primary-500' : 'opacity-70'; ?>"></i>Live Queue
+        </a>
+        
+        <a href="get-ticket.php" class="flex items-center px-6 py-4 rounded-xl text-sm font-bold tracking-tight transition-all duration-300 <?php echo $isGetTicket ? 'bg-primary-600/20 text-white border-l-4 border-primary-500 pl-5' : 'text-gray-400 hover:bg-white/5 hover:text-white' ?>">
+            <i class="fas fa-ticket-alt mr-4 text-lg <?php echo $isGetTicket ? 'text-primary-500' : 'opacity-70'; ?>"></i>Get Ticket
+        </a>
 
-            <a href="my-ticket.php" class="flex items-center px-6 py-4 rounded-xl text-sm font-bold tracking-tight transition-all duration-300 <?php echo $isMyTicket ? 'bg-primary-600/20 text-white border-l-4 border-primary-500 pl-5' : 'text-gray-400 hover:bg-white/5 hover:text-white' ?>">
-                <i class="fas fa-user-tag mr-4 text-lg <?php echo $isMyTicket ? 'text-primary-500' : 'opacity-70'; ?>"></i>My Ticket
-            </a>
-        <?php else: ?>
-            <!-- No office selected — show a way back to office picker -->
-            <div class="px-6 mb-4">
-                <p class="text-[10px] font-black uppercase tracking-widest text-gray-500">Getting Started</p>
-            </div>
-            <a href="dashboard.php" class="flex items-center px-6 py-4 rounded-xl text-sm font-bold tracking-tight transition-all bg-primary-600/20 text-primary-300 border-l-4 border-primary-500 pl-5">
-                <i class="fas fa-building mr-4 text-lg text-primary-400"></i>Select Office
-            </a>
-            <a href="my-ticket.php" class="flex items-center px-6 py-4 rounded-xl text-sm font-bold tracking-tight transition-all duration-300 <?php echo $isMyTicket ? 'bg-primary-600/20 text-white border-l-4 border-primary-500 pl-5' : 'text-gray-400 hover:bg-white/5 hover:text-white' ?>">
-                <i class="fas fa-user-tag mr-4 text-lg <?php echo $isMyTicket ? 'text-primary-500' : 'opacity-70'; ?>"></i>My Ticket
-            </a>
-        <?php endif; ?>
-
-
-        <?php if (isset($_SESSION['office_id'])): ?>
-            <div class="pt-6 px-6 mb-4">
-                <p class="text-[10px] font-black uppercase tracking-widest text-gray-500">Office</p>
-            </div>
-
-            <a href="dashboard.php?action=change_office" class="flex items-center px-6 py-4 rounded-xl text-sm font-bold tracking-tight transition-all duration-300 text-gray-400 hover:bg-white/5 hover:text-white">
-                <i class="fas fa-exchange-alt mr-4 text-lg opacity-70"></i>Change Office
-            </a>
-        <?php endif; ?>
+        <a href="my-ticket.php" class="flex items-center px-6 py-4 rounded-xl text-sm font-bold tracking-tight transition-all duration-300 <?php echo $isMyTicket ? 'bg-primary-600/20 text-white border-l-4 border-primary-500 pl-5' : 'text-gray-400 hover:bg-white/5 hover:text-white' ?>">
+            <i class="fas fa-user-tag mr-4 text-lg <?php echo $isMyTicket ? 'text-primary-500' : 'opacity-70'; ?>"></i>My Ticket
+        </a>
 
         <div class="px-6 mb-4 pt-6">
             <p class="text-[10px] font-black uppercase tracking-widest text-gray-500">General</p>
@@ -112,19 +89,6 @@ if (isset($_SESSION['user_id'])) {
         </a>
     </nav>
 
-    <?php if (isset($_SESSION['office_id'])): ?>
-    <div class="p-6 bg-white/5 m-4 rounded-2xl border border-white/5">
-        <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mb-2">Current Location</p>
-        <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-xs font-black">
-                <?php echo strtoupper(substr($_SESSION['office_name'] ?? 'OF', 0, 2)); ?>
-            </div>
-            <div class="min-w-0">
-                <p class="text-xs font-bold text-white truncate"><?php echo $_SESSION['office_name'] ?? 'Office'; ?></p>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
 </aside>
 
 
@@ -198,18 +162,8 @@ if (isset($_SESSION['user_id'])) {
         }
     }
 
-    // Auto-collapse on desktop if no office is selected
+    // Auto-collapse on desktop if needed
     document.addEventListener('DOMContentLoaded', () => {
-        const hasOffice = <?php echo isset($_SESSION['office_id']) ? 'true' : 'false'; ?>;
-        if (!hasOffice && window.innerWidth >= 1024) {
-            const sidebar = document.getElementById('user-sidebar');
-            const header = document.getElementById('user-header');
-            const mainWrapper = document.getElementById('user-main-wrapper');
-            
-            sidebar.classList.remove('lg:translate-x-0');
-            sidebar.classList.add('-translate-x-full');
-            if (header) header.classList.remove('lg:left-72');
-            if (mainWrapper) mainWrapper.classList.remove('lg:ml-72');
-        }
+        // Default sidebar behavior
     });
 </script>

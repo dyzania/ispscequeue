@@ -369,7 +369,6 @@ require_once __DIR__ . '/../../includes/staff-layout-header.php';
                 }
             })
             .catch(err => {
-                console.error('Recall error:', err);
                 alert('Connection error');
             })
             .finally(() => {
@@ -399,7 +398,6 @@ require_once __DIR__ . '/../../includes/staff-layout-header.php';
                     btn.innerHTML = btn.getAttribute('data-original-text');
                 }
             } catch (e) {
-                console.error('Error in setLoading:', e);
                 // alert('Error in UI update: ' + e.message);
             }
         }
@@ -430,7 +428,6 @@ require_once __DIR__ . '/../../includes/staff-layout-header.php';
 }
 
 function toggleCollegeFilter(college, btn) {
-            console.log('toggleCollegeFilter called', { college });
             const isActive = btn.getAttribute('data-active') === '1';
             const newStatus = !isActive;
             
@@ -491,13 +488,11 @@ function toggleCollegeFilter(college, btn) {
                 }
             })
             .catch(err => {
-                console.error('toggleCollegeFilter error:', err);
                 equeueAlert('Error: ' + err.message, 'Network Error');
             });
         }
 
         function toggleBreakMode(windowId, currentStatus, btn) {
-            console.log('toggleBreakMode called', { windowId, currentStatus });
             try {
                 const newStatus = currentStatus ? 0 : 1;
                 setLoading(btn, true, false);
@@ -528,18 +523,15 @@ function toggleCollegeFilter(college, btn) {
                     }
                 })
                 .catch(async err => {
-                    console.error('toggleBreakMode error:', err);
                     setLoading(btn, false);
                     await equeueAlert('Error: ' + err.message, 'Network Error');
                 });
             } catch (e) {
-                console.error('Error in toggleBreakMode:', e);
                 equeueAlert('Script error: ' + e.message, 'System Error');
             }
         }
 
         function callNext(windowId, btn) {
-            console.log('callNext called', { windowId, btn });
             try {
                 setLoading(btn, true);
                 fetch('../api/call-ticket.php', {
@@ -552,7 +544,6 @@ function toggleCollegeFilter(college, btn) {
                 })
                 .then(res => res.json())
                 .then(async data => {
-                    console.log('callNext data:', data);
                     if (data.success) {
                         window.location.reload();
                     } else {
@@ -561,18 +552,15 @@ function toggleCollegeFilter(college, btn) {
                     }
                 })
                 .catch(async err => {
-                    console.error('callNext error:', err);
                     setLoading(btn, false);
                     await equeueAlert('Error: ' + err.message, 'Network Error');
                 });
             } catch (e) {
-                console.error('Error in callNext:', e);
                 equeueAlert('Script error: ' + e.message, 'System Error');
             }
         }
 
         function startServing(ticketId, btn) {
-            console.log('startServing called', { ticketId });
             try {
                 setLoading(btn, true);
                 fetch('../api/start-serving.php', {
@@ -597,18 +585,15 @@ function toggleCollegeFilter(college, btn) {
                     }
                 })
                 .catch(async err => {
-                    console.error('startServing error:', err);
                     setLoading(btn, false);
                     await equeueAlert('Error: ' + err.message, 'Network Error');
                 });
             } catch (e) {
-                console.error('Error in startServing:', e);
                 equeueAlert('Script error: ' + e.message, 'System Error');
             }
         }
 
         async function cancelTicket(ticketId, btn) {
-            console.log('cancelTicket called', { ticketId });
             try {
                 if (!await equeueConfirm('Are you sure you want to cancel this ticket (No Show)?', 'Confirm No-Show')) return;
                 
@@ -635,18 +620,15 @@ function toggleCollegeFilter(college, btn) {
                     }
                 })
                 .catch(async err => {
-                    console.error('cancelTicket error:', err);
                     setLoading(btn, false);
                     await equeueAlert('Error: ' + err.message, 'Network Error');
                 });
             } catch (e) {
-                console.error('Error in cancelTicket:', e);
                 equeueAlert('Script error: ' + e.message, 'System Error');
             }
         }
 
         function completeTicket(ticketId, btn) {
-            console.log('completeTicket called', { ticketId, btn });
             try {
                 const notesEl = document.getElementById(`staff-notes-${ticketId}`);
                 const notes = notesEl ? notesEl.value : '';
@@ -661,11 +643,9 @@ function toggleCollegeFilter(college, btn) {
                     body: JSON.stringify({ ticket_id: ticketId, notes: notes })
                 })
                 .then(res => {
-                    console.log('completeTicket response status:', res.status);
                     return res.json();
                 })
                 .then(async data => {
-                    console.log('completeTicket data:', data);
                     if (data.success) {
                         window.location.reload();
                     } else {
@@ -674,18 +654,15 @@ function toggleCollegeFilter(college, btn) {
                     }
                 })
                 .catch(async err => {
-                    console.error('completeTicket fetch error:', err);
                     setLoading(btn, false);
                     await equeueAlert('Network error: ' + err.message, 'Network Error');
                 });
             } catch (e) {
-                console.error('Error in completeTicket:', e);
                 equeueAlert('Script error: ' + e.message, 'System Error');
             }
         }
 
         async function archiveTicket(ticketId, btn) {
-            console.log('archiveTicket called', { ticketId, btn });
             try {
                 if (!await equeueConfirm('Move this ticket to archive? Use this for long-running transactions.', 'Archive Ticket')) return;
                 
@@ -703,7 +680,6 @@ function toggleCollegeFilter(college, btn) {
                 })
                 .then(res => res.json())
                 .then(async data => {
-                    console.log('archiveTicket data:', data);
                     if (data.success) {
                         // Notify and delay reload
                         document.dispatchEvent(new CustomEvent('equeue:toast', { 
@@ -716,18 +692,15 @@ function toggleCollegeFilter(college, btn) {
                     }
                 })
                 .catch(async err => {
-                    console.error('archiveTicket error:', err);
                     setLoading(btn, false);
                     await equeueAlert('Error: ' + err.message, 'Network Error');
                 });
             } catch (e) {
-                console.error('Error in archiveTicket:', e);
                 equeueAlert('Script error: ' + e.message, 'System Error');
             }
         }
 
         function resumeTicket(ticketId, btn) {
-            console.log('resumeTicket called', { ticketId });
             try {
                 setLoading(btn, true);
                 fetch('../api/resume-ticket.php', {
@@ -752,12 +725,10 @@ function toggleCollegeFilter(college, btn) {
                     }
                 })
                 .catch(async err => {
-                    console.error('resumeTicket error:', err);
                     setLoading(btn, false);
                     await equeueAlert('Error: ' + err.message, 'Network Error');
                 });
             } catch (e) {
-                console.error('Error in resumeTicket:', e);
                 equeueAlert('Script error: ' + e.message, 'System Error');
             }
         }

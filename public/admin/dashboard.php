@@ -285,7 +285,6 @@ function formatDuration($seconds) {
             this.isEnabled = (savedState === null || savedState === 'true'); 
             this.isUnlocked = false;
             
-            console.log('VoiceAnnouncer: State loaded from storage', { isEnabled: this.isEnabled });
             this.init();
         }
 
@@ -299,7 +298,6 @@ function formatDuration($seconds) {
                     toggle.onchange = () => {
                         this.isEnabled = toggle.checked;
                         localStorage.setItem('voice_enabled', this.isEnabled);
-                        console.log('VoiceAnnouncer: State saved to storage', { isEnabled: this.isEnabled });
                         this.updateUI();
                         
                         if (this.isEnabled && !this.isUnlocked) {
@@ -328,7 +326,6 @@ function formatDuration($seconds) {
                     this.synth.onvoiceschanged = () => this.updateUI();
                 }
             } catch (e) {
-                console.error('VoiceAnnouncer: Initialization failed', e);
             }
         }
 
@@ -339,9 +336,7 @@ function formatDuration($seconds) {
                 this.synth.speak(utterance);
                 this.isUnlocked = true;
                 this.updateUI();
-                console.log('Speech engine unlocked');
             } catch (e) {
-                console.error('Speech unlock failed', e);
             }
         }
 
@@ -368,7 +363,6 @@ function formatDuration($seconds) {
             // This allows re-calling the same ticket number
             const callKey = `${ticketNumber}|${calledAt}`;
             
-            console.log('Announcing ticket:', callKey, 'Priority:', isPriority);
             if (!this.synth || !this.isInitialized) return;
             
             // Avoid repeat announcements for the EXACT same call time
@@ -393,7 +387,6 @@ function formatDuration($seconds) {
             const speakPart = (text, rate = 0.7) => {
                 // Explicitly use "zero" for '0' to avoid it being read as letter "O"
                 const clearText = text.split(' ').map(c => c === '0' ? 'zero' : c).join(' ');
-                console.log('Speaking part:', clearText);
                 
                 const utterance = new SpeechSynthesisUtterance(clearText);
                 utterance.rate = rate;

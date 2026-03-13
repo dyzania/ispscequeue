@@ -31,11 +31,10 @@ class Window {
                     ORDER BY called_at DESC LIMIT 1) as called_at
             FROM windows w
             LEFT JOIN users u ON w.staff_id = u.id
-            WHERE w.office_id = ?
             ORDER BY w.window_number
         ");
         
-        $stmt->execute([$_SESSION['office_id'] ?? 1]);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
     
@@ -62,11 +61,11 @@ class Window {
                     ORDER BY called_at DESC LIMIT 1) as called_at
             FROM windows w
             LEFT JOIN users u ON w.staff_id = u.id
-            WHERE w.is_active = 1 AND w.office_id = ?
+            WHERE w.is_active = 1
             ORDER BY w.window_number
         ");
         
-        $stmt->execute([$_SESSION['office_id'] ?? 1]);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
     
@@ -94,19 +93,19 @@ class Window {
         return $stmt->fetch();
     }
     
-    public function isWindowNumberTaken($windowNumber, $officeId) {
-        $stmt = $this->db->prepare("SELECT id FROM windows WHERE window_number = ? AND office_id = ?");
-        $stmt->execute([$windowNumber, $officeId]);
+    public function isWindowNumberTaken($windowNumber) {
+        $stmt = $this->db->prepare("SELECT id FROM windows WHERE window_number = ?");
+        $stmt->execute([$windowNumber]);
         return $stmt->fetch() ? true : false;
     }
 
-    public function createWindow($windowNumber, $windowName, $staffId = null, $officeId = 1) {
+    public function createWindow($windowNumber, $windowName, $staffId = null) {
         $stmt = $this->db->prepare("
-            INSERT INTO windows (window_number, window_name, staff_id, office_id) 
-            VALUES (?, ?, ?, ?)
+            INSERT INTO windows (window_number, window_name, staff_id) 
+            VALUES (?, ?, ?)
         ");
         
-        return $stmt->execute([$windowNumber, $windowName, $staffId, $officeId]);
+        return $stmt->execute([$windowNumber, $windowName, $staffId]);
     }
     
     public function updateWindow($id, $windowNumber, $windowName, $staffId = null, $preferredColleges = null) {
@@ -157,11 +156,10 @@ class Window {
             SELECT s.*, ws.is_enabled
             FROM services s
             LEFT JOIN window_services ws ON s.id = ws.service_id AND ws.window_id = ?
-            WHERE s.office_id = (SELECT office_id FROM windows WHERE id = ?)
             ORDER BY s.service_name
         ");
         
-        $stmt->execute([$windowId, $windowId]);
+        $stmt->execute([$windowId]);
         return $stmt->fetchAll();
     }
     
@@ -219,13 +217,12 @@ class Window {
     }
 
     public function enableAllServices($windowId) {
-        // Get all active services for the specific window's office
+        // Get all active services
         $stmt = $this->db->prepare("
             SELECT id FROM services 
-            WHERE is_active = 1 
-            AND office_id = (SELECT office_id FROM windows WHERE id = ?)
+            WHERE is_active = 1
         ");
-        $stmt->execute([$windowId]);
+        $stmt->execute();
         $services = $stmt->fetchAll(PDO::FETCH_COLUMN);
         
         foreach ($services as $serviceId) {

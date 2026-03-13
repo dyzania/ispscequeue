@@ -10,11 +10,6 @@ if (typeof EQueueNotifications === "undefined") {
       this.hasPermission = false;
       this.toastContainer = null;
 
-      console.log(
-        "%c🔔 E-Queue Notifications starting...",
-        "color: #059669; font-weight: bold; font-size: 12px;",
-      );
-
       this.baseUrl =
         typeof ANTIGRAVITY_BASE_URL !== "undefined"
           ? ANTIGRAVITY_BASE_URL
@@ -23,9 +18,6 @@ if (typeof EQueueNotifications === "undefined") {
             : undefined;
 
       if (!this.baseUrl) {
-        console.error(
-          "Antigravity Error: ANTIGRAVITY_BASE_URL (or EQUEUE_BASE_URL) is missing. Notifications disabled.",
-        );
         return;
       }
 
@@ -136,7 +128,6 @@ if (typeof EQueueNotifications === "undefined") {
       }
 
       this.startPolling();
-      console.log("E-Queue: Notifications active. Endpoint: " + this.baseUrl);
     }
 
     createToastContainer() {
@@ -154,10 +145,9 @@ if (typeof EQueueNotifications === "undefined") {
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
           this.hasPermission = true;
-          console.log("E-Queue: Native notifications granted.");
         }
       } catch (error) {
-        console.warn("E-Queue: Native notification request failed.");
+        // Native notification request failed
       }
     }
 
@@ -184,7 +174,6 @@ if (typeof EQueueNotifications === "undefined") {
           data.notifications &&
           data.notifications.length > 0
         ) {
-          console.log("E-Queue: " + data.notifications.length + " new alerts.");
           data.notifications.forEach((notif) => {
             this.processNotification(notif);
           });

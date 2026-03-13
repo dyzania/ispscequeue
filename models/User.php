@@ -29,20 +29,20 @@ class User {
         return $errors;
     }
     
-    public function register($email, $password, $full_name, $school_id = null, $role = 'user', $office_id = null, $college = null) {
+    public function register($email, $password, $full_name, $school_id = null, $role = 'user', $college = null) {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $otpCode = sprintf("%06d", mt_rand(0, 999999));
         $otpExpiry = date('Y-m-d H:i:s', strtotime('+15 minutes'));
         
         $stmt = $this->db->prepare("
-            INSERT INTO users (email, password, full_name, school_id, college, role, otp_code, otp_expiry, is_verified, office_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (email, password, full_name, school_id, college, role, otp_code, otp_expiry, is_verified) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $isVerified = ($role !== 'user') ? 1 : 0; // Staff/Admin verified by default
         
         try {
-            if ($stmt->execute([$email, $hashedPassword, $full_name, $school_id, $college, $role, $otpCode, $otpExpiry, $isVerified, $office_id])) {
+            if ($stmt->execute([$email, $hashedPassword, $full_name, $school_id, $college, $role, $otpCode, $otpExpiry, $isVerified])) {
                 return $otpCode;
             }
             return false;
@@ -58,7 +58,7 @@ class User {
     
     public function login($credential, $password) {
         $stmt = $this->db->prepare("
-            SELECT id, email, password, full_name, role, school_id, college, is_verified, lockout_until, login_attempts, office_id
+            SELECT id, email, password, full_name, role, school_id, college, is_verified, lockout_until, login_attempts
             FROM users 
             WHERE email = ? OR school_id = ?
         ");
@@ -175,7 +175,7 @@ class User {
     
     public function getUserById($id) {
         $stmt = $this->db->prepare("
-            SELECT id, email, password, full_name, role, school_id, college, created_at, announcement_subscription, office_id
+            SELECT id, email, password, full_name, role, school_id, college, created_at, announcement_subscription
             FROM users 
             WHERE id = ?
         ");
@@ -184,17 +184,16 @@ class User {
         return $stmt->fetch();
     }
     
-    public function getAllStaff($officeId = null) {
-        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
+    public function getAllStaff() {
         $stmt = $this->db->prepare("
-            SELECT u.id, u.email, u.full_name, w.window_number, w.window_name, w.is_active, u.office_id
+            SELECT u.id, u.email, u.full_name, w.window_number, w.window_name, w.is_active
             FROM users u
             LEFT JOIN windows w ON w.staff_id = u.id
-            WHERE u.role = 'staff' AND u.office_id = ?
+            WHERE u.role = 'staff'
             ORDER BY u.full_name
         ");
         
-        $stmt->execute([$officeId]);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
     
@@ -210,14 +209,9 @@ class User {
         return $stmt->fetchAll();
     }
     
-    public function updateUser($id, $email, $full_name, $office_id = null) {
+    public function updateUser($id, $email, $full_name) {
         $q = "UPDATE users SET email = ?, full_name = ?";
         $params = [$email, $full_name];
-        
-        if ($office_id !== null) {
-            $q .= ", office_id = ?";
-            $params[] = $office_id;
-        }
         
         $q .= " WHERE id = ?";
         $params[] = $id;

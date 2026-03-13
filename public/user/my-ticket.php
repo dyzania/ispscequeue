@@ -7,12 +7,6 @@ require_once __DIR__ . '/../../models/Feedback.php';
 requireLogin();
 requireRole('user');
 
-// Ensure office is selected
-if (!isset($_SESSION['office_id'])) {
-    header('Location: dashboard.php');
-    exit;
-}
-
 $ticketModel = new Ticket();
 $feedbackModel = new Feedback();
 
@@ -77,9 +71,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
     verifyCsrfToken($_POST['csrf_token'] ?? '');
     
     if ($ticket) {
-        $comment = sanitize($_POST['comment']);
+        $comment = sanitize($_POST['comment'] ?? '');
         
-        if ($feedbackModel->createFeedback($ticket['id'], getUserId(), $ticket['window_id'], $comment)) {
+        $csatData = [
+            'client_type' => $_POST['client_type'] ?? null,
+            'client_type_others' => sanitize($_POST['client_type_others'] ?? ''),
+            'contact_means' => $_POST['contact_means'] ?? null,
+            'contact_means_others' => sanitize($_POST['contact_means_others'] ?? ''),
+            'cc_awareness' => $_POST['cc_awareness'] ?? null,
+            'cc_visibility' => $_POST['cc_visibility'] ?? null,
+            'cc_helpfulness' => $_POST['cc_helpfulness'] ?? null,
+            'rating_responsiveness_1' => $_POST['rating_responsiveness_1'] ?? null,
+            'rating_responsiveness_2' => $_POST['rating_responsiveness_2'] ?? null,
+            'rating_reliability' => $_POST['rating_reliability'] ?? null,
+            'rating_access' => $_POST['rating_access'] ?? null,
+            'rating_communication' => $_POST['rating_communication'] ?? null,
+            'rating_costs' => $_POST['rating_costs'] ?? null,
+            'rating_integrity' => $_POST['rating_integrity'] ?? null,
+            'rating_courtesy' => $_POST['rating_courtesy'] ?? null,
+            'rating_outcome' => $_POST['rating_outcome'] ?? null,
+        ];
+        
+        if ($feedbackModel->createFeedback($ticket['id'], getUserId(), $ticket['window_id'], $comment, $csatData)) {
             header('Location: my-ticket.php?success=1');
             exit;
         }
@@ -286,7 +299,7 @@ require_once __DIR__ . '/../../includes/user-layout-header.php';
             <!-- Action Area -->
             <div class="grid grid-cols-1 lg:grid-cols-1 gap-10">
                 <?php if ($ticket['status'] === 'completed' && !$feedbackGiven): ?>
-                    <div class="bg-white rounded-[48px] p-10 shadow-premium border border-slate-50 relative overflow-hidden group">
+                    <div class="bg-white rounded-[32px] md:rounded-[48px] p-6 md:p-10 shadow-premium border border-slate-50 relative overflow-hidden group">
                         <div class="relative z-10">
                             <h3 class="text-3xl font-black text-gray-900 font-heading tracking-tight mb-2">How was your visit?</h3>
                             <p class="text-gray-500 font-medium mb-4 max-w-sm text-lg">We value your time. Let us know how we can improve our service.</p>
@@ -306,29 +319,222 @@ require_once __DIR__ . '/../../includes/user-layout-header.php';
                             }
                             ?>
 
-                            <form method="POST" class="space-y-6">
+                            <form method="POST" class="space-y-8" id="csatForm">
                                 <input type="hidden" name="csrf_token" value="<?php echo generateCsrfToken(); ?>">
-                                <div class="relative group">
-                                    <textarea 
-                                        name="comment" 
-                                        required
-                                        rows="4"
-                                        class="w-full px-8 py-6 bg-slate-50 border border-slate-100 rounded-[32px] focus:outline-none focus:ring-4 focus:ring-primary-100 focus:bg-white focus:border-primary-500 transition-all font-medium text-gray-700 text-lg shadow-inner placeholder-gray-300"
-                                        placeholder="Enter your experience here (e.g. Great and fast service!)"
-                                    ></textarea>
-                                    <div class="absolute top-6 right-8 text-primary-200 group-focus-within:text-primary-600 transition-colors">
-                                        <i class="fas fa-pen-nib text-xl"></i>
+                                
+                                <!-- Client Info Section -->
+                                <div class="p-5 md:p-8 bg-slate-50 border border-slate-200 rounded-3xl space-y-8">
+                                    <h4 class="font-bold text-gray-800 text-lg uppercase tracking-wide">Client Information</h4>
+                                    
+                                    <div class="space-y-4">
+                                        <p class="font-bold text-gray-700 text-sm">Type of Client:</p>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                            <?php 
+                                            $clientTypes = ['Student', 'Non-Teaching', 'Faculty', 'Alumni', 'Parent/Guardian', 'Others'];
+                                            foreach($clientTypes as $ct): 
+                                                $id = strtolower(str_replace([' ', '/'], '_', $ct));
+                                            ?>
+                                            <label class="flex items-center space-x-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-primary-300 hover:bg-primary-50/30 transition-all select-none group">
+                                                <input type="radio" name="client_type" value="<?php echo $ct; ?>" required class="w-5 h-5 text-primary-600 focus:ring-primary-500 border-slate-300" <?php echo $ct === 'Others' ? 'id="client_others_radio"' : ''; ?>>
+                                                <span class="text-sm font-bold text-slate-700 group-hover:text-primary-700"><?php echo $ct; ?></span>
+                                            </label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        <input type="text" name="client_type_others" id="client_type_others" placeholder="Please specify..." class="w-full mt-3 px-5 py-3 border border-slate-200 rounded-xl hidden focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none font-bold text-sm bg-white" disabled>
+                                    </div>
+
+                                    <div class="space-y-4 pt-6 border-t border-slate-200">
+                                        <p class="font-bold text-gray-700 text-sm">Means of contacting the office/person concerned:</p>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <?php 
+                                            $contactMeans = ['In person', 'Over the Telephone', 'University Help Desk', 'Others'];
+                                            foreach($contactMeans as $cm): 
+                                            ?>
+                                            <label class="flex items-center space-x-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-primary-300 hover:bg-primary-50/30 transition-all select-none group">
+                                                <input type="radio" name="contact_means" value="<?php echo $cm; ?>" required class="w-5 h-5 text-primary-600 focus:ring-primary-500 border-slate-300" <?php echo $cm === 'Others' ? 'id="contact_others_radio"' : ''; ?>>
+                                                <span class="text-sm font-bold text-slate-700 group-hover:text-primary-700"><?php echo $cm; ?></span>
+                                            </label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        <input type="text" name="contact_means_others" id="contact_means_others" placeholder="Please specify..." class="w-full mt-3 px-5 py-3 border border-slate-200 rounded-xl hidden focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none font-bold text-sm bg-white" disabled>
                                     </div>
                                 </div>
 
-                                <button type="submit" class="w-full bg-primary-600 text-white py-4 rounded-3xl font-black text-base shadow-2xl shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4 uppercase tracking-widest">
-                                    <span>Submit Feedback</span>
+                                <!-- CC Awareness Section -->
+                                <div class="p-6 bg-[#fdf8e1] border border-[#fce99f] rounded-3xl space-y-6">
+                                    <div class="space-y-4">
+                                        <p class="font-bold text-gray-800">A. Which of the following most describes your awareness of a Citizens Charter (CC)?</p>
+                                        <div class="space-y-2 pl-4">
+                                            <label class="flex items-baseline space-x-3 cursor-pointer">
+                                                <input type="radio" name="cc_awareness" value="1" required class="text-primary-600 mt-1"> 
+                                                <span>1. I know what a CC is and I saw this office\'s CC</span>
+                                            </label>
+                                            <label class="flex items-baseline space-x-3 cursor-pointer">
+                                                <input type="radio" name="cc_awareness" value="2" required class="text-primary-600 mt-1"> 
+                                                <span>2. I know what a CC is but I did NOT see this office\'s CC</span>
+                                            </label>
+                                            <label class="flex items-baseline space-x-3 cursor-pointer">
+                                                <input type="radio" name="cc_awareness" value="3" required class="text-primary-600 mt-1"> 
+                                                <span>3. I learned of the CC only when I saw this office\'s CC</span>
+                                            </label>
+                                            <label class="flex items-baseline space-x-3 cursor-pointer">
+                                                <input type="radio" name="cc_awareness" value="4" required class="text-primary-600 mt-1"> 
+                                                <span>4. I do not know what a CC is and I did not see one in this office. (Answer \'N/A\' on questions 1 and 3)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-4 pt-4 border-t border-[#fce99f]" id="section_b_container">
+                                        <p class="font-bold text-gray-800">B. If aware of CC (answered 1-3 in A), would you say that the CC of this office was...?</p>
+                                        <div class="flex flex-wrap gap-4 pl-4 text-sm font-medium">
+                                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="cc_visibility" value="1" required class="text-primary-600"> <span>Easy to see</span></label>
+                                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="cc_visibility" value="2" required class="text-primary-600"> <span>Somewhat easy to see</span></label>
+                                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="cc_visibility" value="3" required class="text-primary-600"> <span>Difficult to see</span></label>
+                                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="cc_visibility" value="4" required class="text-primary-600"> <span>Not visible at all</span></label>
+                                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="cc_visibility" value="5" required class="text-primary-600" id="cc_visibility_na"> <span>N/A</span></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-4 pt-4 border-t border-[#fce99f]" id="section_c_container">
+                                        <p class="font-bold text-gray-800">C. If aware of CC (answered codes in 1-3 in A), How much did the CC help you in your transaction?</p>
+                                        <div class="flex flex-wrap gap-4 pl-4 text-sm font-medium">
+                                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="cc_helpfulness" value="1" required class="text-primary-600"> <span>Helped very much</span></label>
+                                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="cc_helpfulness" value="2" required class="text-primary-600"> <span>Somewhat helped</span></label>
+                                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="cc_helpfulness" value="3" required class="text-primary-600"> <span>Did not help</span></label>
+                                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="cc_helpfulness" value="4" required class="text-primary-600" id="cc_helpfulness_na"> <span>N/A</span></label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Satisfaction Scale Section -->
+                                <div class="bg-slate-50 rounded-[32px] border border-slate-200 overflow-hidden">
+                                    <div class="p-6 md:p-8 border-b border-slate-200 bg-white">
+                                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-primary-600 mb-2">Service Quality Audit</p>
+                                        <h4 class="text-xl md:text-2xl font-black text-gray-900 font-heading tracking-tight leading-none mb-2">How satisfied were you?</h4>
+                                        <p class="text-gray-500 font-bold text-xs">Please select the rating that corresponds to your experience for each category below:</p>
+                                    </div>
+
+                                    <div class="p-1 md:p-0">
+                                        <div class="grid grid-cols-1 divide-y divide-slate-100">
+                                            <?php 
+                                            $csatRows = [
+                                                ['name' => 'rating_responsiveness_1', 'text' => '1. I am satisfied with the service that I availed. (Responsiveness)'],
+                                                ['name' => 'rating_responsiveness_2', 'text' => '2. I spent a reasonable amount of time for my transaction. (Responsiveness)'],
+                                                ['name' => 'rating_reliability', 'text' => '3. The office followed the transaction\'s requirements and steps based on the information provided. (Reliability)'],
+                                                ['name' => 'rating_access', 'text' => '4. The steps (including payment) I needed to do for my transaction were easy and simple. (Accessible)'],
+                                                ['name' => 'rating_communication', 'text' => '5. I easily found information about my transaction from the office or its website. (Communication)'],
+                                                ['name' => 'rating_costs', 'text' => '6. I paid a reasonable amount of fees for my transactions. (Cost)'],
+                                                ['name' => 'rating_integrity', 'text' => '7. I feel the office was fair to everyone or "walang palakasan", during my transaction. (Integrity)'],
+                                                ['name' => 'rating_courtesy', 'text' => '8. I was treated courteously by the staff, and (if asked for help) the staff was helpful. (Courteous)'],
+                                                ['name' => 'rating_outcome', 'text' => '9. I got what I needed from the government office, or (if denied) denial of request was sufficiently explained to me. (Outcome)']
+                                            ];
+                                            $emojis = [
+                                                '5' => ['icon' => '🤩', 'label' => 'Strongly Agree', 'color' => 'green'],
+                                                '4' => ['icon' => '😊', 'label' => 'Agree', 'color' => 'emerald'],
+                                                '3' => ['icon' => '😐', 'label' => 'Neutral', 'color' => 'yellow'],
+                                                '2' => ['icon' => '🙁', 'label' => 'Disagree', 'color' => 'orange'],
+                                                '1' => ['icon' => '😡', 'label' => 'Strongly Disagree', 'color' => 'red']
+                                            ];
+                                            foreach($csatRows as $idx => $row): 
+                                            ?>
+                                            <div class="p-6 md:p-10 bg-white hover:bg-slate-50 transition-colors group">
+                                                <p class="text-md md:text-xl font-black text-slate-800 mb-6 group-hover:text-primary-700 transition-colors"><?php echo $row['text']; ?></p>
+                                                
+                                                <div class="grid grid-cols-5 md:flex md:flex-row-reverse md:justify-center gap-2 md:gap-4">
+                                                    <?php foreach($emojis as $val => $e): ?>
+                                                    <label class="flex flex-col items-center cursor-pointer group/item relative">
+                                                        <input type="radio" name="<?php echo $row['name']; ?>" value="<?php echo $val; ?>" required class="peer absolute inset-0 opacity-0 cursor-pointer z-10">
+                                                        <div class="w-full aspect-square md:w-20 md:h-20 flex flex-col items-center justify-center rounded-2xl border-2 border-slate-100 bg-white peer-checked:bg-<?php echo $e['color']; ?>-50 peer-checked:border-<?php echo $e['color']; ?>-500 peer-checked:scale-110 md:peer-checked:scale-105 transition-all duration-300 shadow-sm peer-checked:shadow-xl peer-checked:shadow-<?php echo $e['color']; ?>-100 relative overflow-hidden">
+                                                            <div class="text-2xl md:text-4xl mb-1 filter peer-checked:grayscale-0 transition-all"><?php echo $e['icon']; ?></div>
+                                                            <span class="text-[8px] md:text-[10px] font-black uppercase tracking-tighter text-slate-400 peer-checked:text-<?php echo $e['color']; ?>-700 text-center leading-none hidden md:block">
+                                                                <?php echo str_replace(' ', '<br>', $e['label']); ?>
+                                                            </span>
+                                                            <div class="absolute -bottom-2 -right-2 text-4xl md:text-6xl opacity-0 peer-checked:opacity-20 transition-opacity font-black text-<?php echo $e['color']; ?>-500"><?php echo $val; ?></div>
+                                                        </div>
+                                                        <span class="mt-2 text-[9px] font-black text-slate-400 peer-checked:text-<?php echo $e['color']; ?>-600 md:hidden text-center"><?php echo $val; ?></span>
+                                                    </label>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Feedback Comments Section -->
+                                <div class="relative group bg-white p-4 sm:p-6 rounded-[32px] border border-slate-200 overflow-hidden">
+                                    <p class="font-bold text-gray-800 text-lg mb-4 break-words whitespace-normal"></p>
+                                    <textarea 
+                                        name="comment" 
+                                        rows="4"
+                                        class="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-[24px] focus:outline-none focus:ring-4 focus:ring-primary-100 focus:bg-white focus:border-primary-500 transition-all font-medium text-gray-700 text-lg shadow-inner placeholder-gray-400"
+                                        placeholder="Write your feedback/comments here..."
+                                    ></textarea>
+                                </div>
+
+                                <button type="submit" class="w-full bg-primary-600 text-white py-5 rounded-3xl font-black text-xl shadow-2xl shadow-primary-600/20 hover:bg-primary-500 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-4 uppercase tracking-widest mt-8">
+                                    <span>Submit Survey</span>
                                     <i class="fas fa-paper-plane"></i>
                                 </button>
-                                <p class="text-center text-gray-400 text-xs font-black uppercase tracking-widest">
+                                <p class="text-center text-gray-400 text-xs font-bold uppercase tracking-widest mt-4">
                                     <i class="fas fa-robot mr-2"></i>Powered by AI Sentiment Analysis
                                 </p>
                             </form>
+                            
+                            <!-- JavaScript for Dynamic Form Logic -->
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    // Client Type "Others"
+                                    const clientOthersRadio = document.getElementById('client_others_radio');
+                                    const clientTypeOthers = document.getElementById('client_type_others');
+                                    document.querySelectorAll('input[name="client_type"]').forEach(radio => {
+                                        radio.addEventListener('change', (e) => {
+                                            if (e.target.value === 'Others') {
+                                                clientTypeOthers.classList.remove('hidden');
+                                                clientTypeOthers.disabled = false;
+                                                clientTypeOthers.required = true;
+                                            } else {
+                                                clientTypeOthers.classList.add('hidden');
+                                                clientTypeOthers.disabled = true;
+                                                clientTypeOthers.required = false;
+                                            }
+                                        });
+                                    });
+
+                                    // Contact Means "Others"
+                                    const contactOthersRadio = document.getElementById('contact_others_radio');
+                                    const contactMeansOthers = document.getElementById('contact_means_others');
+                                    document.querySelectorAll('input[name="contact_means"]').forEach(radio => {
+                                        radio.addEventListener('change', (e) => {
+                                            if (e.target.value === 'Others') {
+                                                contactMeansOthers.classList.remove('hidden');
+                                                contactMeansOthers.disabled = false;
+                                                contactMeansOthers.required = true;
+                                            } else {
+                                                contactMeansOthers.classList.add('hidden');
+                                                contactMeansOthers.disabled = true;
+                                                contactMeansOthers.required = false;
+                                            }
+                                        });
+                                    });
+
+                                    // CC Awareness Logic (Section A -> B & C)
+                                    const ccVisibilityNa = document.getElementById('cc_visibility_na');
+                                    const ccHelpfulnessNa = document.getElementById('cc_helpfulness_na');
+                                    const secB_radios = document.querySelectorAll('input[name="cc_visibility"]');
+                                    const secC_radios = document.querySelectorAll('input[name="cc_helpfulness"]');
+
+                                    document.querySelectorAll('input[name="cc_awareness"]').forEach(radio => {
+                                        radio.addEventListener('change', (e) => {
+                                            if (e.target.value === '4') {
+                                                // Answered 4: Automatically check N/A and visually disable the rest
+                                                ccVisibilityNa.checked = true;
+                                                ccHelpfulnessNa.checked = true;
+                                            }
+                                        });
+                                    });
+                                });
+                            </script>
                         </div>
                         
                         <div class="absolute -right-10 bottom-0 text-[150px] text-primary-50/70 pointer-events-none opacity-50 group-hover:rotate-6 transition-transform duration-700"><i class="fas fa-quote-right"></i></div>

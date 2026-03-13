@@ -8,32 +8,30 @@ class Service {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    public function getAllServices($officeId = null) {
-        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
-        $stmt = $this->db->prepare("
-            SELECT s.*, 
-                   (SELECT COUNT(*) 
-                    FROM window_services ws 
-                    WHERE ws.service_id = s.id AND ws.is_enabled = 1) as staff_enabled_count
-            FROM services s 
-            WHERE s.is_active = 1 AND s.office_id = ?
-            ORDER BY s.service_name
-        ");
+    public function getAllServices($activeOnly = false) {
+        $sql = "SELECT id, service_name, service_code, description, requirements, staff_notes, target_time, is_active, created_at, updated_at,
+                (SELECT COUNT(*) FROM window_services ws JOIN windows w ON ws.window_id = w.id WHERE ws.service_id = services.id AND ws.is_enabled = 1 AND w.is_active = 1) as staff_enabled_count
+                FROM services";
         
-        $stmt->execute([$officeId]);
+        if ($activeOnly) {
+            $sql .= " WHERE is_active = 1";
+        }
+        
+        $sql .= " ORDER BY service_name ASC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
     
-    public function getAllServicesAdmin($officeId = null) {
-        $officeId = $officeId ?? ($_SESSION['office_id'] ?? 1);
+    public function getAllServicesAdmin() {
         $stmt = $this->db->prepare("
             SELECT * 
             FROM services 
-            WHERE office_id = ?
             ORDER BY service_name
         ");
         
-        $stmt->execute([$officeId]);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
     
@@ -48,14 +46,14 @@ class Service {
         return $stmt->fetch();
     }
     
-    public function createService($serviceName, $serviceCode, $description, $requirements, $staffNotes = null, $targetTime = 10, $officeId = 1) {
+    public function createService($serviceName, $serviceCode, $description, $requirements, $staffNotes = null, $targetTime = 10) {
         try {
             $stmt = $this->db->prepare("
-                INSERT INTO services (service_name, service_code, description, requirements, staff_notes, target_time, office_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO services (service_name, service_code, description, requirements, staff_notes, target_time) 
+                VALUES (?, ?, ?, ?, ?, ?)
             ");
             
-            $success = $stmt->execute([$serviceName, $serviceCode, $description, $requirements, $staffNotes, $targetTime, $officeId]);
+            $success = $stmt->execute([$serviceName, $serviceCode, $description, $requirements, $staffNotes, $targetTime]);
             
             if ($success) {
                 return ['success' => true, 'message' => 'Service created successfully.'];

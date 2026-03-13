@@ -2,14 +2,10 @@
 $pageTitle = 'Operations Center';
 require_once __DIR__ . '/../../models/Window.php';
 require_once __DIR__ . '/../../models/User.php';
-require_once __DIR__ . '/../../models/Office.php';
 include __DIR__ . '/../../includes/admin-layout-header.php';
 
 $windowModel = new Window();
 $userModel = new User();
-$officeModel = new Office();
-$currentOffice = $officeModel->getOfficeById($_SESSION['office_id'] ?? 1);
-$officeCode = $currentOffice ? strtoupper($currentOffice['code']) : 'OFFICE';
 
 // Get all windows
 $windows = $windowModel->getAllWindows();
@@ -51,14 +47,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Auto-generate login code based on window number
                 $baseCode = strtolower(str_replace('-', '', $nextWindowStr)); // "w01"
-                $loginCode = strtolower($officeCode) . '-' . $baseCode; // e.g., "sas-w01"
+                $loginCode = strtolower(OFFICE_NAME) . '-' . $baseCode; // e.g., "ispsc-w01"
                 $email = $loginCode . "@window.local"; // Internal email format
                 $password = $_POST['password'];
                 $full_name = "Staff " . $nextWindowStr;
                 
-                // 1. Check if window number is already taken in this office
-                if ($windowModel->isWindowNumberTaken($nextWindowStr, $currentOffice['id'])) {
-                    $error_msg = "Window number $nextWindowStr is already in use in this office.";
+                // 1. Check if window number is already taken
+                if ($windowModel->isWindowNumberTaken($nextWindowStr)) {
+                    $error_msg = "Window number $nextWindowStr is already in use.";
                 } else if ($userModel->emailExists($email)) {
                     $error_msg = "Login code already exists. Please try again or delete orphaned staff users.";
                 } else {
@@ -66,11 +62,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $db = Database::getInstance()->getConnection();
                         $db->beginTransaction();
 
-                        if ($userModel->register($email, $password, $full_name, null, 'staff', $currentOffice['id'])) {
+                        if ($userModel->register($email, $password, $full_name, null, 'staff')) {
                             $newUserId = $db->lastInsertId();
                             
                             $windowName = !empty($_POST['window_name']) ? sanitize($_POST['window_name']) : "Window $nextNum";
-                            if ($windowModel->createWindow($nextWindowStr, $windowName, $newUserId, $currentOffice['id'])) {
+                            if ($windowModel->createWindow($nextWindowStr, $windowName, $newUserId)) {
                                 $db->commit();
                                 $success_msg = "Window $nextWindowStr created! Login Code: <strong>$loginCode</strong>";
                                 // Refresh stats
@@ -263,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="p-6 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between">
                 <div>
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Auto-Generated Access Code</p>
-                    <p class="text-xl font-black text-gray-900 font-mono tracking-tighter"><?php echo strtolower($officeCode) . '-' . strtolower(str_replace('-', '', $nextWindowStr)); ?></p>
+                    <p class="text-xl font-black text-gray-900 font-mono tracking-tighter"><?php echo strtolower(OFFICE_NAME); ?>-<?php echo strtolower(str_replace('-', '', $nextWindowStr)); ?></p>
                 </div>
                 <div class="w-12 h-12 bg-white rounded-md border border-slate-100 flex items-center justify-center text-primary-600 shadow-sm">
                     <i class="fas fa-key"></i>

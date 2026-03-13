@@ -23,10 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['full_name'] = $user['full_name'];
         $_SESSION['school_id'] = $user['school_id'];
         
-        // Store office_id if available (for staff/admin)
-        if (isset($user['office_id']) && $user['office_id'] !== null) {
-            $_SESSION['office_id'] = $user['office_id'];
-        }
         
         switch ($user['role']) {
             case 'admin': header('Location: admin/dashboard.php'); break;
@@ -103,7 +99,7 @@ if (isset($_GET['update']) && $_GET['update'] === 'password_success') {
                     <span class="text-primary-400 font-black"><?php echo strtoupper(APP_NAME); ?>.</span>
                 </h1>
                 <p class="text-gray-400 text-xl max-w-md font-medium leading-relaxed">
-                    Official e-queueing portal for ISPSC <?php echo OFFICE_NAME; ?>. Manage your walk-in service flow with precision and ease.
+                    Official e-queueing portal for ISPSC. Manage your walk-in service flow with precision and ease.
                 </p>
             </div>
 

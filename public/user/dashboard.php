@@ -8,50 +8,19 @@ require_once __DIR__ . '/../../models/Service.php';
 requireLogin();
 requireRole('user');
 
-// Handle Office Change Request
-if (isset($_GET['action']) && $_GET['action'] === 'change_office') {
-    unset($_SESSION['office_id']);
-    unset($_SESSION['office_name']);
-    header('Location: dashboard.php');
-    exit;
-}
-
-// Handle Office Selection
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['office_id'])) {
-    $selectedOfficeId = (int)$_POST['office_id'];
-    require_once __DIR__ . '/../../models/Office.php';
-    $officeModel = new Office();
-    $offices = $officeModel->getAllOffices();
-    $valid = false;
-    foreach ($offices as $office) {
-        if ($office['id'] == $selectedOfficeId) {
-            $valid = true;
-            $_SESSION['office_name'] = $office['name'];
-            break;
-        }
-    }
-    
-    if ($valid) {
-        $_SESSION['office_id'] = $selectedOfficeId;
-        header('Location: dashboard.php');
-        exit;
-    } else {
-        $error = "Invalid office selected.";
-    }
-}
-
-// Render Selection View if no office is set
-if (!isset($_SESSION['office_id'])) {
-    require __DIR__ . '/dashboard_select_office.php';
-    exit;
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../auth/login.php");
+    exit();
 }
 
 $ticketModel = new Ticket();
 $windowModel = new Window();
 
 $now = time();
-$currentTicket = $ticketModel->getCurrentTicket(getUserId());
-$pendingFeedback = $ticketModel->getPendingFeedbackTicket(getUserId());
+$userId = getUserId(); // Assuming getUserId() is defined elsewhere and returns the current user's ID
+$currentTicket = $ticketModel->getCurrentTicket($userId);
+$pendingFeedback = $ticketModel->getPendingFeedbackTicket($userId);
 $activeWindows = $windowModel->getActiveWindows();
 $waitingTickets = $ticketModel->getWaitingQueue();
 
@@ -81,8 +50,7 @@ require_once __DIR__ . '/../../includes/user-layout-header.php';
             <!-- Welcome Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
                 <div>
-                    <p class="text-primary-600 font-black tracking-[0.3em] uppercase text-[10px] md:text-xs mb-2 3xl:text-lg 5xl:text-2xl"><?php echo htmlspecialchars($_SESSION['office_name'] ?? ''); ?></p>
-                    <h1 class="text-3xl md:text-4xl 3xl:text-6xl 5xl:text-8xl font-black text-gray-900 mb-1 font-heading tracking-tight leading-none">Live Dashboard</h1>
+                    <h1 class="text-3xl md:text-4xl 3xl:text-6xl 5xl:text-8xl font-black text-gray-900 mb-1 font-heading tracking-tight leading-none">Live Queue</h1>
                     <p class="text-gray-500 font-medium text-xs md:text-sm 3xl:text-xl 5xl:text-3xl">Real-time status of services and windows.</p>
                 </div>
                 
@@ -144,12 +112,6 @@ require_once __DIR__ . '/../../includes/user-layout-header.php';
                             <i class="fas <?php echo $icon; ?> <?php echo $textAccent; ?> text-lg md:text-2xl 3xl:text-4xl 5xl:text-7xl"></i>
                         </div>
                         <div class="min-w-0">
-                            <!-- High-visibility Office Badge -->
-                            <div class="inline-flex items-center space-x-2 bg-slate-900/5 text-slate-600 px-2 py-1 md:px-3 md:py-1.5 rounded-md mb-2">
-                                <i class="fas fa-building text-[8px] md:text-[10px] 3xl:text-xs 5xl:text-lg"></i>
-                                <span class="text-[9px] md:text-[11px] 3xl:text-sm 5xl:text-xl font-black uppercase tracking-[0.2em] leading-none"><?php echo htmlspecialchars($bannerTicket['office_name'] ?? 'Office'); ?></span>
-                            </div>
-                            
                             <p class="text-[10px] md:text-xs 3xl:text-sm 5xl:text-xl font-bold uppercase tracking-[0.2em] text-gray-400 mb-1 leading-none mt-1">Your Active Ticket</p>
                             <h2 class="text-xl md:text-2xl 3xl:text-4xl 5xl:text-7xl font-black text-gray-900 font-heading leading-tight truncate">
                                 <?php echo $bannerTicket['ticket_number']; ?>

@@ -31,22 +31,31 @@ loadEnv(__DIR__ . '/../.env');
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
-define('DB_NAME', getenv('DB_NAME') ?: 'equeue_system');
+define('DB_NAME', getenv('DB_NAME') ?: 'equeue_system_notmulti');
 
 // Dynamic Base URL detection for local network/mobile access
 $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];
 
 // Detect if in the 'public' folder or root
-$currentDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-$publicPath = (strpos($currentDir, '/public') !== false) ? '/public' : '';
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+$publicIndex = strpos($scriptName, '/public');
+if ($publicIndex !== false) {
+    $path = substr($scriptName, 0, $publicIndex) . '/public';
+} else {
+    $path = dirname($scriptName);
+}
 
-// local PHP app to handle subdirectories
-$baseUrl = $protocol . '://' . $host . '/ispscequeue/public';
+// Ensure clean format
+$path = str_replace('\\', '/', $path);
+if ($path === '/') $path = '';
+
+$baseUrl = $protocol . '://' . $host . $path;
 define('BASE_URL', $baseUrl);
 
+define('OFFICE_NAME', 'ISPSC');
 define('APP_NAME', 'E-Queue System');
-define('OFFICE_NAME', 'Main Office');
+define('SYSTEM_VERSION', '2.0.0-sm'); // Unified version
 
 // Email Configuration (for notifications)
 define('MAILER_PATH', __DIR__ . '/../mailer/autoload.php');

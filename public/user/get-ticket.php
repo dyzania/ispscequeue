@@ -7,12 +7,7 @@ require_once __DIR__ . '/../../models/Ticket.php';
 requireLogin();
 requireRole('user');
 
-// Ensure office is selected
-if (!isset($_SESSION['office_id'])) {
-    header('Location: dashboard.php');
-    exit;
-}
-
+// Setup models
 $serviceModel = new Service();
 $ticketModel = new Ticket();
 $db = Database::getInstance()->getConnection();

@@ -4,18 +4,14 @@ require_once __DIR__ . '/../../models/Feedback.php';
 include __DIR__ . '/../../includes/admin-layout-header.php';
 ?>
 
-<!-- Add Export & Charting Libraries -->
+<!-- Add Charting Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <?php
-$officeId = $_SESSION['office_id'] ?? 1;
 $feedbackModel = new Feedback();
-$stats = $feedbackModel->getFeedbackStats($officeId);
-$trends = $feedbackModel->getFeedbackTrends(30, $officeId); // Last 30 days
-$allFeedback = $feedbackModel->getAllFeedback($officeId);
+$stats = $feedbackModel->getFeedbackStats();
+$trends = $feedbackModel->getFeedbackTrends(30); // Last 30 days
+$allFeedback = $feedbackModel->getAllFeedback();
 
 // Granular Breakdown Logic
 $db = Database::getInstance()->getConnection();
@@ -26,11 +22,10 @@ $stmt = $db->prepare("
     FROM feedback f
     JOIN tickets t ON f.ticket_id = t.id
     JOIN services s ON t.service_id = s.id
-    WHERE t.office_id = ?
     GROUP BY s.id
     ORDER BY avg_score DESC
 ");
-$stmt->execute([$officeId]);
+$stmt->execute();
 $serviceBreakdown = $stmt->fetchAll();
 
 $stmt = $db->prepare("
@@ -39,11 +34,10 @@ $stmt = $db->prepare("
            COUNT(*) as count
     FROM feedback f
     JOIN windows w ON f.window_id = w.id
-    WHERE w.office_id = ?
     GROUP BY w.id
     ORDER BY avg_score DESC
 ");
-$stmt->execute([$officeId]);
+$stmt->execute();
 $windowBreakdown = $stmt->fetchAll();
 ?>
 
@@ -60,17 +54,9 @@ $windowBreakdown = $stmt->fetchAll();
             </div>
             
             <div class="flex items-center p-1 bg-white border border-slate-200 rounded-xl shadow-sm">
-                <button onclick="exportToExcel()" class="px-4 py-2 hover:bg-emerald-50 text-emerald-600 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center">
-                    <i class="fas fa-file-excel mr-2"></i> Excel
-                </button>
-                <div class="w-px h-4 bg-slate-100 mx-1"></div>
-                <button onclick="exportToPDF()" class="px-4 py-2 hover:bg-rose-50 text-rose-600 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center">
-                    <i class="fas fa-file-pdf mr-2"></i> PDF
-                </button>
-                <div class="w-px h-4 bg-slate-100 mx-1"></div>
-                <button onclick="exportToWord()" class="px-4 py-2 hover:bg-blue-50 text-blue-600 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center">
-                    <i class="fas fa-file-word mr-2"></i> Word
-                </button>
+                <a href="<?php echo BASE_URL; ?>/api/export_all_csat_pdf.php" target="_blank" class="px-4 py-2 hover:bg-rose-50 text-rose-600 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center">
+                     <i class="fas fa-file-pdf mr-2"></i> ALL CSAT Forms (PDF)
+                </a>
             </div>
         </div>
     </div>
@@ -187,7 +173,24 @@ $windowBreakdown = $stmt->fetchAll();
         </div>
         <div class="p-10">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <?php foreach (array_slice($allFeedback, 0, 9) as $feedback): ?>
+                <?php 
+                    $sentimentIcons = [
+                        'very_positive' => ['😊', 'text-slate-900', 'bg-transparent'],
+                        'positive' => ['🙂', 'text-slate-900', 'bg-transparent'],
+                        'neutral' => ['😐', 'text-slate-700', 'bg-transparent'],
+                        'negative' => ['🙁', 'text-slate-900', 'bg-transparent'],
+                        'very_negative' => ['😞', 'text-slate-900', 'bg-transparent']
+                    ];
+                ?>
+                <?php foreach (array_slice($allFeedback, 0, 9) as $feedback): 
+                    $style = $sentimentIcons[$feedback['sentiment']] ?? $sentimentIcons['neutral'];
+                    $textColorClass = 'text-gray-600';
+                    if (in_array($feedback['sentiment'], ['positive', 'very_positive'])) {
+                        $textColorClass = 'text-emerald-600';
+                    } elseif (in_array($feedback['sentiment'], ['negative', 'very_negative'])) {
+                        $textColorClass = 'text-rose-600';
+                    }
+                ?>
                     <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 hover:border-primary-100 transition-all flex flex-col">
                         <div class="flex items-center justify-between mb-6">
                             <div class="flex items-center space-x-3">
@@ -197,21 +200,11 @@ $windowBreakdown = $stmt->fetchAll();
                                     <div class="text-[10px] font-bold text-gray-400 uppercase"><?php echo date('M d, H:i', strtotime($feedback['created_at'])); ?></div>
                                 </div>
                             </div>
-                            <?php 
-                                $sentimentIcons = [
-                                    'very_positive' => ['😊', 'text-slate-900', 'bg-transparent'],
-                                    'positive' => ['🙂', 'text-slate-900', 'bg-transparent'],
-                                    'neutral' => ['😐', 'text-slate-700', 'bg-transparent'],
-                                    'negative' => ['🙁', 'text-slate-900', 'bg-transparent'],
-                                    'very_negative' => ['😞', 'text-slate-900', 'bg-transparent']
-                                ];
-                                $style = $sentimentIcons[$feedback['sentiment']] ?? $sentimentIcons['neutral'];
-                            ?>
-                            <span class="w-10 h-10 <?php echo $style[2]; ?> rounded-lg flex items-center justify-center text-xl shadow-sm">
-                                <?php echo $style[0]; ?>
-                            </span>
+                            <a href="<?php echo BASE_URL; ?>/api/export_csat_pdf.php?id=<?php echo $feedback['id']; ?>" target="_blank" class="w-8 h-8 rounded-lg bg-white border border-slate-100 hover:bg-rose-50 text-slate-300 hover:text-rose-600 flex items-center justify-center transition-all shadow-sm" title="Download PDF">
+                                <i class="fas fa-file-pdf text-xs"></i>
+                            </a>
                         </div>
-                        <p class="text-gray-600 font-medium mb-6 flex-1 text-sm line-clamp-3">"<?php echo htmlspecialchars($feedback['comment']); ?>"</p>
+                        <p class="<?php echo $textColorClass; ?> font-medium mb-6 flex-1 text-sm line-clamp-3 italic">"<?php echo htmlspecialchars($feedback['comment']); ?>"</p>
                         <div class="pt-6 border-t border-slate-200 flex items-center justify-between">
                             <span class="text-[10px] font-black uppercase text-gray-400 tracking-widest"><?php echo $feedback['service_name']; ?></span>
                             <span class="text-[10px] font-black <?php echo $style[1]; ?> uppercase tracking-widest"><?php echo str_replace('_', ' ', $feedback['sentiment']); ?></span>
@@ -289,89 +282,6 @@ $windowBreakdown = $stmt->fetchAll();
 
     // --- Export Logic ---
     const feedbackData = <?php echo json_encode($allFeedback); ?>;
-
-    function exportToExcel() {
-        const worksheet = XLSX.utils.json_to_sheet(feedbackData.map(f => ({
-            'Date': new Date(f.created_at).toLocaleString(),
-            'Ticket #': f.ticket_number,
-            'Service': f.service_name,
-            'Sentiment': f.sentiment.replace('_', ' ').toUpperCase(),
-            'Score': f.sentiment_score,
-            'Comment': f.comment
-        })));
-        
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Feedback");
-        XLSX.writeFile(workbook, `Sentiment_Feedback_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
-    }
-
-    function exportToPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4');
-        
-        doc.setFontSize(20);
-        doc.text("Sentiment Analytics Report", 14, 22);
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
-        
-        const tableBody = feedbackData.map(f => [
-            new Date(f.created_at).toLocaleDateString(),
-            f.ticket_number,
-            f.service_name,
-            f.sentiment.replace('_', ' ').toUpperCase(),
-            f.sentiment_score,
-            f.comment
-        ]);
-        
-        doc.autoTable({
-            startY: 40,
-            head: [['Date', 'Ticket #', 'Service', 'Sentiment', 'Score', 'Comment']],
-            body: tableBody,
-            theme: 'striped',
-            headStyles: { fillColor: [15, 23, 42], fontWeight: 'bold' },
-            styles: { fontSize: 8, cellPadding: 3 },
-            columnStyles: { 5: { cellWidth: 80 } }
-        });
-        
-        doc.save(`Sentiment_Report_${new Date().toISOString().split('T')[0]}.pdf`);
-    }
-
-    function exportToWord() {
-        let content = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Sentiment Report</title></head>
-            <body style="font-family: Arial, sans-serif;">
-                <h1 style="color: #0f172a; text-align: center;">Sentiment Analytics Feed</h1>
-                <p style="color: #64748b; text-align: center;">Report Date: ${new Date().toLocaleString()}</p>
-                <hr>
-                <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
-                    <tr style="background-color: #f8fafc;">
-                        <th>Date</th><th>Ticket #</th><th>Service</th><th>Sentiment</th><th>Comment</th>
-                    </tr>
-                    ${feedbackData.map(f => `
-                        <tr>
-                            <td>${new Date(f.created_at).toLocaleDateString()}</td>
-                            <td>${f.ticket_number}</td>
-                            <td>${f.service_name}</td>
-                            <td>${f.sentiment.replace('_', ' ')}</td>
-                            <td>${f.comment}</td>
-                        </tr>
-                    `).join('')}
-                </table>
-            </body>
-            </html>
-        `;
-        
-        const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Sentiment_Report_${new Date().toISOString().split('T')[0]}.doc`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
 </script>
 
 <?php 
