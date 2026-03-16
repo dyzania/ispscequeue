@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Architecture - Editable Canvas</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0a0e1a;color:#e0e6f0;overflow:hidden;height:100vh}
+#toolbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:12px;padding:10px 20px;background:rgba(12,17,35,0.95);border-bottom:1px solid rgba(56,232,213,0.2);backdrop-filter:blur(12px)}
+#toolbar h1{font-size:14px;font-weight:700;color:#38e8d5;margin-right:16px;white-space:nowrap}
+.tb-btn{padding:6px 14px;border:1px solid rgba(56,232,213,0.3);background:rgba(56,232,213,0.08);color:#38e8d5;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}
+.tb-btn:hover{background:rgba(56,232,213,0.2);border-color:#38e8d5}
+.tb-btn.active{background:rgba(56,232,213,0.25);box-shadow:0 0 8px rgba(56,232,213,0.3)}
+.tb-sep{width:1px;height:24px;background:rgba(56,232,213,0.2)}
+#zoom-info{font-size:11px;color:#7a8ba8;margin-left:auto}
+#canvas-container{position:absolute;top:48px;left:0;right:0;bottom:0;overflow:hidden;cursor:grab}
+#canvas-container.dragging{cursor:grabbing}
+#canvas{position:absolute;transform-origin:0 0}
+.node{position:absolute;border-radius:12px;cursor:move;user-select:none;transition:box-shadow .2s}
+.node:hover{box-shadow:0 0 20px rgba(56,232,213,0.3)!important}
+.node.selected{outline:2px solid #38e8d5;outline-offset:2px}
+.node-content{padding:14px 18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.node-icon{font-size:28px}
+.node-label{font-size:12px;font-weight:600;line-height:1.3;color:#e0e6f0;outline:none;min-width:40px;text-align:center}
+.node-sub{font-size:10px;color:#7a8ba8;font-weight:400}
+.tier-box{position:absolute;border:1.5px solid rgba(56,232,213,0.25);border-radius:16px;background:rgba(56,232,213,0.03);pointer-events:none}
+.tier-label{position:absolute;top:-12px;left:24px;background:#0d1225;padding:2px 12px;font-size:12px;font-weight:600;color:#38e8d5;letter-spacing:0.5px}
+svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+svg.connections line,svg.connections path{stroke:rgba(56,232,213,0.4);stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+.conn-label{position:absolute;font-size:9px;color:#5a7a9a;background:rgba(13,18,37,0.9);padding:2px 6px;border-radius:4px;pointer-events:none;white-space:nowrap;z-index:2}
+#edit-panel{position:fixed;right:-320px;top:48px;bottom:0;width:300px;background:rgba(12,17,35,0.98);border-left:1px solid rgba(56,232,213,0.2);padding:20px;z-index:99;transition:right .3s;overflow-y:auto}
+#edit-panel.open{right:0}
+#edit-panel h3{color:#38e8d5;font-size:13px;margin-bottom:16px}
+#edit-panel label{display:block;font-size:11px;color:#7a8ba8;margin:10px 0 4px}
+#edit-panel input,#edit-panel select{width:100%;padding:8px 10px;background:rgba(56,232,213,0.06);border:1px solid rgba(56,232,213,0.2);border-radius:6px;color:#e0e6f0;font-size:12px;font-family:inherit}
+#edit-panel input:focus{border-color:#38e8d5;outline:none}
+.ep-row{display:flex;gap:8px}
+.ep-row>*{flex:1}
+.color-opt{width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;display:inline-block;margin:2px}
+.color-opt.sel{border-color:#fff}
+#ctx-menu{position:fixed;display:none;background:rgba(12,17,35,0.98);border:1px solid rgba(56,232,213,0.25);border-radius:8px;padding:4px;z-index:200;min-width:160px}
+#ctx-menu div{padding:8px 14px;font-size:12px;cursor:pointer;border-radius:4px;color:#c0cce0}
+#ctx-menu div:hover{background:rgba(56,232,213,0.12);color:#38e8d5}
+.version-tag{position:fixed;bottom:12px;right:16px;font-size:11px;color:#3a4a6a;z-index:50}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <h1>⬡ System Architecture</h1>
+  <button class="tb-btn" onclick="addNode()" title="Add Node">+ Node</button>
+  <button class="tb-btn" id="conn-btn" onclick="toggleConnMode()" title="Draw Connection">🔗 Connect</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="zoomTo(1)">Reset View</button>
+  <button class="tb-btn" onclick="exportPNG()">📷 Export PNG</button>
+  <button class="tb-btn" onclick="saveState()">💾 Save</button>
+  <button class="tb-btn" onclick="loadState()">📂 Load</button>
+  <span id="zoom-info">100%</span>
+</div>
+
+<div id="canvas-container">
+  <svg class="connections" id="svg-layer">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(56,232,213,0.6)"/>
+      </marker>
+    </defs>
+  </svg>
+  <div id="canvas"></div>
+</div>
+
+<div id="edit-panel">
+  <h3>✏️ Edit Node</h3>
+  <label>Label</label><input id="ep-label" oninput="updateSelNode('label',this.value)">
+  <label>Subtitle</label><input id="ep-sub" oninput="updateSelNode('sub',this.value)">
+  <label>Icon (emoji)</label><input id="ep-icon" oninput="updateSelNode('icon',this.value)" maxlength="4">
+  <div class="ep-row"><div><label>X</label><input id="ep-x" type="number" oninput="updateSelNode('x',+this.value)"></div><div><label>Y</label><input id="ep-y" type="number" oninput="updateSelNode('y',+this.value)"></div></div>
+  <label>Background Color</label>
+  <div id="color-picks"></div>
+  <br><button class="tb-btn" onclick="deleteSelNode()" style="border-color:rgba(255,80,80,0.4);color:#ff5050;width:100%">🗑 Delete Node</button>
+</div>
+
+<div id="ctx-menu">
+  <div onclick="ctxAction('edit')">✏️ Edit</div>
+  <div onclick="ctxAction('dup')">📋 Duplicate</div>
+  <div onclick="ctxAction('front')">⬆ Bring to Front</div>
+  <div onclick="ctxAction('del')">🗑 Delete</div>
+</div>
+
+<div class="version-tag">Version 2.0 – Editable Canvas</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const container = document.getElementById('canvas-container');
+const svgLayer = document.getElementById('svg-layer');
+const editPanel = document.getElementById('edit-panel');
+const ctxMenu = document.getElementById('ctx-menu');
+
+let nodes = [], connections = [], tierBoxes = [];
+let scale = 0.85, panX = 60, panY = 30;
+let selectedNode = null, connMode = false, connStart = null;
+let isDragging = false, dragNode = null, dragOffX = 0, dragOffY = 0;
+let isPanning = false, panStartX = 0, panStartY = 0;
+let nextId = 1;
+
+const COLORS = [
+  'rgba(56,232,213,0.12)', 'rgba(80,120,230,0.15)', 'rgba(230,180,50,0.15)',
+  'rgba(200,80,80,0.15)', 'rgba(130,80,230,0.15)', 'rgba(80,200,120,0.15)',
+  'rgba(230,130,80,0.15)', 'rgba(60,60,80,0.3)'
+];
+const BORDERS = [
+  'rgba(56,232,213,0.35)', 'rgba(80,120,230,0.4)', 'rgba(230,180,50,0.4)',
+  'rgba(200,80,80,0.4)', 'rgba(130,80,230,0.4)', 'rgba(80,200,120,0.4)',
+  'rgba(230,130,80,0.4)', 'rgba(100,100,130,0.4)'
+];
+
+// Init color picker
+const cp = document.getElementById('color-picks');
+COLORS.forEach((c, i) => {
+  const d = document.createElement('div');
+  d.className = 'color-opt';
+  d.style.background = c;
+  d.style.borderColor = BORDERS[i];
+  d.dataset.idx = i;
+  d.onclick = () => { if(selectedNode) { selectedNode.colorIdx = i; renderNode(selectedNode); document.querySelectorAll('.color-opt').forEach(x=>x.classList.remove('sel')); d.classList.add('sel'); }};
+  cp.appendChild(d);
+});
+
+function createDefaultNodes() {
+  const defs = [
+    {id:nextId++,label:'User/Client',sub:'End User',icon:'👤',x:80,y:30,colorIdx:0,w:130,h:85},
+    {id:nextId++,label:'Staff Member',sub:'Internal Staff',icon:'🪪',x:280,y:30,colorIdx:0,w:130,h:85},
+    {id:nextId++,label:'System Admin',sub:'Administrator',icon:'👨‍💼',x:480,y:30,colorIdx:0,w:130,h:85},
+    {id:nextId++,label:'User Interface',sub:'Tailwind/JS Frontend',icon:'🖥️',x:220,y:190,colorIdx:1,w:170,h:85},
+    {id:nextId++,label:'Core Application Logic',sub:'PHP Backend',icon:'⚙️',x:220,y:330,colorIdx:1,w:170,h:85},
+    {id:nextId++,label:'MySQL Database',sub:'Data Storage',icon:'🗄️',x:20,y:330,colorIdx:3,w:150,h:85},
+    {id:nextId++,label:'PHPMailer Service',sub:'Email Composer',icon:'📧',x:480,y:310,colorIdx:2,w:150,h:85},
+    {id:nextId++,label:'OpenRouter LLM',sub:'API Gateway',icon:'🔑',x:50,y:550,colorIdx:4,w:155,h:85},
+    {id:nextId++,label:'Sentiment Analysis',sub:'Python Microservice',icon:'🧠',x:270,y:550,colorIdx:4,w:165,h:85},
+    {id:nextId++,label:'SMTP Email Server',sub:'Mail Delivery',icon:'📨',x:490,y:550,colorIdx:2,w:150,h:85},
+    {id:nextId++,label:'HuggingFace ML Model',sub:'Analysis Version',icon:'🤖',x:50,y:710,colorIdx:5,w:170,h:85},
+    {id:nextId++,label:'HuggingFace ML Model',sub:'LLM Processing',icon:'🤖',x:280,y:710,colorIdx:5,w:170,h:85},
+  ];
+  nodes = defs;
+  connections = [
+    {from:1,to:4,label:''},  {from:2,to:4,label:''},  {from:3,to:4,label:''},
+    {from:4,to:5,label:'Sends Data'},
+    {from:5,to:6,label:'SQL Queries'}, {from:6,to:5,label:''},
+    {from:5,to:7,label:''}, {from:7,to:10,label:'Sends Email'},
+    {from:5,to:8,label:'API Call'}, {from:5,to:9,label:'Sentiment Call'},
+    {from:9,to:12,label:'LLM Processing'}, {from:8,to:11,label:'Model Usage'},
+  ];
+  tierBoxes = [
+    {x:10, y:170, w:410, h:270, label:'Application Tier (Core Backend)'},
+    {x:10, y:510, w:650, h:140, label:'AI & External Services Tier'},
+  ];
+}
+
+function renderAll() {
+  canvas.innerHTML = '';
+  // Tier boxes
+  tierBoxes.forEach(t => {
+    const d = document.createElement('div');
+    d.className = 'tier-box';
+    d.style.cssText = `left:${t.x}px;top:${t.y}px;width:${t.w}px;height:${t.h}px`;
+    d.innerHTML = `<span class="tier-label">${t.label}</span>`;
+    canvas.appendChild(d);
+  });
+  nodes.forEach(n => renderNode(n));
+  renderConnections();
+  updateTransform();
+}
+
+function renderNode(n) {
+  let el = document.getElementById('node-' + n.id);
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'node';
+    el.id = 'node-' + n.id;
+    el.style.zIndex = 10;
+    canvas.appendChild(el);
+    el.addEventListener('mousedown', e => onNodeMouseDown(e, n));
+    el.addEventListener('contextmenu', e => onNodeCtx(e, n));
+    el.addEventListener('dblclick', () => selectNode(n));
+  }
+  el.style.left = n.x + 'px';
+  el.style.top = n.y + 'px';
+  el.style.background = COLORS[n.colorIdx || 0];
+  el.style.border = `1.5px solid ${BORDERS[n.colorIdx || 0]}`;
+  el.style.boxShadow = `0 4px 20px ${COLORS[n.colorIdx || 0]}`;
+  if (n.w) el.style.width = n.w + 'px';
+  el.innerHTML = `<div class="node-content">
+    <div class="node-icon">${n.icon}</div>
+    <div class="node-label">${n.label}</div>
+    ${n.sub ? `<div class="node-sub">${n.sub}</div>` : ''}
+  </div>`;
+  if (selectedNode && selectedNode.id === n.id) el.classList.add('selected');
+  else el.classList.remove('selected');
+}
+
+function renderConnections() {
+  const lines = svgLayer.querySelectorAll('line,path,.conn-label-el');
+  lines.forEach(l => l.remove());
+  document.querySelectorAll('.conn-label').forEach(l => l.remove());
+  connections.forEach(c => {
+    const fromN = nodes.find(n => n.id === c.from);
+    const toN = nodes.find(n => n.id === c.to);
+    if (!fromN || !toN) return;
+    const x1 = fromN.x + (fromN.w || 130) / 2;
+    const y1 = fromN.y + (fromN.h || 85);
+    const x2 = toN.x + (toN.w || 130) / 2;
+    const y2 = toN.y;
+    // Use a line
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    svgLayer.appendChild(line);
+    if (c.label) {
+      const lbl = document.createElement('div');
+      lbl.className = 'conn-label';
+      lbl.textContent = c.label;
+      lbl.style.left = ((x1 + x2) / 2 - 20) + 'px';
+      lbl.style.top = ((y1 + y2) / 2 - 8) + 'px';
+      canvas.appendChild(lbl);
+    }
+  });
+}
+
+function updateTransform() {
+  canvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  svgLayer.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  document.getElementById('zoom-info').textContent = Math.round(scale * 100) + '%';
+}
+
+// Node interactions
+function onNodeMouseDown(e, n) {
+  if (e.button === 2) return;
+  e.stopPropagation();
+  if (connMode) {
+    if (!connStart) { connStart = n; }
+    else if (connStart.id !== n.id) {
+      connections.push({from: connStart.id, to: n.id, label: ''});
+      connStart = null;
+      renderConnections();
+    }
+    return;
+  }
+  dragNode = n;
+  const rect = container.getBoundingClientRect();
+  dragOffX = (e.clientX - rect.left - panX) / scale - n.x;
+  dragOffY = (e.clientY - rect.top - panY) / scale - n.y;
+  selectNode(n);
+}
+
+function selectNode(n) {
+  selectedNode = n;
+  document.querySelectorAll('.node').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('node-' + n.id);
+  if (el) el.classList.add('selected');
+  // Fill panel
+  document.getElementById('ep-label').value = n.label;
+  document.getElementById('ep-sub').value = n.sub || '';
+  document.getElementById('ep-icon').value = n.icon;
+  document.getElementById('ep-x').value = Math.round(n.x);
+  document.getElementById('ep-y').value = Math.round(n.y);
+  document.querySelectorAll('.color-opt').forEach((d, i) => d.classList.toggle('sel', i === (n.colorIdx || 0)));
+  editPanel.classList.add('open');
+}
+
+function updateSelNode(prop, val) {
+  if (!selectedNode) return;
+  if (prop === 'label') selectedNode.label = val;
+  else if (prop === 'sub') selectedNode.sub = val;
+  else if (prop === 'icon') selectedNode.icon = val;
+  else if (prop === 'x') { selectedNode.x = val; }
+  else if (prop === 'y') { selectedNode.y = val; }
+  renderNode(selectedNode);
+  renderConnections();
+}
+
+function deleteSelNode() {
+  if (!selectedNode) return;
+  const id = selectedNode.id;
+  nodes = nodes.filter(n => n.id !== id);
+  connections = connections.filter(c => c.from !== id && c.to !== id);
+  const el = document.getElementById('node-' + id);
+  if (el) el.remove();
+  selectedNode = null;
+  editPanel.classList.remove('open');
+  renderConnections();
+}
+
+function addNode() {
+  const n = {id: nextId++, label: 'New Node', sub: '', icon: '📦', x: (-panX + 300) / scale, y: (-panY + 300) / scale, colorIdx: 0, w: 140, h: 85};
+  nodes.push(n);
+  renderNode(n);
+  selectNode(n);
+}
+
+function toggleConnMode() {
+  connMode = !connMode;
+  connStart = null;
+  document.getElementById('conn-btn').classList.toggle('active', connMode);
+  container.style.cursor = connMode ? 'crosshair' : 'grab';
+}
+
+function onNodeCtx(e, n) {
+  e.preventDefault(); e.stopPropagation();
+  selectedNode = n;
+  ctxMenu.style.display = 'block';
+  ctxMenu.style.left = e.clientX + 'px';
+  ctxMenu.style.top = e.clientY + 'px';
+}
+
+function ctxAction(a) {
+  ctxMenu.style.display = 'none';
+  if (!selectedNode) return;
+  if (a === 'edit') selectNode(selectedNode);
+  else if (a === 'dup') {
+    const d = {...selectedNode, id: nextId++, x: selectedNode.x + 30, y: selectedNode.y + 30};
+    nodes.push(d);
+    renderNode(d);
+    selectNode(d);
+  }
+  else if (a === 'front') {
+    const el = document.getElementById('node-' + selectedNode.id);
+    if (el) el.style.zIndex = 100;
+  }
+  else if (a === 'del') deleteSelNode();
+}
+
+// Pan & zoom
+container.addEventListener('mousedown', e => {
+  if (e.target === container || e.target === svgLayer) {
+    isPanning = true;
+    panStartX = e.clientX - panX;
+    panStartY = e.clientY - panY;
+    container.classList.add('dragging');
+  }
+});
+
+window.addEventListener('mousemove', e => {
+  if (dragNode) {
+    const rect = container.getBoundingClientRect();
+    dragNode.x = (e.clientX - rect.left - panX) / scale - dragOffX;
+    dragNode.y = (e.clientY - rect.top - panY) / scale - dragOffY;
+    renderNode(dragNode);
+    renderConnections();
+    if (selectedNode && selectedNode.id === dragNode.id) {
+      document.getElementById('ep-x').value = Math.round(dragNode.x);
+      document.getElementById('ep-y').value = Math.round(dragNode.y);
+    }
+  }
+  if (isPanning) {
+    panX = e.clientX - panStartX;
+    panY = e.clientY - panStartY;
+    updateTransform();
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  dragNode = null;
+  isPanning = false;
+  container.classList.remove('dragging');
+});
+
+container.addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? 0.92 : 1.08;
+  const newScale = Math.min(3, Math.max(0.2, scale * delta));
+  const rect = container.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  panX = mx - (mx - panX) * (newScale / scale);
+  panY = my - (my - panY) * (newScale / scale);
+  scale = newScale;
+  updateTransform();
+}, {passive: false});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ctx-menu')) ctxMenu.style.display = 'none';
+  if (!e.target.closest('.node') && !e.target.closest('#edit-panel') && !e.target.closest('#toolbar')) {
+    selectedNode = null;
+    document.querySelectorAll('.node').forEach(el => el.classList.remove('selected'));
+    editPanel.classList.remove('open');
+  }
+});
+
+function zoomTo(s) { scale = s; panX = 60; panY = 30; updateTransform(); }
+
+function saveState() {
+  const data = JSON.stringify({nodes, connections, tierBoxes, nextId});
+  localStorage.setItem('sysarch_canvas', data);
+  const blob = new Blob([data], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'system-architecture.json';
+  a.click();
+}
+
+function loadState() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        nodes = d.nodes || []; connections = d.connections || [];
+        tierBoxes = d.tierBoxes || []; nextId = d.nextId || 100;
+        renderAll();
+      } catch(err) { alert('Invalid file'); }
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  input.click();
+}
+
+function exportPNG() {
+  const html2canvas = document.createElement('script');
+  html2canvas.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  html2canvas.onload = () => {
+    const oldT = canvas.style.transform;
+    const oldS = svgLayer.style.transform;
+    canvas.style.transform = 'none';
+    svgLayer.style.transform = 'none';
+    window.html2canvas(canvas, {backgroundColor: '#0a0e1a', scale: 2}).then(c => {
+      canvas.style.transform = oldT;
+      svgLayer.style.transform = oldS;
+      const a = document.createElement('a');
+      a.download = 'system-architecture.png';
+      a.href = c.toDataURL();
+      a.click();
+    });
+  };
+  document.head.appendChild(html2canvas);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Delete' && selectedNode && document.activeElement.tagName !== 'INPUT') deleteSelNode();
+  if (e.key === 'Escape') { connMode = false; connStart = null; document.getElementById('conn-btn').classList.remove('active'); container.style.cursor = 'grab'; editPanel.classList.remove('open'); }
+});
+
+// Init
+createDefaultNodes();
+renderAll();
+</script>
+</body>
+</html>
