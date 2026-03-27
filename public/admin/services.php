@@ -211,8 +211,6 @@ $services = $serviceModel->getAllServicesAdmin();
                     <input type="number" name="target_time" value="10" required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-lg focus:ring-4 focus:ring-rose-100 focus:bg-white transition-all text-sm font-bold" placeholder="e.g. 10">
                 </div>
             </div>
- Riverside:
-            
             <div class="flex justify-end pt-4">
                 <button type="submit" class="w-full bg-primary-600 text-white py-5 rounded-lg font-black shadow-xl shadow-primary-200 hover:bg-primary-700 hover:-translate-y-1 transition-all active:scale-95">
                     Deploy Service
